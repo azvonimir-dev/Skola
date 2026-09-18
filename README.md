@@ -1,0 +1,2 @@
+# Skola
+Mapa za školu
