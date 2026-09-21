@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3.1. Prisjetimo se – Mape | InformaKID</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome za ikone -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Fredoka & Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f9ff;
+        }
+        h1, h2, h3, .font-fun {
+            font-family: 'Fredoka', cursive;
+        }
+        .folder-shadow {
+            box-shadow: 0 4px 0px 0px #d97706;
+        }
+        .btn-bounce {
+            transition: transform 0.1s ease-in-out, box-shadow 0.1s ease-in-out;
+        }
+        .btn-bounce:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0px 0px rgba(0,0,0,0.2);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 8px;
+        }
+        @keyframes celebrate {
+            0% { transform: scale(0.8) rotate(-5deg); opacity: 0; }
+            50% { transform: scale(1.1) rotate(5deg); }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+        .animate-celebrate {
+            animation: celebrate 0.5s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-800 flex flex-col justify-between pb-6">
+
+    <!-- ZAGLAVLJE APLIKACIJE -->
+    <header class="bg-amber-400 border-b-4 border-amber-500 sticky top-0 z-50 shadow-md">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-3">
+            <div class="flex items-center space-x-3">
+                <div class="bg-white p-2 rounded-2xl shadow-sm text-amber-500 text-2xl">
+                    <i class="fa-solid fa-folder-open"></i>
+                </div>
+                <div>
+                    <span class="text-xs font-bold uppercase tracking-wider text-amber-900 bg-amber-200 px-2 py-0.5 rounded-full">3. Razred - Informatika</span>
+                    <h1 class="text-xl sm:text-2xl font-bold text-slate-900 leading-none">3.1. Prisjetimo se – Mape</h1>
+                </div>
+            </div>
+
+            <!-- Navigacijski Gumbi -->
+            <nav class="flex bg-amber-500/30 p-1 rounded-2xl gap-1">
+                <button onclick="switchTab('lekcija')" id="tab-lekcija" class="tab-btn px-4 py-2 rounded-xl font-bold text-sm transition-all bg-white text-amber-700 shadow-sm">
+                    <i class="fa-solid fa-book-open mr-1.5"></i> Lekcija
+                </button>
+                <button onclick="switchTab('simulator')" id="tab-simulator" class="tab-btn px-4 py-2 rounded-xl font-bold text-sm transition-all text-amber-900 hover:bg-white/50">
+                    <i class="fa-solid fa-laptop-code mr-1.5"></i> Simulator
+                </button>
+                <button onclick="switchTab('kviz')" id="tab-kviz" class="tab-btn px-4 py-2 rounded-xl font-bold text-sm transition-all text-amber-900 hover:bg-white/50">
+                    <i class="fa-solid fa-gamepad mr-1.5"></i> Kviz Znanja
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- GLAVNI SADRŽAJ -->
+    <main class="max-w-6xl mx-auto px-4 py-6 w-full flex-grow">
+
+        <!-- TAB 1: LEKCIJA -->
+        <section id="sec-lekcija" class="tab-content space-y-6">
+            <!-- Hero Kartica -->
+            <div class="bg-gradient-to-r from-amber-100 via-orange-100 to-amber-50 border-3 border-amber-300 rounded-3xl p-6 sm:p-8 shadow-sm relative overflow-hidden">
+                <div class="max-w-2xl relative z-10">
+                    <span class="bg-amber-400 text-amber-950 font-bold text-xs uppercase px-3 py-1 rounded-full inline-block mb-3">3. Stvaranje digitalnog sadržaja</span>
+                    <h2 class="text-3xl font-bold text-slate-900 mb-3">Što su to mape na računalu?</h2>
+                    <p class="text-lg text-slate-700 leading-relaxed">
+                        <strong>Mape</strong> su mjesta na disku računala uz pomoć kojih organiziramo svoje datoteke (podatke). Prepoznajemo ih po prepoznatljivim <strong>žutim ikonama</strong>. 📂
+                    </p>
+                </div>
+                <div class="hidden md:flex absolute -right-6 -bottom-6 w-64 h-64 bg-amber-300/40 rounded-full justify-center items-center">
+                    <i class="fa-solid fa-folder-closed text-9xl text-amber-400/80"></i>
+                </div>
+            </div>
+
+            <!-- Dva načina izrade mape -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- 1. NAČIN -->
+                <div class="bg-white border-2 border-blue-200 rounded-2xl p-6 shadow-sm hover:border-blue-400 transition-all">
+                    <div class="flex items-center gap-3 mb-4">
+                        <span class="bg-blue-500 text-white font-bold w-9 h-9 rounded-xl flex items-center justify-center text-lg">1</span>
+                        <h3 class="text-xl font-bold text-blue-900">1. NAČIN: Preko trake s alatima</h3>
+                    </div>
+                    <ul class="space-y-3 text-slate-700">
+                        <li class="flex items-start gap-2">
+                            <i class="fa-solid fa-circle-check text-blue-500 mt-1"></i>
+                            <span>Otvori prozor računala gdje želiš napraviti mapu.</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fa-solid fa-circle-check text-blue-500 mt-1"></i>
+                            <span>Klikni na gumb <strong>"Nova mapa"</strong> na traci s alatima pri vrhu prozora.</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fa-solid fa-circle-check text-blue-500 mt-1"></i>
+                            <span>Tipkovnicom upiši željeni naziv mape i pritisni <kbd class="bg-slate-100 border rounded px-1 text-xs">Enter</kbd>.</span>
+                        </li>
+                    </ul>
+                    <div class="mt-4 bg-blue-50 p-3 rounded-xl border border-blue-100 flex items-center gap-3">
+                        <i class="fa-solid fa-mouse-pointer text-blue-500 text-xl"></i>
+                        <span class="text-xs text-blue-800 font-medium">Klik mišem na gumb na vrhu ekrana!</span>
+                    </div>
+                </div>
+
+                <!-- 2. NAČIN -->
+                <div class="bg-white border-2 border-emerald-200 rounded-2xl p-6 shadow-sm hover:border-emerald-400 transition-all">
+                    <div class="flex items-center gap-3 mb-4">
+                        <span class="bg-emerald-500 text-white font-bold w-9 h-9 rounded-xl flex items-center justify-center text-lg">2</span>
+                        <h3 class="text-xl font-bold text-emerald-900">2. NAČIN: Desnim klikom miša</h3>
+                    </div>
+                    <ul class="space-y-3 text-slate-700">
+                        <li class="flex items-start gap-2">
+                            <i class="fa-solid fa-circle-check text-emerald-500 mt-1"></i>
+                            <span>Klikni <strong>desnom tipkom miša</strong> na prazno mjesto u prozoru.</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fa-solid fa-circle-check text-emerald-500 mt-1"></i>
+                            <span>U izborniku pokaži na <strong>Novo</strong>, a zatim klikni na <strong>Mapa</strong>.</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fa-solid fa-circle-check text-emerald-500 mt-1"></i>
+                            <span>Upiši naziv mape i pritisni tipku <kbd class="bg-slate-100 border rounded px-1 text-xs">Enter</kbd>.</span>
+                        </li>
+                    </ul>
+                    <div class="mt-4 bg-emerald-50 p-3 rounded-xl border border-emerald-100 flex items-center gap-3">
+                        <i class="fa-solid fa-hand-pointer text-emerald-500 text-xl"></i>
+                        <span class="text-xs text-emerald-800 font-medium">Desni klik -> Novo -> Mapa!</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Podmape i Organizacija -->
+            <div class="bg-white border-2 border-purple-200 rounded-2xl p-6 shadow-sm">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="bg-purple-500 text-white p-2 rounded-xl">
+                        <i class="fa-solid fa-sitemap text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-purple-950">Podmape – Mape unutar mapa</h3>
+                        <p class="text-sm text-slate-500">Kao što u ormaru stavljamo ladice u ladice, tako u mapi pravimo podmape!</p>
+                    </div>
+                </div>
+
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-4">
+                    <p class="text-sm text-slate-700 mb-2"><strong>Primjer iz udžbenika:</strong> U mapi <u>Vježba</u> radimo podmape <u>Biljke</u> i <u>Životinje</u>.</p>
+                    <div class="flex flex-wrap gap-2 text-xs font-semibold text-slate-600">
+                        <span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-lg border border-purple-200">📁 Vježba</span>
+                        <span class="text-slate-400">➔</span>
+                        <span class="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-lg border border-emerald-200">📁 Biljke (Voće, Povrće, Cvijeće, Drveće)</span>
+                        <span class="text-slate-400">➔</span>
+                        <span class="bg-amber-100 text-amber-800 px-3 py-1 rounded-lg border border-amber-200">📁 Životinje (Domaće, Divlje, Kukci, Kućni ljubimci)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Autorska Prava Warning -->
+            <div class="bg-rose-50 border-2 border-rose-200 rounded-2xl p-5 flex gap-4 items-start shadow-sm">
+                <div class="bg-rose-500 text-white p-3 rounded-2xl text-2xl flex-shrink-0">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <div>
+                    <h4 class="text-lg font-bold text-rose-950">Pazi na autorska prava! 🛑</h4>
+                    <p class="text-sm text-rose-800 mt-1">
+                        Slike s interneta ne smijemo samo tako uzimati! Najbolje je istraživati slike na besplatnim i sigurnim stranicama koje nude slike za slobodno korištenje:
+                    </p>
+                    <div class="flex flex-wrap gap-2 mt-3">
+                        <a href="https://www.pixabay.com" target="_blank" class="bg-white border border-rose-300 text-rose-700 font-semibold px-3 py-1 rounded-lg text-xs hover:bg-rose-100 transition">www.pixabay.com</a>
+                        <a href="https://www.unsplash.com" target="_blank" class="bg-white border border-rose-300 text-rose-700 font-semibold px-3 py-1 rounded-lg text-xs hover:bg-rose-100 transition">www.unsplash.com</a>
+                        <a href="https://www.publicdomainpictures.net" target="_blank" class="bg-white border border-rose-300 text-rose-700 font-semibold px-3 py-1 rounded-lg text-xs hover:bg-rose-100 transition">www.publicdomainpictures.net</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2: INTERAKTIVNI SIMULATOR STABLA MAPA -->
+        <section id="sec-simulator" class="tab-content hidden space-y-6">
+            <div class="bg-white border-2 border-amber-300 rounded-3xl p-6 shadow-sm">
+                <div class="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-6 pb-4 border-b">
+                    <div>
+                        <span class="bg-amber-100 text-amber-800 text-xs font-bold px-2.5 py-1 rounded-full uppercase">Praktična Vježba</span>
+                        <h2 class="text-2xl font-bold text-slate-900 mt-1">Složi stablo mapa iz udžbenika!</h2>
+                        <p class="text-sm text-slate-600">Dodaj odgovarajuće podmape unutar mapa kako bi dobio/la točnu strukturu.</p>
+                    </div>
+                    <button onclick="resetTree()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2 rounded-xl text-sm transition flex items-center gap-2 self-start md:self-auto">
+                        <i class="fa-solid fa-rotate-left"></i> Kreni ispočetka
+                    </button>
+                </div>
+
+                <!-- Cilj vježbe -->
+                <div class="bg-amber-50/70 border border-amber-200 rounded-xl p-4 mb-6">
+                    <h4 class="font-bold text-amber-900 text-sm mb-2"><i class="fa-solid fa-bullseye text-amber-600 mr-1"></i> Zadatak:</h4>
+                    <p class="text-xs sm:text-sm text-amber-800">
+                        1. Unutar mape <strong>Vježba</strong> napravi podmape <strong>Biljke</strong> i <strong>Životinje</strong>.<br>
+                        2. Unutar podmape <strong>Biljke</strong> dodaj: <i>Voće, Povrće, Cvijeće, Drveće</i>.<br>
+                        3. Unutar podmape <strong>Životinje</strong> dodaj: <i>Domaće životinje, Divlje životinje, Kukci, Kućni ljubimci</i>.
+                    </p>
+                </div>
+
+                <!-- Simulator sučelje -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Kontrola / Dodavanje -->
+                    <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-4">
+                        <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-square-plus text-amber-500"></i> Izradi novu mapu
+                        </h3>
+                        
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Odaberi gdje stavljaš mapu:</label>
+                            <select id="parent-folder-select" class="w-full p-2.5 rounded-xl border border-slate-300 text-sm font-medium focus:ring-2 focus:ring-amber-400 focus:outline-none bg-white">
+                                <!-- Dinamički se puni -->
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Naziv nove mape:</label>
+                            <input type="text" id="new-folder-name" placeholder="Npr. Biljke..." class="w-full p-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-amber-400 focus:outline-none">
+                        </div>
+
+                        <button onclick="addFolderFromInput()" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-2.5 px-4 rounded-xl shadow-sm btn-bounce transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-folder-plus"></i> Dodaj Mapu
+                        </button>
+
+                        <div class="pt-3 border-t border-slate-200">
+                            <span class="text-xs text-slate-500 font-semibold block mb-2">Brzi prijedlozi (klikni za brzi unos):</span>
+                            <div class="flex flex-wrap gap-1.5" id="quick-suggestions">
+                                <!-- Prijedlozi gumbi -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Prikaz stabla -->
+                    <div class="lg:col-span-2 bg-slate-900 rounded-2xl p-5 text-white shadow-inner font-mono text-sm min-h-[320px] flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-center pb-3 border-b border-slate-800 mb-3">
+                                <span class="text-xs text-slate-400 uppercase tracking-wider font-sans font-bold flex items-center gap-2">
+                                    <i class="fa-solid fa-desktop text-amber-400"></i> Preglednik Datoteka (Moj Računalo)
+                                </span>
+                                <span id="tree-status" class="text-xs px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-sans">U tijeku...</span>
+                            </div>
+                            <div id="tree-container" class="space-y-1 font-sans custom-scrollbar overflow-y-auto max-h-[350px] pr-2">
+                                <!-- Stablo mapa se ovdje crta -->
+                            </div>
+                        </div>
+                        
+                        <div id="tree-success-msg" class="hidden mt-4 p-3 bg-emerald-500/20 border border-emerald-500/50 rounded-xl text-emerald-300 text-xs font-sans flex items-center gap-3">
+                            <i class="fa-solid fa-circle-check text-2xl text-emerald-400"></i>
+                            <div>
+                                <strong class="block font-bold text-sm">Bravo! Savršeno! 🎉</strong>
+                                Uspešno si napravio/la točno stablo mapa prema uputama iz udžbenika!
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: INTERAKTIVNI KVIZ ZNANJA -->
+        <section id="sec-kviz" class="tab-content hidden space-y-6">
+            <div class="bg-white border-2 border-indigo-200 rounded-3xl p-6 sm:p-8 shadow-sm">
+                <!-- Status Bar Kviza -->
+                <div class="flex justify-between items-center pb-6 border-b border-slate-100 mb-6">
+                    <div>
+                        <span class="bg-indigo-100 text-indigo-800 text-xs font-bold px-3 py-1 rounded-full uppercase">Kviz Znanja</span>
+                        <h2 class="text-2xl font-bold text-slate-900 mt-1">Provjeri svoje znanje o mapama</h2>
+                    </div>
+                    <div class="bg-indigo-50 border border-indigo-100 px-4 py-2 rounded-2xl flex items-center gap-3">
+                        <i class="fa-solid fa-trophy text-amber-500 text-xl"></i>
+                        <div>
+                            <span class="text-xs text-slate-500 block leading-none">Bodovi</span>
+                            <span id="quiz-score" class="text-lg font-bold text-indigo-900 leading-none">0 / 6</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Kontejner za Pitanja -->
+                <div id="quiz-container" class="space-y-8">
+                    <!-- Pitanja se uvoze putem JS-a -->
+                </div>
+
+                <!-- Završni Gumb -->
+                <div class="pt-6 border-t border-slate-100 flex justify-end">
+                    <button id="btn-finish-quiz" onclick="checkQuizResults()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-2xl shadow-lg btn-bounce transition text-base flex items-center gap-2">
+                        <i class="fa-solid fa-check-circle"></i> Provjeri Odgovore
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- PODNOŽJE -->
+    <footer class="max-w-6xl mx-auto px-4 text-center text-xs text-slate-500 py-4">
+        <p>Informatika za 3. razred osnovne škole | Lekcija: 3.1. Prisjetimo se – Mape</p>
+    </footer>
+
+    <script>
+        // --- PROMJENA TABOVA ---
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-white', 'text-amber-700', 'shadow-sm');
+                btn.classList.add('text-amber-900', 'hover:bg-white/50');
+            });
+
+            document.getElementById(`sec-${tabId}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`tab-${tabId}`);
+            activeBtn.classList.add('bg-white', 'text-amber-700', 'shadow-sm');
+            activeBtn.classList.remove('text-amber-900', 'hover:bg-white/50');
+        }
+
+        // ==========================================
+        // LOGIKA SIMULATORA STABLA MAPA
+        // ==========================================
+
+        // Inicijalna struktura stabla
+        let folderTree = {
+            id: 'root',
+            name: 'Vježba',
+            children: []
+        };
+
+        const targetStructure = {
+            'Biljke': ['Voće', 'Povrće', 'Cvijeće', 'Drveće'],
+            'Životinje': ['Domaće životinje', 'Divlje životinje', 'Kukci', 'Kućni ljubimci']
+        };
+
+        const quickSuggestionsList = [
+            'Biljke', 'Životinje', 'Voće', 'Povrće', 'Cvijeće', 'Drveće',
+            'Domaće životinje', 'Divlje životinje', 'Kukci', 'Kućni ljubimci'
+        ];
+
+        function initSimulator() {
+            renderFolderSelect();
+            renderFolderTree();
+            renderSuggestions();
+        }
+
+        function renderSuggestions() {
+            const container = document.getElementById('quick-suggestions');
+            container.innerHTML = '';
+            quickSuggestionsList.forEach(name => {
+                const btn = document.createElement('button');
+                btn.className = "bg-white hover:bg-amber-100 text-slate-700 border border-slate-200 text-xs px-2.5 py-1 rounded-lg transition font-medium";
+                btn.innerText = "+ " + name;
+                btn.onclick = () => {
+                    document.getElementById('new-folder-name').value = name;
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        // Pronalaženje mape po ID-u
+        function findFolderById(node, id) {
+            if (node.id === id) return node;
+            for (let child of node.children) {
+                let found = findFolderById(child, id);
+                if (found) return found;
+            }
+            return null;
+        }
+
+        // Generiranje opcija u Select izborniku
+        function populateSelectOptions(node, depth = 0, selectEl) {
+            const option = document.createElement('option');
+            option.value = node.id;
+            option.innerText = "📁 ".repeat(depth + 1) + " " + node.name;
+            selectEl.appendChild(option);
+
+            node.children.forEach(child => {
+                populateSelectOptions(child, depth + 1, selectEl);
+            });
+        }
+
+        function renderFolderSelect() {
+            const selectEl = document.getElementById('parent-folder-select');
+            selectEl.innerHTML = '';
+            populateSelectOptions(folderTree, 0, selectEl);
+        }
+
+        // Renderiranje visualnog stabla mapa
+        function createTreeHTML(node, level = 0) {
+            let html = `
+                <div class="flex items-center gap-2 py-1 px-2 hover:bg-slate-800 rounded transition" style="margin-left: ${level * 20}px">
+                    <i class="fa-solid fa-folder-closed text-amber-400 text-lg"></i>
+                    <span class="font-medium text-slate-200">${node.name}</span>
+                    ${node.id !== 'root' ? `
+                        <button onclick="deleteFolder('${node.id}')" class="ml-auto text-slate-500 hover:text-rose-400 text-xs p-1" title="Izbriši mapu">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    ` : '<span class="text-xs text-amber-500/70 ml-2 font-mono">(Glavna mapa)</span>'}
+                </div>
+            `;
+
+            node.children.forEach(child => {
+                html += createTreeHTML(child, level + 1);
+            });
+
+            return html;
+        }
+
+        function renderFolderTree() {
+            const container = document.getElementById('tree-container');
+            container.innerHTML = createTreeHTML(folderTree);
+            checkTreeCompletion();
+        }
+
+        function addFolderFromInput() {
+            const parentId = document.getElementById('parent-folder-select').value;
+            const nameInput = document.getElementById('new-folder-name');
+            const folderName = nameInput.value.trim();
+
+            if (!folderName) {
+                alert('Molimo upišite naziv mape!');
+                return;
+            }
+
+            const parentNode = findFolderById(folderTree, parentId);
+            if (parentNode) {
+                // Provjera postoji li već mapa s tim imenom
+                if (parentNode.children.some(c => c.name.toLowerCase() === folderName.toLowerCase())) {
+                    alert('Mapa s tim nazivom već postoji u ovoj mapi!');
+                    return;
+                }
+
+                parentNode.children.push({
+                    id: 'f_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+                    name: folderName,
+                    children: []
+                });
+
+                nameInput.value = '';
+                renderFolderSelect();
+                renderFolderTree();
+            }
+        }
+
+        function deleteFolder(id) {
+            function removeNode(parent, targetId) {
+                parent.children = parent.children.filter(child => child.id !== targetId);
+                parent.children.forEach(child => removeNode(child, targetId));
+            }
+            removeNode(folderTree, id);
+            renderFolderSelect();
+            renderFolderTree();
+        }
+
+        function resetTree() {
+            folderTree = {
+                id: 'root',
+                name: 'Vježba',
+                children: []
+            };
+            renderFolderSelect();
+            renderFolderTree();
+            document.getElementById('tree-success-msg').classList.add('hidden');
+            document.getElementById('tree-status').innerText = "U tijeku...";
+            document.getElementById('tree-status').className = "text-xs px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-sans";
+        }
+
+        // Provjera je li stablo točno izgrađeno prema zadatku
+        function checkTreeCompletion() {
+            // Potrebno: 'Biljke' i 'Životinje' unutar 'Vježba'
+            const biljkeNode = folderTree.children.find(c => c.name.toLowerCase() === 'biljke');
+            const zivotinjeNode = folderTree.children.find(c => c.name.toLowerCase() === 'životinje' || c.name.toLowerCase() === 'zivotinje');
+
+            let isCorrect = false;
+
+            if (biljkeNode && zivotinjeNode) {
+                const biljkeSubs = biljkeNode.children.map(c => c.name.toLowerCase());
+                const zivotinjeSubs = zivotinjeNode.children.map(c => c.name.toLowerCase());
+
+                const requiredBiljke = ['voće', 'povrće', 'cvijeće', 'drveće'];
+                const requiredZivotinje = ['domaće životinje', 'divlje životinje', 'kukci', 'kućni ljubimci'];
+
+                const biljkeMatch = requiredBiljke.every(req => biljkeSubs.some(s => s.includes(req) || req.includes(s)));
+                const zivotinjeMatch = requiredZivotinje.every(req => zivotinjeSubs.some(s => s.includes(req) || req.includes(s)));
+
+                if (biljkeMatch && zivotinjeMatch) {
+                    isCorrect = true;
+                }
+            }
+
+            const statusEl = document.getElementById('tree-status');
+            const successMsg = document.getElementById('tree-success-msg');
+
+            if (isCorrect) {
+                statusEl.innerText = "Točno završeno! 🎉";
+                statusEl.className = "text-xs px-2 py-0.5 rounded bg-emerald-500/30 text-emerald-300 font-sans font-bold";
+                successMsg.classList.remove('hidden');
+            } else {
+                statusEl.innerText = "U tijeku...";
+                statusEl.className = "text-xs px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-sans";
+                successMsg.classList.add('hidden');
+            }
+        }
+
+        // ==========================================
+        // LOGIKA INTERAKTIVNOG KVIZA
+        // ==========================================
+
+        const quizData = [
+            {
+                id: 1,
+                type: 'single',
+                question: 'Koje su boje ikone mapa u računalu koje koristimo za organizaciju datoteka?',
+                options: ['A) Plave', 'B) Žute', 'C) Zelene', 'D) Crvene'],
+                correct: 1,
+                explanation: 'Mape su u pravilu prepoznatljive po svojoj žutoj boji! 📂'
+            },
+            {
+                id: 2,
+                type: 'single',
+                question: 'Što je to mapa na računalu?',
+                options: [
+                    'A) Mjesto na disku uz pomoć kojeg organiziramo datoteke.',
+                    'B) Crtež s geografskim kartama zemalja.',
+                    'C) Tipka na tipkovnici.',
+                    'D) Računalni program za igranje igrica.'
+                ],
+                correct: 0,
+                explanation: 'Mape nam služe kao digitalne pregrade ili kutije u koje organizirano spremamo svoje radove i datoteke.'
+            },
+            {
+                id: 3,
+                type: 'multiple',
+                question: 'Koji su točni načini za izradu nove mape na računalu? (Odaberi 2 točna odgovora)',
+                options: [
+                    'Klikom na gumb "Nova mapa" u traci s alatima.',
+                    'Desni klik mišem na prazno mjesto ➔ Novo ➔ Mapa.',
+                    'Gašenjem i ponovnim paljenjem računala.',
+                    'Pritiskom na tipku Esc na tipkovnici.'
+                ],
+                correct: [0, 1],
+                explanation: 'Mapu možemo izraditi klikom na gumb u traci s alatima ili desnim klikom miša pa odabirom Novo -> Mapa!'
+            },
+            {
+                id: 4,
+                type: 'single',
+                question: 'Kako nazivamo mapu koja se nalazi unutar druge mape?',
+                options: ['A) Nadmapa', 'B) Podmapa', 'C) Mala mapa', 'D) Skrivena mapa'],
+                correct: 1,
+                explanation: 'Mapa unutar druge mape naziva se PODMAPA.'
+            },
+            {
+                id: 5,
+                type: 'multiple',
+                question: 'Gdje je najbolje i najsigurnije tražiti besplatne slike pazeći na autorska prava? (Odaberi točne stranice)',
+                options: [
+                    'www.pixabay.com',
+                    'www.unsplash.com',
+                    'www.publicdomainpictures.net',
+                    'Bilo gdje na internetu bez pitanja'
+                ],
+                correct: [0, 1, 2],
+                explanation: 'Pixabay, Unsplash i PublicDomainPictures nude besplatne slike koje smijemo slobodno koristiti!'
+            },
+            {
+                id: 6,
+                type: 'categorize',
+                question: 'Razvrstaj podmape: kamo spada koja podmapa?',
+                items: [
+                    { name: 'Cvijeće', target: 'Biljke' },
+                    { name: 'Kukci', target: 'Životinje' },
+                    { name: 'Voće', target: 'Biljke' },
+                    { name: 'Domaće životinje', target: 'Životinje' }
+                ],
+                explanation: 'Cvijeće i Voće spadaju pod Biljke, a Kukci i Domaće životinje pod Životinje!'
+            }
+        ];
+
+        function renderQuiz() {
+            const container = document.getElementById('quiz-container');
+            container.innerHTML = '';
+
+            quizData.forEach((q, index) => {
+                const qCard = document.createElement('div');
+                qCard.className = "bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-4";
+                
+                let contentHTML = `
+                    <div class="flex items-start gap-3">
+                        <span class="bg-indigo-600 text-white font-bold rounded-xl w-8 h-8 flex items-center justify-center flex-shrink-0 text-sm">
+                            ${index + 1}
+                        </span>
+                        <h3 class="text-base sm:text-lg font-bold text-slate-800 pt-0.5">${q.question}</h3>
+                    </div>
+                `;
+
+                if (q.type === 'single') {
+                    contentHTML += `<div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pl-11">`;
+                    q.options.forEach((opt, optIdx) => {
+                        contentHTML += `
+                            <label class="flex items-center gap-3 p-3 bg-white border border-slate-200 rounded-xl cursor-pointer hover:border-indigo-300 transition">
+                                <input type="radio" name="q_${q.id}" value="${optIdx}" class="w-4 h-4 text-indigo-600 focus:ring-indigo-500">
+                                <span class="text-sm font-medium text-slate-700">${opt}</span>
+                            </label>
+                        `;
+                    });
+                    contentHTML += `</div>`;
+                } else if (q.type === 'multiple') {
+                    contentHTML += `<div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pl-11">`;
+                    q.options.forEach((opt, optIdx) => {
+                        contentHTML += `
+                            <label class="flex items-center gap-3 p-3 bg-white border border-slate-200 rounded-xl cursor-pointer hover:border-indigo-300 transition">
+                                <input type="checkbox" name="q_${q.id}" value="${optIdx}" class="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500">
+                                <span class="text-sm font-medium text-slate-700">${opt}</span>
+                            </label>
+                        `;
+                    });
+                    contentHTML += `</div>`;
+                } else if (q.type === 'categorize') {
+                    contentHTML += `<div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pl-11">`;
+                    q.items.forEach((item, itemIdx) => {
+                        contentHTML += `
+                            <div class="p-3 bg-white border border-slate-200 rounded-xl flex items-center justify-between gap-2">
+                                <span class="text-sm font-bold text-slate-700">📂 ${item.name}</span>
+                                <select id="cat_${itemIdx}" class="text-xs p-2 rounded-lg border border-slate-300 bg-slate-50 font-medium">
+                                    <option value="">-- Odaberi gdje spada --</option>
+                                    <option value="Biljke">U mapu Biljke</option>
+                                    <option value="Životinje">U mapu Životinje</option>
+                                </select>
+                            </div>
+                        `;
+                    });
+                    contentHTML += `</div>`;
+                }
+
+                contentHTML += `
+                    <div id="feedback_q_${q.id}" class="hidden pl-11 pt-2">
+                        <!-- Povratna informacija -->
+                    </div>
+                `;
+
+                qCard.innerHTML = contentHTML;
+                container.appendChild(qCard);
+            });
+        }
+
+        function checkQuizResults() {
+            let totalScore = 0;
+
+            quizData.forEach(q => {
+                const feedbackEl = document.getElementById(`feedback_q_${q.id}`);
+                feedbackEl.classList.remove('hidden');
+                let isCorrect = false;
+
+                if (q.type === 'single') {
+                    const selected = document.querySelector(`input[name="q_${q.id}"]:checked`);
+                    if (selected && parseInt(selected.value) === q.correct) {
+                        isCorrect = true;
+                    }
+                } else if (q.type === 'multiple') {
+                    const selectedBoxes = Array.from(document.querySelectorAll(`input[name="q_${q.id}"]:checked`)).map(cb => parseInt(cb.value));
+                    if (selectedBoxes.length === q.correct.length && selectedBoxes.every(val => q.correct.includes(val))) {
+                        isCorrect = true;
+                    }
+                } else if (q.type === 'categorize') {
+                    let allCatCorrect = true;
+                    q.items.forEach((item, itemIdx) => {
+                        const sel = document.getElementById(`cat_${itemIdx}`);
+                        if (!sel || sel.value !== item.target) {
+                            allCatCorrect = false;
+                        }
+                    });
+                    if (allCatCorrect) isCorrect = true;
+                }
+
+                if (isCorrect) {
+                    totalScore++;
+                    feedbackEl.innerHTML = `
+                        <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-xs font-medium flex items-center gap-2">
+                            <i class="fa-solid fa-circle-check text-emerald-600 text-base"></i>
+                            <span><strong>Točno!</strong> ${q.explanation}</span>
+                        </div>
+                    `;
+                } else {
+                    feedbackEl.innerHTML = `
+                        <div class="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 text-xs font-medium flex items-center gap-2">
+                            <i class="fa-solid fa-circle-xmark text-rose-600 text-base"></i>
+                            <span><strong>Netočno ili nepotpuno.</strong> ${q.explanation}</span>
+                        </div>
+                    `;
+                }
+            });
+
+            document.getElementById('quiz-score').innerText = `${totalScore} / ${quizData.length}`;
+
+            // Prikaz čestitke pri izvrsnom rezultatu
+            if (totalScore === quizData.length) {
+                alert('Bravo! Osvojio/la si sve bodove u kvizu! 🌟🏆');
+            }
+        }
+
+        // Inicijalizacija pri učitavanju
+        window.onload = function () {
+            initSimulator();
+            renderQuiz();
+        };
+    </script>
+</body>
+</html>
