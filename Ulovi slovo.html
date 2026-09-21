@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ulovi Slovo - Vježba Tipkovnice</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #e0f7fa;
+            font-family: 'Comic Sans MS', 'Arial', sans-serif;
+            user-select: none;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            transition: background-color 0.2s ease;
+        }
+
+        #ui {
+            position: absolute;
+            top: 20px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px 30px;
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            margin: 0 0 5px 0;
+            font-size: 26px;
+            color: #00796b;
+        }
+
+        #stats {
+            font-size: 22px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        #letter-card {
+            width: 220px;
+            height: 220px;
+            background-color: #ff4081;
+            color: white;
+            border-radius: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 130px;
+            font-weight: bold;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            margin-top: 50px;
+            transition: transform 0.1s ease;
+        }
+
+        #instruction {
+            margin-top: 20px;
+            font-size: 24px;
+            color: #004d40;
+            font-weight: bold;
+        }
+
+        #start-btn {
+            font-size: 26px;
+            padding: 12px 35px;
+            background-color: #00bfa5;
+            color: white;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            margin-top: 20px;
+        }
+
+        #start-btn:hover {
+            background-color: #009688;
+        }
+
+        /* Animacija kad pogode ili pogriješe */
+        .correct-bg {
+            background-color: #a5d6a7 !important;
+        }
+
+        .wrong-bg {
+            background-color: #ef9a9a !important;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="ui">
+        <h1>Ulovi slovo na tipkovnici! ⌨️</h1>
+        <div id="stats">Bodovi: <span id="score">0</span></div>
+    </div>
+
+    <button id="start-btn" onclick="startGame()">KRENI!</button>
+
+    <div id="letter-card" style="display: none;">?</div>
+    <div id="instruction" style="display: none;">Pritisni označeno slovo!</div>
+
+    <script>
+        // Popis slova koja će se pojavljivati (osnovna abeceda)
+        const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        
+        // Boje za karticu sa slovom
+        const colors = ["#ff4081", "#7c4dff", "#536def", "#00b0ff", "#00e676", "#ff9100", "#d500f9"];
+
+        const letterCard = document.getElementById('letter-card');
+        const instruction = document.getElementById('instruction');
+        const startBtn = document.getElementById('start-btn');
+        const scoreDisplay = document.getElementById('score');
+
+        let currentLetter = '';
+        let score = 0;
+        let speed = 3000; // Početno vrijeme (3 sekunde)
+        let timer = null;
+        let isGameActive = false;
+
+        function startGame() {
+            score = 0;
+            speed = 3000;
+            isGameActive = true;
+            scoreDisplay.textContent = score;
+
+            startBtn.style.display = 'none';
+            letterCard.style.display = 'flex';
+            instruction.style.display = 'block';
+
+            nextLetter();
+        }
+
+        function nextLetter() {
+            if (!isGameActive) return;
+
+            // Odaberi nasumično slovo
+            const randomIndex = Math.floor(Math.random() * letters.length);
+            currentLetter = letters[randomIndex];
+            letterCard.textContent = currentLetter;
+
+            // Odaberi nasumičnu boju kartice
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+            letterCard.style.backgroundColor = randomColor;
+
+            // Tajmer: ako dijete ne stigne pritisnuti slovo, ono se zamijeni novim
+            clearTimeout(timer);
+            timer = setTimeout(() => {
+                flashBg('wrong');
+                nextLetter();
+            }, speed);
+        }
+
+        // Slušatelj za pritisak tipke na tipkovnici
+        document.addEventListener('keydown', function(event) {
+            if (!isGameActive) return;
+
+            // Pretvori pritisnutu tipku u veliko slovo
+            const pressedKey = event.key.toUpperCase();
+
+            // Provjeri je li pritisnuta tipka jednaka traženom slovu
+            if (pressedKey === currentLetter) {
+                // Točno!
+                score++;
+                scoreDisplay.textContent = score;
+
+                // Ubrzaj igru (svaki bod smanjuje vrijeme za 70ms, minimalno do 800ms)
+                if (speed > 800) {
+                    speed -= 70;
+                }
+
+                flashBg('correct');
+                nextLetter();
+            } else {
+                // Krivo slovo (samo reagiramo ako je pritisnuto neko od slova, da zanemarimo npr. Shift)
+                if (letters.includes(pressedKey)) {
+                    flashBg('wrong');
+                }
+            }
+        });
+
+        // Efekt kratkog bljeskanja pozadine (zeleno/crveno)
+        function flashBg(type) {
+            const className = type === 'correct' ? 'correct-bg' : 'wrong-bg';
+            document.body.classList.add(className);
+            setTimeout(() => {
+                document.body.classList.remove(className);
+            }, 200);
+        }
+    </script>
+</body>
+</html>

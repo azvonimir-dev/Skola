@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vježba miša - Ulovi točku!</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f0f8ff;
+            font-family: 'Comic Sans MS', 'Arial', sans-serif;
+            user-select: none;
+            overflow: hidden;
+        }
+
+        #ui {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+
+        h1 {
+            margin: 0 0 5px 0;
+            font-size: 24px;
+            color: #333;
+        }
+
+        #stats {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        #instruction {
+            font-size: 26px;
+            font-weight: bold;
+            padding: 8px 15px;
+            border-radius: 10px;
+            display: inline-block;
+        }
+
+        .left-click {
+            background-color: #2ecc71;
+            color: white;
+        }
+
+        .right-click {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        #game-area {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        #target {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            position: absolute;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            transition: transform 0.1s ease;
+        }
+
+        #target:active {
+            transform: scale(0.9);
+        }
+
+        #start-btn {
+            font-size: 22px;
+            padding: 10px 25px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        #start-btn:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="ui">
+        <h1>Ulovi točku! 🐭</h1>
+        <div id="stats">Bodovi: <span id="score">0</span></div>
+        <div id="instruction" class="left-click">Pritisni 'KRENI' za početak!</div>
+        <br>
+        <button id="start-btn" onclick="startGame()">KRENI!</button>
+    </div>
+
+    <div id="game-area">
+        <div id="target" style="display: none;"></div>
+    </div>
+
+    <script>
+        const target = document.getElementById('target');
+        const scoreDisplay = document.getElementById('score');
+        const instruction = document.getElementById('instruction');
+        const startBtn = document.getElementById('start-btn');
+        const gameArea = document.getElementById('game-area');
+
+        let score = 0;
+        let requiredClick = 'left'; // 'left' ili 'right'
+        let speed = 2500; // Početno vrijeme (u milisekundama) prije nego točka sama pobjegne
+        let timer = null;
+        let isGameActive = false;
+
+        // Onemogući otvaranje desnog izbornika (context menu) u cijeloj igri
+        document.addEventListener('contextmenu', event => event.preventDefault());
+
+        function startGame() {
+            score = 0;
+            speed = 2500;
+            isGameActive = true;
+            scoreDisplay.textContent = score;
+            startBtn.style.display = 'none';
+            target.style.display = 'flex';
+            nextTurn();
+        }
+
+        function getRandomPosition() {
+            // Izračunaj granice da točka ne izađe iz ekrana
+            const padding = 100;
+            const maxX = window.innerWidth - padding - 100;
+            const maxY = window.innerHeight - padding - 100;
+            
+            const randomX = Math.max(padding, Math.floor(Math.random() * maxX));
+            const randomY = Math.max(padding + 80, Math.floor(Math.random() * maxY)); // +80 zbog UI-ja na vrhu
+
+            return { x: randomX, y: randomY };
+        }
+
+        function nextTurn() {
+            if (!isGameActive) return;
+
+            // Nasumično odaberi lijevi ili desni klik
+            requiredClick = Math.random() < 0.5 ? 'left' : 'right';
+
+            // Postavi vizualne upute
+            if (requiredClick === 'left') {
+                instruction.textContent = "Klikni LIJEVIM tipkom! 🟩";
+                instruction.className = "left-click";
+                target.style.backgroundColor = "#2ecc71";
+                target.textContent = "LIJEVI";
+            } else {
+                instruction.textContent = "Klikni DESNOM tipkom! 🟥";
+                instruction.className = "right-click";
+                target.style.backgroundColor = "#e74c3c";
+                target.textContent = "DESNI";
+            }
+
+            // Postavi točku na novu poziciju
+            const pos = getRandomPosition();
+            target.style.left = pos.x + 'px';
+            target.style.top = pos.y + 'px';
+
+            // Pokreni tajmer za automatsko premještanje ako je igrač prespor
+            clearTimeout(timer);
+            timer = setTimeout(() => {
+                // Ako ne stigne kliknuti, točka bježi
+                nextTurn();
+            }, speed);
+        }
+
+        // Reagiranje na klik miša na točku
+        target.addEventListener('mousedown', function(event) {
+            if (!isGameActive) return;
+
+            // event.button: 0 = lijevi klik, 2 = desni klik
+            const clickedLeft = event.button === 0;
+            const clickedRight = event.button === 2;
+
+            if ((requiredClick === 'left' && clickedLeft) || (requiredClick === 'right' && clickedRight)) {
+                // Točan klik!
+                score++;
+                scoreDisplay.textContent = score;
+
+                // Ubrzaj igru (smanji vrijeme za 80ms po bodu, ali nemoj ići ispod 700ms)
+                if (speed > 700) {
+                    speed -= 80;
+                }
+
+                nextTurn();
+            } else {
+                // Pogrešan klik - mala vizualna kazna (točka malo zatrese ili pocrni na trenutak)
+                target.style.backgroundColor = "#333";
+            }
+        });
+    </script>
+</body>
+</html>
