@@ -2,27 +2,137 @@
 <html lang="hr">
 <head>
     <meta charset="UTF-8">
-    <title>Popis zadataka</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Informatika Portal - Razredna Nastava</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            transition: all 0.2s ease-in-out;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 35px 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+            border: 3px solid #bae6fd;
+        }
+
+        .icon-header {
+            font-size: 50px;
+            margin-bottom: 10px;
+            display: inline-block;
+            animation: bounce 2s infinite;
+        }
+
+        h2 { 
+            color: #0369a1; 
+            margin-top: 0;
+            font-size: 26px;
+            margin-bottom: 8px;
+        }
+
+        p { 
+            color: #64748b; 
+            font-size: 16px; 
+            margin-bottom: 25px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .btn-razred {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px 15px;
+            color: white;
+            text-decoration: none;
+            border-radius: 16px;
+            font-weight: bold;
+            font-size: 18px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-razred span {
+            font-size: 32px;
+            margin-bottom: 6px;
+        }
+
+        .btn-razred:hover { 
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+
+        /* Žive i prepoznatljive boje za razrede */
+        .r1 { background-color: #ef4444; } /* Crvena */
+        .r2 { background-color: #f59e0b; } /* Žuta/Narančasta */
+        .r3 { background-color: #10b981; } /* Zelena */
+        .r4 { background-color: #3b82f6; } /* Plava */
+
+        .r1:hover { background-color: #dc2626; }
+        .r2:hover { background-color: #d97706; }
+        .r3:hover { background-color: #059669; }
+        .r4:hover { background-color: #2563eb; }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        @media (max-width: 420px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
 
-    <h2>Zadatci informatika:</h2>
-    <ul id="popis"></ul>
-
-    <script>
-        // Samo promijenite ova 2 podatka:
-        const korisnik = "azvonimir-dev";
-        const repo = "Skola";
-
-        fetch(`https://api.github.com/repos/${korisnik}/${repo}/contents/`)
-            .then(res => res.json())
-            .then(files => {
-                const ul = document.getElementById('popis');
-                files.filter(f => f.name.endsWith('.html') && f.name !== 'index.html').forEach(f => {
-                    ul.innerHTML += `<li><a href="${f.name}">${f.name}</a></li>`;
-                });
-            });
-    </script>
+<div class="card">
+    <div class="icon-header">💻</div>
+    <h2>Portal za Informatiku</h2>
+    <p>Odaberi svoj razred i kreni na radne listiće:</p>
+    
+    <div class="grid">
+        <a class="btn-razred r1" href="1razred/">
+            <span>🎨</span>
+            1. Razred
+        </a>
+        <a class="btn-razred r2" href="2razred/">
+            <span>🧩</span>
+            2. Razred
+        </a>
+        <a class="btn-razred r3" href="3razred/">
+            <span>🤖</span>
+            3. Razred
+        </a>
+        <a class="btn-razred r4" href="4razred/">
+            <span>🚀</span>
+            4. Razred
+        </a>
+    </div>
+</div>
 
 </body>
 </html>
