@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interaktivni listić: Računalni programi (2. razred)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', sans-serif;
+            background-color: #f0fdf4;
+        }
+        .card {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8 text-gray-800">
+    <div class="max-w-4xl mx-auto bg-white rounded-3xl p-6 md:p-10 border-4 border-green-400 card">
+        <!-- Header -->
+        <header class="text-center mb-8 border-b-4 border-dashed border-green-300 pb-6">
+            <h1 class="text-3xl md:text-4xl font-extrabold text-green-600 mb-2">💻 Računalni Programi 💻</h1>
+            <p class="text-lg text-gray-600 font-medium">Interaktivni listić za 2. razred osnovne škole</p>
+            <div class="mt-4 inline-block bg-yellow-100 border-2 border-yellow-400 text-yellow-800 px-4 py-2 rounded-full text-sm md:text-base font-semibold">
+                Riješi 20 zadataka i provjeri svoje znanje! 🌟
+            </div>
+        </header>
+
+        <!-- Quiz Form -->
+        <form id="quizForm" onsubmit="event.preventDefault(); checkAnswers();">
+            <div id="questionsContainer" class="space-y-8">
+                <!-- Questions will be injected dynamically -->
+            </div>
+
+            <!-- Submit Button -->
+            <div class="mt-10 text-center">
+                <button type="submit" class="bg-green-500 hover:bg-green-600 text-white font-bold text-xl px-8 py-4 rounded-full shadow-lg transform transition active:scale-95 hover:scale-105 border-b-4 border-green-700">
+                    ✅ Provjeri odgovore!
+                </button>
+            </div>
+        </form>
+
+        <!-- Result Section -->
+        <div id="resultModal" class="hidden mt-10 p-6 bg-blue-50 border-4 border-blue-400 rounded-2xl text-center shadow-lg">
+            <h2 id="resultTitle" class="text-3xl font-bold mb-2"></h2>
+            <p id="resultScore" class="text-2xl font-semibold mb-4"></p>
+            <p id="resultMessage" class="text-lg text-gray-700 mb-6"></p>
+            <button onclick="resetQuiz()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold px-6 py-3 rounded-full text-lg shadow border-b-4 border-blue-700">
+                🔄 Pokušaj ponovno
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const questionsData = [
+            {
+                id: 1,
+                question: "1. Na računalu sve radiš pomoću programa i...",
+                options: ["igračaka", "aplikacija", "papira"],
+                correct: "aplikacija"
+            },
+            {
+                id: 2,
+                question: "2. Što ti je potrebno na računalu uz monitor, tipkovnicu i miša da bi mogao raditi?",
+                options: ["Samo struja", "Programi i aplikacije", "Nita, sve radi samo od sebe"],
+                correct: "Programi i aplikacije"
+            },
+            {
+                id: 3,
+                question: "3. Koji ćemo program pokrenuti ako želimo zbrojiti brojeve 23 i 61?",
+                options: ["Program za crtanje (Bojanje)", "Kalkulator (Program za računanje)", "Snimač zvuka"],
+                correct: "Kalkulator (Program za računanje)"
+            },
+            {
+                id: 4,
+                question: "4. Računalo radi prema uputama koje nazivamo...",
+                options: ["programima", "pjesmicama", "slikama"],
+                correct: "programima"
+            },
+            {
+                id: 5,
+                question: "5. Što je to program (skup uputa za računalo)?",
+                options: ["Niz crteža", "Niz naredbi koje kažu računalu što treba raditi", "Kutija u kojoj stoji računalo"],
+                correct: "Niz naredbi koje kažu računalu što treba raditi"
+            },
+            {
+                id: 6,
+                question: "6. Prije nego što računalo može pokrenuti bilo koji program, mora se pokrenuti:",
+                options: ["Program za crtanje", "Operacijski sustav", "Internet browser"],
+                correct: "Operacijski sustav"
+            },
+            {
+                id: 7,
+                question: "7. Točno ili Netočno: Windows je vrsta operacijskog sustava.",
+                options: ["Točno", "Netočno"],
+                correct: "Točno"
+            },
+            {
+                id: 8,
+                question: "8. Kojem operacijskom sustavu pripada Android?",
+                options: ["Operacijskim sustavima koji se često koriste na pametnim telefonima i tabletima", "Programima za crtanje", "Programima za računanje"],
+                correct: "Operacijskim sustavima koji se često koriste na pametnim telefonima i tabletima"
+            },
+            {
+                id: 9,
+                question: "9. Označi sve operacijske sustave s popisa:",
+                options: ["Windows, Android, iOS, Linux", "Kalkulator, Bojanje, Scratch", "Čaj, Voda, Limun"],
+                correct: "Windows, Android, iOS, Linux"
+            },
+            {
+                id: 10,
+                question: "10. Program koji nam omogućuje da pokrenemo i koristimo računalo zove se:",
+                options: ["Program za igru", "Operacijski sustav", "Pisač"],
+                correct: "Operacijski sustav"
+            },
+            {
+                id: 11,
+                question: "11. Mogu li se operacijski sustavi nalaziti na tabletima i pametnim telefonima?",
+                options: ["Da", "Ne"],
+                correct: "Da"
+            },
+            {
+                id: 12,
+                question: "12. Male sličice na zaslonu koje otvaraju određene programe nazivaju se:",
+                options: ["Naljepnice", "Ikone", "Fotografije"],
+                correct: "Ikone"
+            },
+            {
+                id: 13,
+                question: "13. Koja od ovih aplikacija služi za stvaranje priča i igara učenjem kodiranja?",
+                options: ["Scratch", "Kalkulator", "Windows"],
+                correct: "Scratch"
+            },
+            {
+                id: 14,
+                question: "14. Ako želimo snimiti svoj glas na računalu, upotrijebit ćemo:",
+                options: ["Kalkulator", "Snimač zvuka", "Bojanje"],
+                correct: "Snimač zvuka"
+            },
+            {
+                id: 15,
+                question: "15. Ako pratim korake za kuhanje čaja: 1. Zakuhaj vodu, 2. Stavi vrećicu čaja, 3. Neka odstoji, ja zapravo pratim:",
+                options: ["Naredbe i upute", "Računalo", "Video igru"],
+                correct: "Naredbe i upute"
+            },
+            {
+                id: 16,
+                question: "16. Zbroj brojeva 23 i 61 iznosi:",
+                options: ["84", "74", "94"],
+                correct: "84"
+            },
+            {
+                id: 17,
+                question: "17. Točno ili Netočno: MacOSX i Linux su također operacijski sustavi.",
+                options: ["Točno", "Netočno"],
+                correct: "Točno"
+            },
+            {
+                id: 18,
+                question: "18. Što od navedenog NIJE program za različite namjene nego je OPERACIJSKI SUSTAV?",
+                options: ["Bojanje", "Windows", "Kalkulator"],
+                correct: "Windows"
+            },
+            {
+                id: 19,
+                question: "19. Kada upalimo računalo, na monitoru se prvo pokreće:",
+                options: ["Igra", "Operacijski sustav", "Crtež"],
+                correct: "Operacijski sustav"
+            },
+            {
+                id: 20,
+                question: "20. Postoji li samo jedna vrsta programa ili ih ima više za različite namjene?",
+                options: ["Postoji samo jedan program za sve", "Postoji više vrsta programa za različite namjene"],
+                correct: "Postoji više vrsta programa za različite namjene"
+            }
+        ];
+
+        function renderQuiz() {
+            const container = document.getElementById('questionsContainer');
+            container.innerHTML = '';
+
+            questionsData.forEach((q, index) => {
+                const qCard = document.createElement('div');
+                qCard.className = 'p-5 bg-emerald-50 rounded-2xl border-2 border-emerald-200';
+                
+                let optionsHTML = '';
+                q.options.forEach((opt, optIndex) => {
+                    optionsHTML += `
+                        <label class="flex items-center space-x-3 p-3 rounded-xl bg-white border border-gray-200 cursor-pointer hover:bg-green-100 transition">
+                            <input type="radio" name="question_${q.id}" value="${opt}" class="w-5 h-5 text-green-600 focus:ring-green-500">
+                            <span class="text-base md:text-lg text-gray-700 font-medium">${opt}</span>
+                        </label>
+                    `;
+                });
+
+                qCard.innerHTML = `
+                    <p class="text-lg md:text-xl font-bold text-green-900 mb-4">${q.question}</p>
+                    <div class="space-y-2">${optionsHTML}</div>
+                    <div id="feedback_${q.id}" class="mt-3 font-semibold text-base hidden"></div>
+                `;
+                container.appendChild(qCard);
+            });
+        }
+
+        function checkAnswers() {
+            let score = 0;
+            
+            questionsData.forEach((q) => {
+                const selected = document.querySelector(`input[name="question_${q.id}"]:checked`);
+                const feedbackEl = document.getElementById(`feedback_${q.id}`);
+                
+                feedbackEl.classList.remove('hidden', 'text-green-600', 'text-red-500');
+
+                if (selected && selected.value === q.correct) {
+                    score++;
+                    feedbackEl.innerHTML = '✨ Točno! Bravo!';
+                    feedbackEl.classList.add('text-green-600');
+                } else {
+                    feedbackEl.innerHTML = `❌ Netočno. Točan odgovor je: <strong>${q.correct}</strong>`;
+                    feedbackEl.classList.add('text-red-500');
+                }
+            });
+
+            // Display Results Modal/Section
+            const resultModal = document.getElementById('resultModal');
+            const resultTitle = document.getElementById('resultTitle');
+            const resultScore = document.getElementById('resultScore');
+            const resultMessage = document.getElementById('resultMessage');
+
+            resultScore.innerHTML = `Tvoj rezultat je: <span class="text-green-600 font-bold">${score} / ${questionsData.length}</span>`;
+
+            if (score === 20) {
+                resultTitle.innerText = "🏆 Fantastično! Super znalac!";
+                resultMessage.innerText = "Riješio/la si sve zadatke bez greške! Odlično poznaješ računala!";
+            } else if (score >= 15) {
+                resultTitle.innerText = "🌟 Bravo! Vrlo dobro!";
+                resultMessage.innerText = "Napravio/la si samo nekoliko grešaka. Bravo za trud!";
+            } else if (score >= 10) {
+                resultTitle.innerText = "👍 Dobar posao!";
+                resultMessage.innerText = "Možeš još malo ponoviti gradivo iz udžbenika i pokušati ponovno!";
+            } else {
+                resultTitle.innerText = "💪 Nemoj odustati!";
+                resultMessage.innerText = "Pogledaj još jednom stranice u knjizi pa ponovi kviz!";
+            }
+
+            resultModal.classList.remove('hidden');
+            resultModal.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function resetQuiz() {
+            document.getElementById('quizForm').reset();
+            const feedbacks = document.querySelectorAll('[id^="feedback_"]');
+            feedbacks.forEach(f => f.classList.add('hidden'));
+            
+            const resultModal = document.getElementById('resultModal');
+            resultModal.classList.add('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Initialize Quiz
+        renderQuiz();
+    </script>
+</body>
+</html>
