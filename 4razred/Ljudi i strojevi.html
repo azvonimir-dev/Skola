@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interaktivni listić: Ljudi i strojevi (4. razred)</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, #e0f2fe 0%, #f3e8ff 100%);
+            min-height: 100vh;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
+        }
+        .option-card:hover {
+            transform: translateY(-2px);
+        }
+        /* Custom progress bar animation */
+        .progress-bar-fill {
+            transition: width 0.4s ease-in-out;
+        }
+    </style>
+</head>
+<body class="py-6 px-3 md:px-8 text-slate-800">
+
+    <div class="max-w-4xl mx-auto">
+        <!-- Header -->
+        <header class="glass-card rounded-3xl p-6 md:p-8 mb-8 text-center border-t-8 border-indigo-500 relative overflow-hidden">
+            <div class="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-indigo-100 rounded-full blur-xl opacity-70 pointer-events-none"></div>
+            <div class="absolute bottom-0 left-0 -mb-4 -ml-4 w-24 h-24 bg-purple-100 rounded-full blur-xl opacity-70 pointer-events-none"></div>
+
+            <span class="inline-block px-4 py-1.5 bg-indigo-100 text-indigo-700 font-bold rounded-full text-sm mb-3 tracking-wide">
+                INFORMATIKA • 4. RAZRED
+            </span>
+            <h1 class="text-3xl md:text-5xl font-extrabold text-slate-900 tracking-tight mb-3">
+                🤖 Ljudi i strojevi 🦾
+            </h1>
+            <p class="text-slate-600 font-medium text-base md:text-lg max-w-2xl mx-auto">
+                Provjeri svoje znanje o robotima, njihovim mogućnostima, prednostima nad strojevima i suradnji čovjeka i tehnologije!
+            </p>
+
+            <!-- Score Progress Bar sticky top -->
+            <div class="mt-6 pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-4 text-sm font-semibold text-slate-600">
+                <div class="flex items-center gap-2">
+                    <span>📊 Pitanja: 20 zadataka</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span>⏱️ Vrijeme: Neograničeno</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span id="answeredCounter" class="text-indigo-600 font-bold">Riješeno: 0/20</span>
+                </div>
+            </div>
+        </header>
+
+        <form id="quizForm" onsubmit="event.preventDefault(); processQuiz();">
+            <div id="questionsList" class="space-y-6">
+                <!-- Dynamic insertion of questions -->
+            </div>
+
+            <div class="mt-10 mb-12 text-center">
+                <button type="submit" id="submitBtn" class="w-full md:w-auto bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-700 hover:to-pink-700 text-white font-extrabold text-xl px-10 py-4 rounded-2xl shadow-xl hover:shadow-2xl transform active:scale-95 transition duration-200 border-b-4 border-indigo-900">
+                    🚀 Predaj i provjeri odgovore!
+                </button>
+            </div>
+        </form>
+
+        <div id="resultCard" class="hidden glass-card rounded-3xl p-8 text-center border-4 border-indigo-300 shadow-2xl mb-12 animate-fade-in">
+            <div class="text-6xl mb-4" id="resultEmoji">🏆</div>
+            <h2 id="resultTitle" class="text-3xl md:text-4xl font-extrabold text-slate-900 mb-2"></h2>
+            <div class="inline-flex items-center gap-2 bg-indigo-50 border border-indigo-200 px-6 py-3 rounded-2xl mb-4">
+                <span class="text-slate-600 font-semibold text-lg">Tvoj rezultat:</span>
+                <span id="resultScore" class="text-3xl font-black text-indigo-600"></span>
+            </div>
+            <p id="resultFeedback" class="text-slate-700 text-lg font-medium max-w-xl mx-auto mb-8"></p>
+            
+            <div class="flex flex-wrap justify-center gap-4">
+                <button onclick="resetQuiz()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-8 py-3.5 rounded-xl shadow-lg transition active:scale-95">
+                    🔄 Riješi ponovno
+                </button>
+                <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-8 py-3.5 rounded-xl transition">
+                    ⬆️ Pregledaj odgovore
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Audio synthesis for micro-interactions without external files
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSound(type) {
+            try {
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                if (type === 'correct') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+                    osc.frequency.exponentialRampToValueAtTime(659.25, audioCtx.currentTime + 0.15); // E5
+                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.3);
+                } else if (type === 'click') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+                    gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.05);
+                } else if (type === 'finish') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.3);
+                    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.5);
+                }
+            } catch (e) {
+                // Fallback if browser blocks audio
+            }
+        }
+
+        // 20 Questions Data directly tailored to "1.2 Ljudi i strojevi"
+        const quizQuestions = [
+            {
+                id: 1,
+                q: "Što su roboti u današnjem svijetu?",
+                options: ["Obične igračke koje rade na baterije", "Pametni strojevi i uređaji koji mogu samostalno obavljati neke poslove", "Ljudska bića napravljena od metala"],
+                correct: "Pametni strojevi i uređaji koji mogu samostalno obavljati neke poslove",
+                exp: "Roboti su pametni strojevi koji samostalno izvršavaju zadatke prema zadanim programima."
+            },
+            {
+                id: 2,
+                q: "Koji od navedenih kućanskih poslova roboti danas mogu samostalno obavljati u kućanstvu?",
+                options: ["Gledati televiziju s ukućanima", "Čistiti i usisavati podove", "Kuhati ručak po vlastitoj želji"],
+                correct: "Čistiti i usisavati podove",
+                exp: "Robotski usisavači sami obilaze prostorije i čiste kuću."
+            },
+            {
+                id: 3,
+                q: "Kako roboti pomažu u poljoprivredi?",
+                options: ["Samostalno beru plodove (npr. rajčice)", "Pjevaju biljkama da brže rastu", "Jedu ubrane plodove"],
+                correct: "Samostalno beru plodove (npr. rajčice)",
+                exp: "Moderni roboti u poljoprivredi mogu prepoznati zrele plodove i pažljivo ih ubrati."
+            },
+            {
+                id: 4,
+                q: "Na koji način roboti pomažu u automobilskoj industriji?",
+                options: ["Voze automobile na utrkama", "Sklapaju i spajaju dijelove automobila na traci", "Kupuju nove automobile"],
+                correct: "Sklapaju i spajaju dijelove automobila na traci",
+                exp: "Industrijski roboti precizno sklapaju i vare dijelove vozila u tvornicama."
+            },
+            {
+                id: 5,
+                q: "Točno ili Netočno: Moderni zrakoplovi su danas u velikoj mjeri robotizirani i ne bi mogli letjeti bez pomoći računala.",
+                options: ["Točno", "Netočno"],
+                correct: "Točno",
+                exp: "Računala i autopilot sustavi upravljaju većinom letnih operacija u zrakoplovima."
+            },
+            {
+                id: 6,
+                q: "Mogu li automobili danas sami obavljati neke radnje u vožnji?",
+                options: ["Ne, niti jedan automobil ne može ništa sam", "Da, neki se automobili sami parkiraju ili već sami voze"],
+                correct: "Da, neki se automobili sami parkiraju ili već sami voze",
+                exp: "Napredni automobili imaju senzore pomoću kojih se mogu sami parkirati pa i voziti."
+            },
+            {
+                id: 7,
+                q: "Mogu li strojevi i roboti osjećati i samostalno razmišljati kao čovjek?",
+                options: ["Da, roboti imaju prave osjećaje", "Ne, strojevi ne mogu razmišljati niti osjećati"],
+                correct: "Ne, strojevi ne mogu razmišljati niti osjećati",
+                exp: "Strojevi nemaju emocije i ne mogu sami razmišljati izvan uputa koje su dobili."
+            },
+            {
+                id: 8,
+                q: "Zašto strojevi ne mogu samostalno donositi vlastite životne odluke?",
+                options: ["Zato što ovise o računalima i programima koje im je zadao čovjek", "Zato što su previše lijeni", "Zato što nemaju dovoljno baterije"],
+                correct: "Zato što ovise o računalima i programima koje im je zadao čovjek",
+                exp: "Strojevi su automatizirani i rade samo ono za što ih je čovjek programirao."
+            },
+            {
+                id: 9,
+                q: "Može li robot samostalno (iz vlastite mašte) napisati prekrasnu pjesmicu ili nacrtati likovni rad s emocijama?",
+                options: ["Da, izrazito su maštoviti", "Ne, oni su samo automatizirani strojevi kojima netko upravlja"],
+                correct: "Ne, oni su samo automatizirani strojevi kojima netko upravlja",
+                exp: "Stvaralaštvo, mašta i osjećaji rezervirani su za čovjeka."
+            },
+            {
+                id: 10,
+                q: "Koja je jedna od velikih prednosti robota u usporedbi s ljudskim radnicima?",
+                options: ["Roboti ne idu na godišnji odmor i ne umaraju se", "Roboti vole ići na pauzu za kavu", "Roboti spavaju svaku noć 8 sati"],
+                correct: "Roboti ne idu na godišnji odmor i ne umaraju se",
+                exp: "Roboti mogu raditi bez stanke, odmora i ne osjećaju umor."
+            },
+            {
+                id: 11,
+                q: "U koje doba dana roboti mogu obavljati svoje poslove?",
+                options: ["Samo ujutro po suncu", "Samo poslijepodne", "I po danu i u potpunom mraku"],
+                correct: "I po danu i u potpunom mraku",
+                exp: "Roboti ne trebanju svjetlost za rad osim ako je riječ o posebnim vizualnim senzorima."
+            },
+            {
+                id: 12,
+                q: "Koliko ljudskih radnika robot može zamijeniti svojom učinkovitošću na pojedinim poslovima?",
+                options: ["Samo polovicu jednog radnika", "Dva do pet radnika", "Više od sto tisuća radnika odjednom"],
+                correct: "Dva do pet radnika",
+                exp: "Učinkovitošću jedan industrijski robot može zamijeniti 2 do 5 radnika na traci."
+            },
+            {
+                id: 13,
+                q: "Što znači pojam 'interakcija čovjek – stroj'?",
+                options: ["Kada čovjek i stroj zajedno surađuju u obavljanju nekog posla", "Kada se čovjek svađa sa strojem", "Kada stroj pobijedi čovjeka u utrci"],
+                correct: "Kada čovjek i stroj zajedno surađuju u obavljanju nekog posla",
+                exp: "Interakcija označava zajednički rad i međusobno djelovanje čovjeka i stroja."
+            },
+            {
+                id: 14,
+                q: "Gdje nalazimo jedan od najboljih primjera zajedničke suradnje čovjeka i robota?",
+                options: ["U medicini (npr. prilikom operacija ili dijagnostike)", "U crtanju slikovnica", "U pisanju domaćih zadaća iz hrvatskog jezika"],
+                correct: "U medicini (npr. prilikom operacija ili dijagnostike)",
+                exp: "U medicini robot pomaže kirurgu preciznim pokretima tijekom operativnih zahvata."
+            },
+            {
+                id: 15,
+                q: "Tko donosi konačne odluke kako dalje postupati prilikom liječenja pacijenta u bolnici?",
+                options: ["Robot koji samostalno liječi", "Liječnik na temelju podataka koje dijagnosticira robot", "Medicinski krevet"],
+                correct: "Liječnik na temelju podataka koje dijagnosticira robot",
+                exp: "Liječnik (čovjek) uvijek donosi konačnu stručnu odluku na temelju nalaza."
+            },
+            {
+                id: 16,
+                q: "Kako se roboti koriste nakon nesreća ili ozljeda pacijenata?",
+                options: ["Za zabavu u bolničkoj čekaonici", "Kao pomoć pacijentima u rehabilitaciji i bržem oporavku", "Za čišćenje automobila ispred bolnice"],
+                correct: "Kao pomoć pacijentima u rehabilitaciji i bržem oporavku",
+                exp: "Robotski uređaji pomažu pacijentima ponovno naučiti hodati ili pokretati udove."
+            },
+            {
+                id: 17,
+                q: "Dopuni rečenicu: Strojevi uvelike olakšavaju rad, ali je čovjekova prisutnost ipak...",
+                options: ["nepotrebna", "nezamjenjiva", "štetna"],
+                correct: "nezamjenjiva",
+                exp: "Čovjekova prisutnost, razum i osjećaji su nezamjenjivi bez obzira na napredak tehnologije."
+            },
+            {
+                id: 18,
+                q: "Što od navedenog može učiniti samo ČOVJEK, a stroj NE MOŽE?",
+                options: ["Izračunati 1000 matematičkih zadataka u sekundi", "Iskreno se razveseliti roditeljima peticom iz matematike", "Raditi 24 sata bez prestanka"],
+                correct: "Iskreno se razveseliti roditeljima peticom iz matematike",
+                exp: "Ljudski osjećaji poput radosti i sreće svojstveni su samo ljudima!"
+            },
+            {
+                id: 19,
+                q: "Tko upravlja automatiziranim strojevima i usmjerava njihov rad?",
+                options: ["Čovjek (programeri i operateri)", "Priroda", "Drugi strojevi sami od sebe bez ljudskog utjecaja"],
+                correct: "Čovjek (programeri i operateri)",
+                exp: "Iza svakog stroja i robota stoji čovjek koji ga je stvorio i programirao."
+            },
+            {
+                id: 20,
+                q: "Mogu li strojevi i roboti u potpunosti zamijeniti sve što čine ljudi?",
+                options: ["Da, roboti u svemu mogu zamijeniti čovjeka", "Ne, strojevi ne mogu zamijeniti ljudsku maštu, emocije i razum"],
+                correct: "Ne, strojevi ne mogu zamijeniti ljudsku maštu, emocije i razum",
+                exp: "Strojevi su naši pomagači, ali ljudi su jedinstveni zbog svog razuma i osjećaja."
+            }
+        ];
+
+        function renderQuiz() {
+            const container = document.getElementById('questionsList');
+            container.innerHTML = '';
+
+            quizQuestions.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = 'glass-card rounded-2xl p-5 md:p-6 transition border-l-4 border-indigo-400';
+                card.id = `qCard_${item.id}`;
+
+                let optionsHTML = item.options.map((opt, optIdx) => `
+                    <label onclick="playSound('click'); updateProgress();" class="option-card flex items-start gap-3 p-3.5 rounded-xl border border-slate-200 bg-white hover:bg-indigo-50/50 cursor-pointer transition">
+                        <input type="radio" name="q_${item.id}" value="${opt}" class="mt-1 w-4 h-4 text-indigo-600 focus:ring-indigo-500">
+                        <span class="text-slate-700 font-medium text-base md:text-lg leading-snug">${opt}</span>
+                    </label>
+                `).join('');
+
+                card.innerHTML = `
+                    <div class="flex items-center justify-between gap-2 mb-3">
+                        <span class="text-xs font-bold uppercase tracking-wider px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full">
+                            Zadatak ${index + 1}
+                        </span>
+                    </div>
+                    <h3 class="text-lg md:text-xl font-bold text-slate-900 mb-4 leading-snug">${item.q}</h3>
+                    <div class="space-y-2.5">${optionsHTML}</div>
+                    <div id="exp_${item.id}" class="hidden mt-4 p-3.5 rounded-xl text-sm font-medium leading-relaxed"></div>
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        // Live selection counter update
+        function updateProgress() {
+            let answered = 0;
+            quizQuestions.forEach(q => {
+                if (document.querySelector(`input[name="q_${q.id}"]:checked`)) {
+                    answered++;
+                }
+            });
+            document.getElementById('answeredCounter').innerText = `Riješeno: ${answered}/20`;
+        }
+
+        function processQuiz() {
+            let score = 0;
+
+            quizQuestions.forEach((q) => {
+                const selected = document.querySelector(`input[name="q_${q.id}"]:checked`);
+                const card = document.getElementById(`qCard_${q.id}`);
+                const expBox = document.getElementById(`exp_${q.id}`);
+
+                expBox.classList.remove('hidden', 'bg-emerald-50', 'text-emerald-800', 'border-emerald-300', 'bg-rose-50', 'text-rose-800', 'border-rose-300');
+                expBox.classList.add('border');
+
+                if (selected && selected.value === q.correct) {
+                    score++;
+                    card.className = 'glass-card rounded-2xl p-5 md:p-6 transition border-l-8 border-emerald-500 bg-emerald-50/30';
+                    expBox.classList.add('bg-emerald-50', 'text-emerald-900', 'border-emerald-200');
+                    expBox.innerHTML = `✅ <strong>Točno!</strong> ${q.exp}`;
+                } else {
+                    card.className = 'glass-card rounded-2xl p-5 md:p-6 transition border-l-8 border-rose-500 bg-rose-50/30';
+                    expBox.classList.add('bg-rose-50', 'text-rose-900', 'border-rose-200');
+                    expBox.innerHTML = `❌ <strong>Netočno.</strong> Točan odgovor je: <em>"${q.correct}"</em>.<br><span class="text-xs opacity-90 mt-1 block">${q.exp}</span>`;
+                }
+            });
+
+            // Display Results
+            const resultCard = document.getElementById('resultCard');
+            const resultTitle = document.getElementById('resultTitle');
+            const resultScore = document.getElementById('resultScore');
+            const resultFeedback = document.getElementById('resultFeedback');
+            const resultEmoji = document.getElementById('resultEmoji');
+
+            resultScore.innerText = `${score} / 20`;
+
+            if (score === 20) {
+                resultEmoji.innerText = "🏆";
+                resultTitle.innerText = "Izvrsno! Majstor tehnologije!";
+                resultFeedback.innerText = "Savršeno razumiješ ulogu robota, njihove prednosti te važnost čovjeka u svijetu strojeva!";
+            } else if (score >= 16) {
+                resultEmoji.innerText = "🌟";
+                resultTitle.innerText = "Odlično obavljeno!";
+                resultFeedback.innerText = "Prikazao/la si sjajno znanje! Napravio/la si samo nekoliko malih grešaka.";
+            } else if (score >= 10) {
+                resultEmoji.innerText = "👍";
+                resultTitle.innerText = "Dobar rezultat!";
+                resultFeedback.innerText = "Znaš osnovne pojmove o strojevima, no provjeri objašnjenja za pitanja na koja nisi točno odgovorio/la.";
+            } else {
+                resultEmoji.innerText = "📚";
+                resultTitle.innerText = "Pokušaj još jednom!";
+                resultFeedback.innerText = "Pročitaj još jednom lekciju 'Ljudi i strojevi' u udžbeniku i ponovno pokreni kviz!";
+            }
+
+            playSound('finish');
+            resultCard.classList.remove('hidden');
+            resultCard.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function resetQuiz() {
+            document.getElementById('quizForm').reset();
+            
+            quizQuestions.forEach(q => {
+                const card = document.getElementById(`qCard_${q.id}`);
+                const expBox = document.getElementById(`exp_${q.id}`);
+                card.className = 'glass-card rounded-2xl p-5 md:p-6 transition border-l-4 border-indigo-400';
+                expBox.classList.add('hidden');
+            });
+
+            document.getElementById('resultCard').classList.add('hidden');
+            updateProgress();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Initialize quiz rendering
+        renderQuiz();
+    </script>
+</body>
+</html>
