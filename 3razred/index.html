@@ -1,1 +1,207 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3. Razred - Zadatci</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            transition: all 0.2s ease-in-out;
+        }
 
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #fee2e2 0%, #fef2f2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+            border: 3px solid #fca5a5;
+        }
+
+        .header-icon {
+            font-size: 48px;
+            margin-bottom: 5px;
+        }
+
+        h2 { 
+            color: #dc2626; 
+            margin-top: 0;
+            font-size: 26px;
+            margin-bottom: 5px;
+        }
+
+        p { 
+            color: #64748b; 
+            font-size: 15px; 
+            margin-bottom: 20px;
+        }
+
+        /* Tražilica za brze zadatke */
+        .search-box {
+            width: 100%;
+            padding: 12px 15px;
+            font-size: 15px;
+            border: 2px solid #fecaca;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            outline: none;
+        }
+
+        .search-box:focus {
+            border-color: #ef4444;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+        }
+
+        /* Dinamička lista zadataka */
+        .lista-zadataka {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: 320px;
+            overflow-y: auto;
+            padding-right: 5px;
+            margin-bottom: 25px;
+        }
+
+        .btn-zadatak {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 18px;
+            background-color: #fef2f2;
+            color: #991b1b;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 17px;
+            border: 2px solid #fecaca;
+        }
+
+        .btn-zadatak:hover {
+            background-color: #ef4444;
+            color: white;
+            border-color: #dc2626;
+            transform: translateX(4px);
+        }
+
+        .btn-back {
+            display: inline-block;
+            color: #64748b;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: bold;
+            padding: 8px 16px;
+            border-radius: 8px;
+            background: #f1f5f9;
+        }
+
+        .btn-back:hover {
+            background: #e2e8f0;
+            color: #1e293b;
+        }
+
+        .poruka-prazno {
+            color: #94a3b8;
+            font-style: italic;
+            padding: 20px 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div class="header-icon">🎨</div>
+    <h2>3. Razred - Zadatci</h2>
+    <p>Odaberi vježbu ili radni listić:</p>
+
+    <!-- Prettraga -->
+    <input type="text" id="trazi" class="search-box" placeholder="🔍 Pretraži zadatke..." onkeyup="filtrirajZadatke()">
+
+    <!-- Kontejner gdje JavaScript učitava gumbe s datotekama -->
+    <div id="lista" class="lista-zadataka">
+        <div class="poruka-prazno">Učitavanje zadataka...</div>
+    </div>
+
+    <a class="btn-back" href="../">← Povratak na popis razreda</a>
+</div>
+
+<script>
+    const korisnik = "azvonimir-dev";
+    const repo = "Skola";
+    const mapa = "3razred"; // Naziv ove mape
+
+    let sviZadatci = [];
+
+    // Dohvaćanje datoteka s GitHub API-ja
+    fetch(`https://api.github.com/repos/${korisnik}/${repo}/contents/${mapa}`)
+        .then(res => res.json())
+        .then(files => {
+            const kontejner = document.getElementById('lista');
+            kontejner.innerHTML = '';
+
+            if (!Array.isArray(files)) {
+                kontejner.innerHTML = '<div class="poruka-prazno">Trenutno nema dostupnih zadataka u ovoj mapi.</div>';
+                return;
+            }
+
+            // Filtriraj samo .html datoteke i izbaci sam index.html
+            sviZadatci = files.filter(f => f.name.endsWith('.html') && f.name.toLowerCase() !== 'index.html');
+
+            if (sviZadatci.length === 0) {
+                kontejner.innerHTML = '<div class="poruka-prazno">Trenutno nema zadataka u mapi.</div>';
+            } else {
+                prikaziZadatke(sviZadatci);
+            }
+        })
+        .catch(err => {
+            document.getElementById('lista').innerHTML = '<div class="poruka-prazno">Greška pri učitavanju. Provjerite vezu.</div>';
+        });
+
+    // Prikaz gumba na stranici
+    function prikaziZadatke(lista) {
+        const kontejner = document.getElementById('lista');
+        kontejner.innerHTML = '';
+
+        if (lista.length === 0) {
+            kontejner.innerHTML = '<div class="poruka-prazno">Nije pronađen nijedan zadatak.</div>';
+            return;
+        }
+
+        lista.forEach(f => {
+            // Uljepšavanje naziva datoteke: "vjezba-1.html" -> "Vjezba 1"
+            let lijepiNaziv = f.name.replace('.html', '').replace(/[-_]/g, ' ');
+            lijepiNaziv = lijepiNaziv.charAt(0).toUpperCase() + lijepiNaziv.slice(1);
+
+            kontejner.innerHTML += `
+                <a class="btn-zadatak" href="${f.name}">
+                    <span>📄 ${lijepiNaziv}</span>
+                    <span>➔</span>
+                </a>
+            `;
+        });
+    }
+
+    // Funkcija za tražilicu
+    function filtrirajZadatke() {
+        const unos = document.getElementById('trazi').value.toLowerCase();
+        const filtrirani = sviZadatci.filter(f => f.name.toLowerCase().includes(unos));
+        prikaziZadatke(filtrirani);
+    }
+</script>
+
+</body>
+</html>
