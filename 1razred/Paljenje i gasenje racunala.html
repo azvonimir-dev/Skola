@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulacija: Ugasi računalo! 🖥️ (Windows / Mac / Linux)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        body {
+            font-family: 'Fredoka', cursive, sans-serif;
+            user-select: none;
+            overflow: hidden;
+            background-color: #0f172a;
+        }
+
+        /* Windows Theme Wallpaper */
+        .theme-win {
+            background: linear-gradient(135deg, #0f4c81 0%, #1e3c72 50%, #2a5298 100%);
+        }
+
+        /* Mac Theme Wallpaper */
+        .theme-mac {
+            background: linear-gradient(135deg, #ff7e5f 0%, #feb47b 40%, #86a8e7 100%);
+        }
+
+        /* Linux Theme Wallpaper */
+        .theme-linux {
+            background: linear-gradient(135deg, #7b4397 0%, #dc2430 100%);
+        }
+
+        /* Highlight animation for visual hint */
+        @keyframes hint-pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.9); transform: scale(1); }
+            50% { box-shadow: 0 0 0 16px rgba(250, 204, 21, 0); transform: scale(1.06); }
+        }
+
+        .highlight-hint {
+            animation: hint-pulse 1.3s infinite;
+            border: 3px solid #facc15 !important;
+            z-index: 50 !important;
+        }
+
+        @keyframes bounce-hand {
+            0%, 100% { transform: translateY(0) rotate(-10deg); }
+            50% { transform: translateY(-12px) rotate(-10deg); }
+        }
+
+        .pointing-hand {
+            animation: bounce-hand 1.2s infinite ease-in-out;
+            pointer-events: none;
+        }
+
+        .shutdown-fade {
+            animation: shutdown-anim 2s forwards ease-in-out;
+        }
+
+        @keyframes shutdown-anim {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col justify-between select-none overflow-hidden text-slate-100">
+
+    <header class="bg-indigo-950/90 border-b border-indigo-800/60 px-4 py-2 flex justify-between items-center z-40 shadow-lg">
+        <div class="flex items-center gap-3">
+            <span class="text-2xl md:text-3xl">🖥️</span>
+            <div>
+                <h1 id="header-title" class="text-base md:text-xl font-bold text-amber-300">Nauči ugasiti računalo!</h1>
+                <p id="step-instruction" class="text-xs md:text-sm text-slate-200 font-semibold">
+                    Odaberi svoje računalo za početak vježbe!
+                </p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <button id="btn-audio-repeat" onclick="speakCurrentInstruction()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1.5 rounded-xl shadow text-xs md:text-sm flex items-center gap-1 transition active:scale-95">
+                🔊 <span>Ponovi</span>
+            </button>
+            <button onclick="showOsSelector()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-3 py-1.5 rounded-xl text-xs md:text-sm transition active:scale-95 flex items-center gap-1">
+                💻 <span>Promijeni OS</span>
+            </button>
+        </div>
+    </header>
+
+    <main id="main-container" class="relative flex-grow w-full h-full overflow-hidden p-4 md:p-8 flex items-center justify-center bg-slate-900">
+
+        <!-- ZASLON 1: ODABIR OPERACIJSKOG SUSTAVA -->
+        <div id="os-selector-screen" class="z-30 w-full max-w-4xl bg-slate-800/90 border-4 border-indigo-500/50 p-6 md:p-10 rounded-3xl shadow-2xl backdrop-blur-lg flex flex-col items-center text-center">
+            <h2 class="text-2xl md:text-4xl font-extrabold text-amber-300 mb-2">KOJE RAČUNALO KORISTIŠ? 💻</h2>
+            <p class="text-slate-300 text-sm md:text-lg font-semibold mb-8">Klikni na svoj operacijski sustav za početak vježbe:</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
+                <!-- Windows Card -->
+                <button onclick="selectOS('win')" class="bg-slate-700/80 hover:bg-blue-600/30 border-4 border-blue-500 hover:border-blue-400 p-6 rounded-2xl flex flex-col items-center gap-3 transition transform hover:-translate-y-2 hover:shadow-2xl active:scale-95 group">
+                    <div class="text-6xl group-hover:scale-110 transition">🪟</div>
+                    <span class="text-2xl font-bold text-white">WINDOWS</span>
+                    <span class="text-xs text-blue-300 bg-blue-900/50 px-3 py-1 rounded-full font-semibold">Traka na dnu + Start</span>
+                </button>
+
+                <!-- Mac macOS Card -->
+                <button onclick="selectOS('mac')" class="bg-slate-700/80 hover:bg-pink-600/30 border-4 border-pink-400 hover:border-pink-300 p-6 rounded-2xl flex flex-col items-center gap-3 transition transform hover:-translate-y-2 hover:shadow-2xl active:scale-95 group">
+                    <div class="text-6xl group-hover:scale-110 transition">🍎</div>
+                    <span class="text-2xl font-bold text-white">macOS (Mac)</span>
+                    <span class="text-xs text-pink-300 bg-pink-900/50 px-3 py-1 rounded-full font-semibold">Traka na vrhu + Jabuka</span>
+                </button>
+
+                <!-- Linux Edu Card -->
+                <button onclick="selectOS('linux')" class="bg-slate-700/80 hover:bg-orange-600/30 border-4 border-orange-500 hover:border-orange-400 p-6 rounded-2xl flex flex-col items-center gap-3 transition transform hover:-translate-y-2 hover:shadow-2xl active:scale-95 group">
+                    <div class="text-6xl group-hover:scale-110 transition">🐧</div>
+                    <span class="text-2xl font-bold text-white">LINUX EDU</span>
+                    <span class="text-xs text-orange-300 bg-orange-900/50 px-3 py-1 rounded-full font-semibold">Ubuntu / Izbornik gore</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- ZASLON 2: INTERAKTIVNA RADNA POVRŠINA (DESKTOP SIMULATOR) -->
+        <div id="desktop-simulator" class="hidden absolute inset-0 w-full h-full flex flex-col justify-between overflow-hidden">
+            
+            <!-- WINDOW 1: Bojanka -->
+            <div id="window-draw" class="absolute top-12 left-8 md:left-24 w-72 md:w-96 bg-slate-100 rounded-2xl shadow-2xl border-2 border-slate-300 overflow-hidden z-20 transition-all duration-300">
+                <div id="win-draw-header" class="bg-slate-800 px-4 py-2 flex justify-between items-center">
+                    <!-- Mac style controls if Mac OS -->
+                    <div id="mac-controls-draw" class="hidden flex items-center gap-2">
+                        <button onclick="closeWindow('draw')" class="w-3.5 h-3.5 rounded-full bg-rose-500 hover:bg-rose-600 flex items-center justify-center text-[8px] text-rose-950 font-bold shadow">✕</button>
+                        <div class="w-3.5 h-3.5 rounded-full bg-amber-400"></div>
+                        <div class="w-3.5 h-3.5 rounded-full bg-emerald-500"></div>
+                    </div>
+
+                    <div class="flex items-center gap-2 text-white font-bold text-xs md:text-sm">
+                        <span>🎨</span> Crtalica i Bojanka
+                    </div>
+
+                    <!-- Standard X button for Win/Linux -->
+                    <button id="btn-close-draw-std" onclick="closeWindow('draw')" class="bg-rose-500 hover:bg-rose-600 text-white font-extrabold w-7 h-7 rounded-lg flex items-center justify-center shadow transition active:scale-90">
+                        ✕
+                    </button>
+                </div>
+                <div class="p-4 text-slate-800 bg-white h-40 md:h-44 flex flex-col items-center justify-center gap-2">
+                    <div class="text-4xl">🎨🖌️🖼️</div>
+                    <p class="font-bold text-center text-slate-700 text-xs md:text-sm">Otvorena aplikacija za crtanje!</p>
+                    <p class="text-[11px] text-rose-600 font-bold bg-rose-50 px-3 py-1 rounded-full border border-rose-200">
+                        Zatvori me na gumb sa znakom ✖️!
+                    </p>
+                </div>
+            </div>
+
+            <!-- WINDOW 2: Igrica -->
+            <div id="window-game" class="absolute top-32 left-20 md:left-80 w-72 md:w-96 bg-slate-100 rounded-2xl shadow-2xl border-2 border-slate-300 overflow-hidden z-25 transition-all duration-300">
+                <div id="win-game-header" class="bg-indigo-900 px-4 py-2 flex justify-between items-center">
+                    <!-- Mac style controls if Mac OS -->
+                    <div id="mac-controls-game" class="hidden flex items-center gap-2">
+                        <button onclick="closeWindow('game')" class="w-3.5 h-3.5 rounded-full bg-rose-500 hover:bg-rose-600 flex items-center justify-center text-[8px] text-rose-950 font-bold shadow">✕</button>
+                        <div class="w-3.5 h-3.5 rounded-full bg-amber-400"></div>
+                        <div class="w-3.5 h-3.5 rounded-full bg-emerald-500"></div>
+                    </div>
+
+                    <div class="flex items-center gap-2 text-white font-bold text-xs md:text-sm">
+                        <span>🎮</span> Edukativna Igra
+                    </div>
+
+                    <!-- Standard X button for Win/Linux -->
+                    <button id="btn-close-game-std" onclick="closeWindow('game')" class="bg-rose-500 hover:bg-rose-600 text-white font-extrabold w-7 h-7 rounded-lg flex items-center justify-center shadow transition active:scale-90">
+                        ✕
+                    </button>
+                </div>
+                <div class="p-4 text-slate-800 bg-indigo-50 h-40 md:h-44 flex flex-col items-center justify-center gap-2">
+                    <div class="text-4xl">🚀⭐👾</div>
+                    <p class="font-bold text-center text-slate-700 text-xs md:text-sm">Igra je još uključena!</p>
+                    <p class="text-[11px] text-rose-600 font-bold bg-rose-100 px-3 py-1 rounded-full border border-rose-200">
+                        Zatvori me prije gašenja računala!
+                    </p>
+                </div>
+            </div>
+
+            <!-- WINDOWS START MENU -->
+            <div id="win-start-menu" class="hidden absolute bottom-16 left-3 w-72 bg-slate-900/95 border-2 border-blue-500/50 rounded-2xl p-4 shadow-2xl z-40 space-y-3 backdrop-blur-md">
+                <div class="flex items-center gap-3 border-b border-slate-700 pb-2">
+                    <span class="text-3xl">👦</span>
+                    <div>
+                        <h4 class="font-bold text-sm text-white">Učenik 1.a</h4>
+                        <p class="text-[10px] text-slate-400">Windows Korisnik</p>
+                    </div>
+                </div>
+                <button id="btn-win-power-menu" onclick="toggleWinPowerMenu()" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold p-3 rounded-xl flex items-center justify-between transition">
+                    <div class="flex items-center gap-2">
+                        <span class="text-2xl text-amber-400">⏻</span>
+                        <span class="text-sm">Uključi / Isključi</span>
+                    </div>
+                    <span>➔</span>
+                </button>
+                <div id="win-power-submenu" class="hidden mt-2 bg-slate-950 border border-slate-700 rounded-xl p-2 space-y-1">
+                    <button id="btn-win-shutdown" onclick="triggerShutdown()" class="w-full text-left p-2.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs flex items-center gap-2 transition">
+                        <span>🛑</span> Isključi računalo
+                    </button>
+                </div>
+            </div>
+
+            <!-- MAC SHUTDOWN MENU DOCK -->
+            <div id="mac-apple-menu" class="hidden absolute top-10 left-3 w-64 bg-slate-900/95 border border-slate-700 rounded-2xl p-2 shadow-2xl z-40 space-y-1 backdrop-blur-md text-sm text-slate-200">
+                <div class="p-2 font-bold text-white border-b border-slate-800">O ovom Macu</div>
+                <div class="p-2 text-xs text-slate-400">Postavke sustava...</div>
+                <div class="border-t border-slate-800 my-1"></div>
+                <button id="btn-mac-shutdown" onclick="triggerShutdown()" class="w-full text-left p-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs flex items-center gap-2 transition">
+                    <span>🛑</span> Isključi... (Shut Down)
+                </button>
+            </div>
+
+            <!-- LINUX POWER MENU PANEL -->
+            <div id="linux-power-panel" class="hidden absolute top-12 right-3 w-64 bg-slate-900/95 border border-orange-500/40 rounded-2xl p-3 shadow-2xl z-40 space-y-2 backdrop-blur-md">
+                <div class="text-xs font-bold text-slate-400 pb-1 border-b border-slate-800">Linux Sustav</div>
+                <button id="btn-linux-shutdown" onclick="triggerShutdown()" class="w-full text-left p-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs flex items-center gap-2 transition">
+                    <span>⏻</span> Isključi računalo (Power Off)
+                </button>
+            </div>
+
+            <!-- UPOZORENJE MASKOTA -->
+            <div id="warning-bubble" class="hidden absolute bottom-20 left-10 bg-amber-400 text-slate-950 p-4 rounded-2xl shadow-2xl border-4 border-white max-w-xs z-50 animate-bounce">
+                <div class="flex items-start gap-3">
+                    <span class="text-3xl">🚨</span>
+                    <div>
+                        <h4 class="font-bold text-sm">Prvo zatvori programe!</h4>
+                        <p class="text-xs font-semibold">Uvijek zatvori sve otvarane aplikacije na ✖️ prije nego ugasiš računalo!</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pokazivač prsta pomoći -->
+            <div id="helper-hand" class="hidden absolute z-50 pointer-events-none transition-all duration-300">
+                <span class="text-5xl pointing-hand filter drop-shadow-lg">👆</span>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- DYNAMIC OS TOOLBAR / TASKBAR -->
+    <div id="os-bar" class="hidden h-14 bg-slate-950/90 border-t border-slate-800 px-4 flex justify-between items-center z-40 relative">
+        
+        <!-- WINDOWS TASKBAR CONTENT -->
+        <div id="bar-content-win" class="hidden w-full flex justify-between items-center">
+            <button id="btn-win-start" onclick="clickWinStart()" class="h-10 px-3 rounded-xl bg-blue-600/30 hover:bg-blue-600/60 active:scale-95 transition flex items-center gap-2 border border-blue-400/40">
+                <svg class="w-6 h-6 text-sky-400 fill-current" viewBox="0 0 24 24">
+                    <path d="M3 5.5L10 4.5V11.5H3V5.5ZM3 12.5H10V19.5L3 18.5V12.5ZM11 4.3L21 3V11.5H11V4.3ZM11 12.5H21V21L11 19.7V12.5Z"/>
+                </svg>
+                <span class="font-bold text-sm text-white">Start</span>
+            </button>
+            <div class="text-xs font-bold text-slate-300 bg-slate-800 px-3 py-1 rounded-lg">Windows 10/11</div>
+        </div>
+
+        <!-- MAC TOP BAR CONTENT -->
+        <div id="bar-content-mac" class="hidden w-full flex justify-between items-center font-semibold text-sm">
+            <div class="flex items-center gap-4">
+                <button id="btn-mac-apple" onclick="clickMacApple()" class="text-2xl hover:scale-110 transition px-2">🍎</button>
+                <span class="font-bold text-white">Datoteka</span>
+                <span class="text-slate-400">Prikaz</span>
+                <span class="text-slate-400">Pomoć</span>
+            </div>
+            <div class="text-xs font-bold text-slate-300">macOS Edu</div>
+        </div>
+
+        <!-- LINUX TOP BAR CONTENT -->
+        <div id="bar-content-linux" class="hidden w-full flex justify-between items-center text-sm">
+            <div class="flex items-center gap-3">
+                <span class="bg-orange-600 text-white font-bold px-2.5 py-1 rounded-lg text-xs">Aktivnosti</span>
+                <span class="font-bold text-white">Linux Edu</span>
+            </div>
+            <button id="btn-linux-power-top" onclick="clickLinuxPower()" class="bg-slate-800 hover:bg-orange-600 text-amber-400 hover:text-white p-2 rounded-xl transition font-bold flex items-center gap-1 border border-slate-700">
+                <span>⏻</span> <span class="text-xs hidden sm:inline">Izbornik</span>
+            </button>
+        </div>
+
+    </div>
+
+    <div id="shutdown-screen" class="hidden fixed inset-0 bg-black z-50 flex flex-col items-center justify-center text-center p-6 shutdown-fade">
+        <div id="shutdown-progress" class="flex flex-col items-center gap-4 text-white">
+            <div class="w-16 h-16 border-4 border-sky-400 border-t-transparent rounded-full animate-spin"></div>
+            <h2 class="text-2xl md:text-3xl font-bold">Isključivanje računala...</h2>
+            <p class="text-slate-400 text-sm">Sređujemo tvoje zadatke...</p>
+        </div>
+
+        <div id="victory-card" class="hidden flex-col items-center gap-4 max-w-lg bg-slate-900 border-4 border-emerald-400 p-8 rounded-3xl shadow-2xl">
+            <div class="text-7xl mb-2">🎉🖥️⭐</div>
+            <h2 class="text-3xl md:text-4xl font-bold text-emerald-400">BRAVO! SAVRŠENO!</h2>
+            <p class="text-base md:text-lg text-slate-200">
+                Pravilno si ugasio/la računalo! Zatvorio/la si programe i slijedio/la točne korake!
+            </p>
+            <div class="flex gap-2 text-4xl my-2">⭐ ⭐ ⭐ ⭐ ⭐</div>
+            <button onclick="showOsSelector()" class="mt-4 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xl px-8 py-4 rounded-2xl shadow-xl transform transition active:scale-95 flex items-center gap-2">
+                🔄 Odaberi drugo računalo
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let selectedOS = ''; // 'win', 'mac', 'linux'
+        let openWindowsCount = 2;
+        let currentStep = 0; // 0: Zatvori, 1: Open menu, 2: Power sub, 3: Shutdown
+        let hintTimer = null;
+
+        // Web Speech API
+        function speak(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'hr-HR';
+                utterance.rate = 0.9;
+                utterance.pitch = 1.1;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        function speakCurrentInstruction() {
+            if (!selectedOS) {
+                speak("Odaberi svoje računalo s liste!");
+                return;
+            }
+
+            if (openWindowsCount > 0) {
+                speak("Zatvori sve otvorene programe klikom na znak iks!");
+            } else if (currentStep === 1) {
+                if (selectedOS === 'win') speak("Sada klikni na gumb Start u donjem lijevom kutu!");
+                if (selectedOS === 'mac') speak("Sada klikni na ikonu Jabuke u gornjem lijevom kutu!");
+                if (selectedOS === 'linux') speak("Sada klikni na gumb za gašenje u gornjem desnom kutu!");
+            } else if (currentStep === 2) {
+                speak("Sada klikni na opciju Uključi ili Isključi!");
+            } else if (currentStep === 3) {
+                speak("Sada klikni na Isključi računalo!");
+            }
+        }
+
+        // Audio Effects
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        let audioCtx;
+
+        function playPopSound() {
+            if (!audioCtx) audioCtx = new AudioCtx();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(300, audioCtx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.1);
+        }
+
+        function playSuccessSound() {
+            if (!audioCtx) audioCtx = new AudioCtx();
+            const now = audioCtx.currentTime;
+            [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(freq, now + idx * 0.12);
+                gain.gain.setValueAtTime(0.3, now + idx * 0.12);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.12 + 0.4);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now + idx * 0.12);
+                osc.stop(now + idx * 0.12 + 0.4);
+            });
+        }
+
+        // Navigation
+        function showOsSelector() {
+            clearTimeout(hintTimer);
+            hideHelperHand();
+            removeHighlights();
+
+            document.getElementById("os-selector-screen").classList.remove("hidden");
+            document.getElementById("desktop-simulator").classList.add("hidden");
+            document.getElementById("os-bar").classList.add("hidden");
+            document.getElementById("shutdown-screen").classList.add("hidden");
+
+            selectedOS = '';
+            document.getElementById("step-instruction").innerText = "Odaberi svoje računalo za početak vježbe!";
+            speak("Odaberi svoje računalo za početak!");
+        }
+
+        function selectOS(osType) {
+            playPopSound();
+            selectedOS = osType;
+            openWindowsCount = 2;
+            currentStep = 0;
+
+            document.getElementById("os-selector-screen").classList.add("hidden");
+            document.getElementById("desktop-simulator").classList.remove("hidden");
+            document.getElementById("os-bar").classList.remove("hidden");
+
+            const mainComp = document.getElementById("main-container");
+            mainComp.className = "relative flex-grow w-full h-full overflow-hidden p-4 md:p-8 flex items-center justify-center ";
+            if (osType === 'win') mainComp.classList.add("theme-win");
+            if (osType === 'mac') mainComp.classList.add("theme-mac");
+            if (osType === 'linux') mainComp.classList.add("theme-linux");
+
+            // Setup bar position and content
+            const osBar = document.getElementById("os-bar");
+            document.getElementById("bar-content-win").classList.add("hidden");
+            document.getElementById("bar-content-mac").classList.add("hidden");
+            document.getElementById("bar-content-linux").classList.add("hidden");
+
+            // Mac Window controls toggle
+            const macControlsDraw = document.getElementById("mac-controls-draw");
+            const macControlsGame = document.getElementById("mac-controls-game");
+            const stdBtnDraw = document.getElementById("btn-close-draw-std");
+            const stdBtnGame = document.getElementById("btn-close-game-std");
+
+            if (osType === 'mac') {
+                osBar.classList.remove("border-t");
+                osBar.classList.add("border-b");
+                document.getElementById("bar-content-mac").classList.remove("hidden");
+                
+                macControlsDraw.classList.remove("hidden");
+                macControlsGame.classList.remove("hidden");
+                stdBtnDraw.classList.add("hidden");
+                stdBtnGame.classList.add("hidden");
+            } else {
+                osBar.classList.remove("border-b");
+                osBar.classList.add("border-t");
+                
+                macControlsDraw.classList.add("hidden");
+                macControlsGame.classList.add("hidden");
+                stdBtnDraw.classList.remove("hidden");
+                stdBtnGame.classList.remove("hidden");
+
+                if (osType === 'win') document.getElementById("bar-content-win").classList.remove("hidden");
+                if (osType === 'linux') document.getElementById("bar-content-linux").classList.remove("hidden");
+            }
+
+            resetDesktopWindows();
+            updateInstruction("Prvo zatvori sve otvorene programe klikom na crveni ✖️!");
+            speak("Odabrao si računalo. Prvo zatvori sve otvorene programe na crveni iks!");
+            scheduleHint();
+        }
+
+        function resetDesktopWindows() {
+            document.getElementById("window-draw").style.display = "block";
+            document.getElementById("window-game").style.display = "block";
+            document.getElementById("window-draw").classList.remove("scale-0", "opacity-0");
+            document.getElementById("window-game").classList.remove("scale-0", "opacity-0");
+            
+            document.getElementById("win-start-menu").classList.add("hidden");
+            document.getElementById("win-power-submenu").classList.add("hidden");
+            document.getElementById("mac-apple-menu").classList.add("hidden");
+            document.getElementById("linux-power-panel").classList.add("hidden");
+        }
+
+        function closeWindow(winId) {
+            playPopSound();
+            const winEl = document.getElementById(`window-${winId}`);
+            if (winEl) winEl.classList.add("scale-0", "opacity-0");
+            setTimeout(() => { if (winEl) winEl.style.display = "none"; }, 250);
+
+            openWindowsCount--;
+
+            if (openWindowsCount === 0) {
+                currentStep = 1;
+                let nextMsg = "";
+                if (selectedOS === 'win') nextMsg = "Bravo! Sada klikni na gumb Start u donjem lijevom kutu!";
+                if (selectedOS === 'mac') nextMsg = "Bravo! Sada klikni na ikonu Jabuke gore lijevo!";
+                if (selectedOS === 'linux') nextMsg = "Bravo! Sada klikni na izbornik za gašenje u gornjem desnom kutu!";
+
+                updateInstruction(nextMsg);
+                speak(nextMsg);
+                scheduleHint();
+            }
+        }
+
+        // STEP 1 Action handlers per OS
+        function clickWinStart() {
+            playPopSound();
+            if (openWindowsCount > 0) { showWarningBubble(); return; }
+            document.getElementById("win-start-menu").classList.toggle("hidden");
+            currentStep = 2;
+            updateInstruction("Sada klikni na gumb Uključi / Isključi!");
+            speak("Sada klikni na gumb Uključi ili Isključi!");
+            scheduleHint();
+        }
+
+        function toggleWinPowerMenu() {
+            playPopSound();
+            document.getElementById("win-power-submenu").classList.toggle("hidden");
+            currentStep = 3;
+            updateInstruction("Klikni na 'Isključi računalo'!");
+            speak("Klikni na Isključi računalo!");
+            scheduleHint();
+        }
+
+        function clickMacApple() {
+            playPopSound();
+            if (openWindowsCount > 0) { showWarningBubble(); return; }
+            document.getElementById("mac-apple-menu").classList.toggle("hidden");
+            currentStep = 3;
+            updateInstruction("Sada klikni na 'Isključi... (Shut Down)'!");
+            speak("Sada klikni na Isključi!");
+            scheduleHint();
+        }
+
+        function clickLinuxPower() {
+            playPopSound();
+            if (openWindowsCount > 0) { showWarningBubble(); return; }
+            document.getElementById("linux-power-panel").classList.toggle("hidden");
+            currentStep = 3;
+            updateInstruction("Sada klikni na 'Isključi računalo (Power Off)'!");
+            speak("Sada klikni na Isključi računalo!");
+            scheduleHint();
+        }
+
+        // STEP FINAL: Shutdown trigger
+        function triggerShutdown() {
+            playPopSound();
+            clearTimeout(hintTimer);
+            hideHelperHand();
+
+            document.getElementById("shutdown-screen").classList.remove("hidden");
+            document.getElementById("shutdown-progress").classList.remove("hidden");
+            document.getElementById("victory-card").classList.add("hidden");
+
+            speak("Isključivanje računala...");
+
+            setTimeout(() => {
+                document.getElementById("shutdown-progress").classList.add("hidden");
+                const victoryCard = document.getElementById("victory-card");
+                victoryCard.classList.remove("hidden");
+                victoryCard.classList.add("flex");
+
+                playSuccessSound();
+                speak("Bravo! Savršeno si ugasio računalo!");
+
+                if (typeof confetti === 'function') {
+                    confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
+                }
+            }, 2000);
+        }
+
+        function showWarningBubble() {
+            const bubble = document.getElementById("warning-bubble");
+            bubble.classList.remove("hidden");
+            speak("Pažnja! Prvo zatvori sve otvorene programe na crveni iks!");
+            setTimeout(() => bubble.classList.add("hidden"), 3000);
+        }
+
+        function updateInstruction(text) {
+            document.getElementById("step-instruction").innerText = text;
+            clearTimeout(hintTimer);
+            removeHighlights();
+        }
+
+        function scheduleHint() {
+            clearTimeout(hintTimer);
+            removeHighlights();
+            hideHelperHand();
+            hintTimer = setTimeout(() => showVisualHint(), 3500);
+        }
+
+        function showVisualHint() {
+            let targetEl = null;
+
+            if (openWindowsCount > 0) {
+                targetEl = document.getElementById("btn-close-game-std") || document.getElementById("btn-close-draw-std");
+                if (selectedOS === 'mac') targetEl = document.querySelector("#mac-controls-game button") || document.querySelector("#mac-controls-draw button");
+            } else if (currentStep === 1) {
+                if (selectedOS === 'win') targetEl = document.getElementById("btn-win-start");
+                if (selectedOS === 'mac') targetEl = document.getElementById("btn-mac-apple");
+                if (selectedOS === 'linux') targetEl = document.getElementById("btn-linux-power-top");
+            } else if (currentStep === 2) {
+                if (selectedOS === 'win') targetEl = document.getElementById("btn-win-power-menu");
+            } else if (currentStep === 3) {
+                if (selectedOS === 'win') targetEl = document.getElementById("btn-win-shutdown");
+                if (selectedOS === 'mac') targetEl = document.getElementById("btn-mac-shutdown");
+                if (selectedOS === 'linux') targetEl = document.getElementById("btn-linux-shutdown");
+            }
+
+            if (targetEl) {
+                targetEl.classList.add("highlight-hint");
+                const rect = targetEl.getBoundingClientRect();
+                const hand = document.getElementById("helper-hand");
+                hand.style.left = `${rect.left + rect.width / 2 - 20}px`;
+                hand.style.top = `${rect.top - 45}px`;
+                hand.classList.remove("hidden");
+            }
+        }
+
+        function removeHighlights() {
+            document.querySelectorAll(".highlight-hint").forEach(el => el.classList.remove("highlight-hint"));
+        }
+
+        function hideHelperHand() {
+            document.getElementById("helper-hand").classList.add("hidden");
+        }
+
+        window.onload = () => {
+            showOsSelector();
+        };
+    </script>
+</body>
+</html>
