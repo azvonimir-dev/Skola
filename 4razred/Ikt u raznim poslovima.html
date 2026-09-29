@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kviz: IKT u raznim poslovima (4. razred)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Quicksand:wght@500;700&display=swap');
+        
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-color: #f0f9ff;
+        }
+        
+        h1, h2, h3, .font-heading {
+            font-family: 'Fredoka', cursive;
+        }
+
+        .option-card {
+            transition: all 0.2s ease;
+        }
+
+        .option-card:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body class="min-h-screen py-8 px-4 sm:px-6 lg:px-8 flex flex-col justify-between">
+
+    <div class="max-w-3xl mx-auto w-full">
+        <!-- Header -->
+        <header class="text-center mb-8 bg-white p-6 rounded-3xl shadow-sm border-2 border-blue-100">
+            <span class="bg-blue-100 text-blue-800 text-sm font-semibold px-4 py-1.5 rounded-full uppercase tracking-wide">Informatika 4. razred</span>
+            <h1 class="text-3xl sm:text-4xl font-bold text-slate-800 mt-3 mb-1">1.3. IKT u raznim poslovima</h1>
+            <p class="text-slate-500">Provjeri svoje znanje kroz 20 zanimljivih pitanja!</p>
+        </header>
+
+        <!-- Quiz Container -->
+        <main id="quiz-container" class="bg-white rounded-3xl shadow-md p-6 sm:p-8 border-2 border-blue-100">
+            
+            <!-- Progress Bar -->
+            <div class="mb-6">
+                <div class="flex justify-between items-center mb-2">
+                    <span id="question-number" class="text-sm font-bold text-blue-600">Pitanje 1 od 20</span>
+                    <span id="score-display" class="text-sm font-bold text-emerald-600">Bodovi: 0</span>
+                </div>
+                <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
+                    <div id="progress-bar" class="bg-blue-500 h-full w-0 transition-all duration-300"></div>
+                </div>
+            </div>
+
+            <!-- Question Card -->
+            <div id="question-card" class="space-y-6">
+                <h2 id="question-text" class="text-xl sm:text-2xl font-bold text-slate-800">
+                    Učitavanje pitanja...
+                </h2>
+
+                <div id="options-container" class="grid grid-cols-1 gap-3">
+                    <!-- Options will be injected here dynamically -->
+                </div>
+
+                <!-- Explanation Box -->
+                <div id="explanation-box" class="hidden p-4 rounded-2xl border-2 text-sm leading-relaxed"></div>
+
+                <!-- Next Button -->
+                <div class="flex justify-end pt-4">
+                    <button id="next-btn" onclick="nextQuestion()" class="hidden bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-2xl shadow-lg transition duration-200 flex items-center gap-2">
+                        <span>Sljedeće pitanje</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Results Screen (Hidden by default) -->
+            <div id="results-screen" class="hidden text-center py-8 space-y-6">
+                <div class="w-24 h-24 bg-yellow-100 text-yellow-500 rounded-full flex items-center justify-center mx-auto text-5xl">
+                    <i class="fa-solid fa-trophy"></i>
+                </div>
+                <h2 class="text-3xl font-bold text-slate-800">Kviz je završen!</h2>
+                <p id="final-score" class="text-xl text-slate-600">Tvoj rezultat je <span class="font-bold text-blue-600">0</span> od 20 točnih odgovora.</p>
+                <div id="feedback-message" class="p-4 bg-blue-50 rounded-2xl text-blue-800 font-medium max-w-md mx-auto"></div>
+                
+                <button onclick="restartQuiz()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-3 rounded-2xl shadow-lg transition duration-200">
+                    Zaigraj ponovno <i class="fa-solid fa-rotate-right ml-2"></i>
+                </button>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="text-center text-xs text-slate-400 mt-8">
+        Interaktivni kviz za ponavljanje gradiva informatike • 4. razred osnovne škole
+    </footer>
+
+    <script>
+        const questions = [
+            {
+                question: "Što skraćeno označava kratica IKT?",
+                options: [
+                    "Informacijsko-komunikacijska tehnologija",
+                    "Internet i računalna tehnika",
+                    "Igre i kompjutorska tehnologija",
+                    "Informacijska kartica i telefon"
+                ],
+                correct: 0,
+                explanation: "IKT je kratica za Informacijsko-komunikacijsku tehnologiju."
+            },
+            {
+                question: "Što je Ena radila kod kuće nakon što je izradila nekoliko uspješnih mrežnih stranica?",
+                options: [
+                    "Pokrenula je vlastiti posao i radila od kuće",
+                    "Zaposlila se u trgovini živežnim namirnicama",
+                    "Odustala je od rada na računalu",
+                    "Radila je restsuraciju starih slika"
+                ],
+                correct: 0,
+                explanation: "Ena je prepoznata po svom radu te je dobila posao koji obavlja iz svog doma."
+            },
+            {
+                question: "Osim mrežnih stranica, što je Ena osmislila za turističke agencije?",
+                options: [
+                    "Aplikaciju koja olakšava odabir putovanja",
+                    "Tiskani vodič s kartama",
+                    "Novi fotoaparat za slikanje hrane",
+                    "Autobus za prijevoz turista"
+                ],
+                correct: 0,
+                explanation: "Ena je osmislila aplikaciju koja olakšava odabir putovanja."
+            },
+            {
+                question: "Koja od navedenih zanimanja zahtijevaju korištenje IKT-a u svom radu?",
+                options: [
+                    "Liječnik, učitelj, arhitekt, fotograf",
+                    "Samo programeri",
+                    "Nitko osim ljudi koji rade u tvornicama",
+                    "Samo osobe koje pišu novine"
+                ],
+                correct: 0,
+                explanation: "Mnogobrojna zanimanja poput liječnika, učitelja, arhitekata, urednika, prodavača i fotografa koriste IKT."
+            },
+            {
+                question: "Koji se od navedenih poslova, zahvaljujući IKT-u, može obavljati od kuće?",
+                options: [
+                    "Pisanje vijesti za novine i izrada aplikacija",
+                    "Popravak cesta",
+                    "Vožnja gradskog autobusa",
+                    "Građenje kuća na gradilištu"
+                ],
+                correct: 0,
+                explanation: "Pisanje vijesti, izrada mrežnih stranica i aplikacija te organizacija događanja mogu se obavljati od kuće."
+            },
+            {
+                question: "Što označava pojam 'Automatizacija'?",
+                options: [
+                    "Prijenos rada s čovjeka na stroj",
+                    "Popravak pokvarenog automobila",
+                    "Ručno izrađivanje predmeta od drva",
+                    "Kupovina automobila putem interneta"
+                ],
+                correct: 0,
+                explanation: "Automatizacija znači prijenos rada s čovjeka na stroj – poslove koje je obavljao čovjek sada obavlja stroj."
+            },
+            {
+                question: "Koji je najbolji primjer automatizacije u tvornicama?",
+                options: [
+                    "Roboti na proizvodnim trakama",
+                    "Učitelji u učionicama",
+                    "Fotografi koji slikaju hranu",
+                    "Kuhari koji kuhaju ručak"
+                ],
+                correct: 0,
+                explanation: "Najbolji primjer automatizacije u tvornicama su roboti na proizvodnim trakama."
+            },
+            {
+                question: "Ima li rad od kuće s fleksibilnim poslom uobičajeno fiksno radno vrijeme?",
+                options: [
+                    "Često nemaju strogo određeno radno vrijeme, već rade po potrebi i dogovoru",
+                    "Da, moraju raditi točno od 8 do 12 sati svaki dan",
+                    "Rade samo noću",
+                    "Ne smiju sami organizirati svoje vrijeme"
+                ],
+                correct: 0,
+                explanation: "Rad od kuće često omogućava fleksibilno radno vrijeme bez strogog rasporeda."
+            },
+            {
+                question: "Tko je 'Blogger'?",
+                options: [
+                    "Osoba koja piše i objavljuje sadržaj na svom blogu (mrežnom dnevniku)",
+                    "Osoba koja popravlja računala",
+                    "Osoba koja proizvodi robote",
+                    "Osoba koja radi u banci"
+                ],
+                correct: 0,
+                explanation: "Blogger je osoba koja redovito piše i objavljuje tekstove na blogu."
+            },
+            {
+                question: "Tko je 'Youtuber'?",
+                options: [
+                    "Osoba koja snima i objavljuje videozapise na kanalu YouTube",
+                    "Osoba koja prodaje televizore",
+                    "Glumac u kazalištu",
+                    "Osoba koja izrađuje mobilne mreže"
+                ],
+                correct: 0,
+                explanation: "Youtuber izrađuje i dijeli video sadržaje putem platforme YouTube."
+            },
+            {
+                question: "Kako popularne osobe na mrežnim kanalima (poput Youtubera) ostvaruju zaradu?",
+                options: [
+                    "Preko reklama, sponzorstava i broja pregleda",
+                    "Tako što im školska knjižnica daje novac",
+                    "Pokupljanjem bodova u videoigricama",
+                    "Zarada na mreži nije moguća"
+                ],
+                correct: 0,
+                explanation: "Zaradu ostvaruju putem sponzorstava, reklama i prikaza svojih sadržaja širokoj publici."
+            },
+            {
+                question: "Što je potrebno osigurati prije obavljanja poslova poput izrade web stranica od kuće?",
+                options: [
+                    "Računalo i stabilnu internetsku vezu",
+                    "Veliku tvorničku traku",
+                    "Posebno odijelo za vožnju",
+                    "Kuhinjski mikser"
+                ],
+                correct: 0,
+                explanation: "Za rad od kuće na računalnim poslovima ključni su računalo i pristup internetu."
+            },
+            {
+                question: "Što moraš učiniti kada dobiješ novo računalo ili instaliraš novi program?",
+                options: [
+                    "Potrebno je vremena da ga upoznaš i prilagodiš se",
+                    "Odmah sve znaš bez čitanja i vježbanja",
+                    "Moraš ga odmah vratiti u trgovinu",
+                    "Ne smiješ ga uključiti nekoliko dana"
+                ],
+                correct: 0,
+                explanation: "Nove tehnologije traže promjene i prilagodbe, te je potrebno vrijeme za učenje."
+            },
+            {
+                question: "Što gradimo na mrežnim kanalima ako želimo baviti se zanimanjima poput Instagrammera ili Youtubera?",
+                options: [
+                    "Vlastitu virtualnu zajednicu",
+                    "Drvenu kućicu",
+                    "Novi robotički pogon",
+                    "Školsko igralište"
+                ],
+                correct: 0,
+                explanation: "Za uspjeh na mrežnim kanalima potrebno je izraditi vlastitu virtualnu zajednicu (pratitelje)."
+            },
+            {
+                question: "Zašto se u tvornicama uvode roboti?",
+                options: [
+                    "Mogu brže, preciznije i neumorno obavljati ponavljajuće poslove",
+                    "Zato što roboti vole piti mlijeko",
+                    "Kako bi se ljudi više umarali",
+                    "Zbog toga što roboti pišu recepte za kuhanje"
+                ],
+                correct: 0,
+                explanation: "Roboti pomažu u ubrzavanju i olakšavanju teških i ponavljajućih poslova u proizvodnji."
+            },
+            {
+                question: "Koje od navedenih zanimanja spada u popularna moderna zanimanja današnjice?",
+                options: [
+                    "Instagrammer",
+                    "Kovač konjskih potkova",
+                    "Sakupljač ugljena ručno",
+                    "Nosač pisama pješice"
+                ],
+                correct: 0,
+                explanation: "Instagrammer, YouTuber i Blogger su moderna IKT zanimanja."
+            },
+            {
+                question: "Što je od navedenog Prednost automatizacije?",
+                options: [
+                    "Veća brzina izrade i manje fizičkog napora za čovjeka",
+                    "Gubitak potrebe za učenjem",
+                    "Računala nikada ne trebaju struju",
+                    "Ljudima više uopće ne trebaju poslovi"
+                ],
+                correct: 0,
+                explanation: "Automatizacija olakšava teške fizičke poslove i ubrzava proizvodnju."
+            },
+            {
+                question: "Kada tražiš informacije na internetu za istraživački rad, na što trebaš pripaziti?",
+                options: [
+                    "Pravila o točnosti informacija i vrednovanju pouzdanosti stranice",
+                    "Uvijek je prva stranica na internetu 100% točna",
+                    "Sve što piše na internetu je istina",
+                    "Nije važno tko je objavio informaciju"
+                ],
+                correct: 0,
+                explanation: "Važno je provjeriti točnost informacija i vrednovati koja je mrežna stranica pouzdana."
+            },
+            {
+                question: "Što moraju činiti ljudi unatoč novim tehnologijama i automatizaciji poslova?",
+                options: [
+                    "Spremni su i sposobni učiti i prilagoditi se novim načinima rada",
+                    "Prestati ići u školu i učiti",
+                    "Zabraniti korištenje računala",
+                    "Radi samo ono što su radili prije 100 godina"
+                ],
+                correct: 0,
+                explanation: "Ljudi moraju neprestano učiti i prilagođavati se novim tehnologijama."
+            },
+            {
+                question: "Koji se od navedenih edukativnih poslova danas lako obavlja putem IKT-a na daljinu?",
+                options: [
+                    "Edukacija i sastanci putem videopoziva",
+                    "Čišćenje učionice metlom",
+                    "Popravak školskog krova",
+                    "Sadnja drveća u školskom dvorištu"
+                ],
+                correct: 0,
+                explanation: "Edukacije i sastanci mogu se jednostavno održavati putem videopoziva na daljinu."
+            }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let selectedOption = null;
+
+        function loadQuestion() {
+            const q = questions[currentQuestion];
+            
+            // UI elements
+            document.getElementById('question-number').innerText = `Pitanje ${currentQuestion + 1} od ${questions.length}`;
+            document.getElementById('score-display').innerText = `Bodovi: ${score}`;
+            document.getElementById('progress-bar').style.width = `${((currentQuestion + 1) / questions.length) * 100}%`;
+            document.getElementById('question-text').innerText = q.question;
+            
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+            
+            const explanationBox = document.getElementById('explanation-box');
+            explanationBox.classList.add('hidden');
+            
+            document.getElementById('next-btn').classList.add('hidden');
+
+            // Render options
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = `option-card text-left p-4 rounded-2xl border-2 border-slate-200 hover:border-blue-400 hover:bg-blue-50 font-medium text-slate-700 flex items-center gap-3 w-full`;
+                btn.onclick = () => selectOption(idx);
+                btn.id = `opt-${idx}`;
+                
+                btn.innerHTML = `
+                    <span class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-500 text-sm flex-shrink-0">${String.fromCharCode(65 + idx)}</span>
+                    <span class="flex-grow">${opt}</span>
+                `;
+                
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function selectOption(index) {
+            const q = questions[currentQuestion];
+            const options = document.querySelectorAll('.option-card');
+            
+            // Disable all options after pick
+            options.forEach(opt => opt.onclick = null);
+
+            if (index === q.correct) {
+                score++;
+                document.getElementById(`opt-${index}`).classList.remove('border-slate-200', 'hover:bg-blue-50');
+                document.getElementById(`opt-${index}`).classList.add('border-emerald-500', 'bg-emerald-50', 'text-emerald-900');
+                document.getElementById(`opt-${index}`).querySelector('span').classList.add('bg-emerald-500', 'text-white');
+            } else {
+                document.getElementById(`opt-${index}`).classList.remove('border-slate-200', 'hover:bg-blue-50');
+                document.getElementById(`opt-${index}`).classList.add('border-rose-500', 'bg-rose-50', 'text-rose-900');
+                document.getElementById(`opt-${index}`).querySelector('span').classList.add('bg-rose-500', 'text-white');
+
+                // Highlight correct one
+                document.getElementById(`opt-${q.correct}`).classList.remove('border-slate-200');
+                document.getElementById(`opt-${q.correct}`).classList.add('border-emerald-500', 'bg-emerald-50', 'text-emerald-900');
+            }
+
+            // Show explanation
+            const expBox = document.getElementById('explanation-box');
+            expBox.innerHTML = `<strong>Objašnjenje:</strong> ${q.explanation}`;
+            expBox.className = `p-4 rounded-2xl border-2 text-sm leading-relaxed ${index === q.correct ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-amber-50 border-amber-200 text-amber-800'}`;
+            expBox.classList.remove('hidden');
+
+            document.getElementById('score-display').innerText = `Bodovi: ${score}`;
+            document.getElementById('next-btn').classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            currentQuestion++;
+            if (currentQuestion < questions.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            document.getElementById('question-card').classList.add('hidden');
+            document.getElementById('results-screen').classList.remove('hidden');
+            document.getElementById('final-score').innerHTML = `Tvoj rezultat je <span class="font-bold text-blue-600">${score}</span> od ${questions.length} točnih odgovora.`;
+            
+            const feedback = document.getElementById('feedback-message');
+            const percentage = (score / questions.length) * 100;
+
+            if (percentage === 100) {
+                feedback.innerText = "Izvrsno! Vrhunski poznaješ ulogu IKT-a u poslovima!";
+            } else if (percentage >= 70) {
+                feedback.innerText = "Bravo! Imaš jako dobro znanje o gradu IKT u poslovima.";
+            } else if (percentage >= 50) {
+                feedback.innerText = "Dobro urađeno! Možeš još malo ponoviti gradivo za još bolji rezultat.";
+            } else {
+                feedback.innerText = "Preporuka: Pročitaj još jednom lekciju u udžbeniku i pokušaj ponovno!";
+            }
+        }
+
+        function restartQuiz() {
+            currentQuestion = 0;
+            score = 0;
+            document.getElementById('results-screen').classList.add('hidden');
+            document.getElementById('question-card').classList.remove('hidden');
+            loadQuestion();
+        }
+
+        // Initialize quiz
+        loadQuestion();
+    </script>
+</body>
+</html>
