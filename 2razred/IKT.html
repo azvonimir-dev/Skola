@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Informatika 2. razred - Kviz znanja</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@500;700&display=swap');
+        
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background: linear-gradient(135deg, #a8edf0 0%, #fed6e3 100%);
+            min-height: 100vh;
+        }
+
+        .font-fun {
+            font-family: 'Fredoka One', cursive;
+        }
+
+        .card-bounce {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .card-bounce:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .btn-option {
+            transition: all 0.2s ease;
+        }
+
+        .btn-option:hover {
+            transform: scale(1.02);
+        }
+
+        .correct-anim {
+            animation: pulse-green 0.5s ease-in-out;
+        }
+
+        .wrong-anim {
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes pulse-green {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-10px); }
+            40%, 80% { transform: translateX(10px); }
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4">
+
+    <!-- Glavni spremnik -->
+    <div class="max-w-2xl w-full bg-white rounded-3xl shadow-2xl p-6 sm:p-8 border-4 border-yellow-300 relative overflow-hidden">
+        
+        <!-- POČETNI EKRAN -->
+        <div id="start-screen" class="text-center py-8">
+            <div class="text-6xl mb-4 text-yellow-400">
+                <i class="fa-solid fa-laptop-code"></i>
+            </div>
+            <h1 class="text-3xl sm:text-4xl font-fun text-purple-600 mb-4">Informatika 2. Razred</h1>
+            <p class="text-lg text-gray-600 mb-8 font-semibold">Provjeri svoje znanje o računalima, IKT-u i zanimanjima!</p>
+            <div class="bg-blue-50 p-4 rounded-2xl mb-8 border-2 border-blue-200">
+                <p class="text-blue-800 text-sm font-bold"><i class="fa-solid fa-star text-yellow-500 mr-2"></i> Kviz ima 20 zanimljivih pitanja.</p>
+                <p class="text-blue-800 text-sm font-bold mt-1"><i class="fa-solid fa-shuffle text-purple-500 mr-2"></i> Odgovori su svaki put nasumično izmiješani!</p>
+            </div>
+            <button onclick="startQuiz()" class="bg-green-500 hover:bg-green-600 text-white font-fun text-2xl py-4 px-10 rounded-full shadow-lg transform transition hover:scale-105 active:scale-95">
+                KRENI U KVIZ! <i class="fa-solid fa-play ml-2"></i>
+            </button>
+        </div>
+
+        <!-- EKRAN S PITANJIMA -->
+        <div id="quiz-screen" class="hidden">
+            <!-- Traka napretka i bodovi -->
+            <div class="flex justify-between items-center mb-6">
+                <span id="question-number" class="font-fun text-lg text-purple-600 bg-purple-100 px-4 py-2 rounded-full">
+                    Pitanje 1/20
+                </span>
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-star text-yellow-400 text-2xl"></i>
+                    <span id="score" class="font-fun text-2xl text-gray-700">0</span>
+                </div>
+            </div>
+
+            <!-- Progres traka -->
+            <div class="w-full bg-gray-200 rounded-full h-4 mb-8 overflow-hidden">
+                <div id="progress-bar" class="bg-gradient-to-r from-blue-400 to-purple-500 h-4 rounded-full transition-all duration-300" style="width: 5%"></div>
+            </div>
+
+            <!-- Pitanje -->
+            <div class="bg-yellow-50 border-2 border-yellow-200 rounded-2xl p-6 mb-6">
+                <h2 id="question-text" class="text-xl sm:text-2xl font-bold text-gray-800 text-center">
+                    Učitavanje pitanja...
+                </h2>
+            </div>
+
+            <!-- Ponuđeni odgovori -->
+            <div id="options-container" class="grid grid-cols-1 gap-4 mb-6">
+                <!-- Odgovori se generiraju u JavaScriptu -->
+            </div>
+
+            <!-- Poruka povratne informacije -->
+            <div id="feedback" class="text-center font-fun text-xl h-8 mb-4"></div>
+
+            <!-- Gumb za dalje -->
+            <div class="text-center">
+                <button id="next-btn" onclick="nextQuestion()" class="hidden bg-purple-600 hover:bg-purple-700 text-white font-fun text-xl py-3 px-8 rounded-full shadow-md transition transform hover:scale-105">
+                    Sljedeće pitanje <i class="fa-solid fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- ZAVRŠNI EKRAN -->
+        <div id="result-screen" class="hidden text-center py-8">
+            <div id="result-icon" class="text-7xl mb-4">🏆</div>
+            <h2 class="text-3xl font-fun text-purple-600 mb-2">Bravo, završen kviz!</h2>
+            <p class="text-gray-600 text-lg mb-6">Tvoj konačni rezultat je:</p>
+            
+            <div class="bg-purple-50 border-2 border-purple-200 rounded-2xl p-6 mb-8 inline-block">
+                <span id="final-score" class="text-5xl font-fun text-purple-700">0</span>
+                <span class="text-2xl font-fun text-purple-400"> / 20</span>
+                <p id="result-message" class="mt-4 font-bold text-lg text-gray-700"></p>
+            </div>
+
+            <div>
+                <button onclick="restartQuiz()" class="bg-blue-500 hover:bg-blue-600 text-white font-fun text-xl py-4 px-8 rounded-full shadow-lg transform transition hover:scale-105">
+                    <i class="fa-solid fa-rotate-right mr-2"></i> Igraj ponovno
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Baza svih 20 pitanja za 2. razred
+        const questionsData = [
+            {
+                question: "Što skraćeno znači riječ IKT?",
+                options: ["Informacijsko-komunikacijska tehnologija", "Igre i kompjuterski testovi", "Internet i kućni telefoni"],
+                answer: 0
+            },
+            {
+                question: "Tko od navedenih stručnjaka popravlja računala?",
+                options: ["Serviser računala", "Zubar", "Kuhar"],
+                answer: 0
+            },
+            {
+                question: "Za što liječnik u svojoj ordinaciji koristi računalo?",
+                options: ["Za pregled kartona i nalaza pacijenata", "Za kuhanje ručka", "Za vožnju automobila"],
+                answer: 0
+            },
+            {
+                question: "Koji od ovih poslova se obavlja BEZ tehnologije?",
+                options: ["Zidanje zida običnom ciglom", "Pisanje poruke na mobitelu", "E-učenje na računalu"],
+                answer: 0
+            },
+            {
+                question: "Tko je IT stručnjak?",
+                options: ["Osoba koja izrađuje programe i održava IKT", "Osoba koja vozi autobus", "Osoba koja pjeva u zboru"],
+                answer: 0
+            },
+            {
+                question: "Koriste li prodavači u trgovini IKT opremu?",
+                options: ["Da, za skeniranje artikala i blagajnu", "Ne, uopće im ne treba", "Samo ako prodaju igračke"],
+                answer: 0
+            },
+            {
+                question: "Što od navedenog NIJE digitalni uređaj?",
+                options: ["Drvena olovka", "Pametni telefon", "Tablet"],
+                answer: 0
+            },
+            {
+                question: "Kako učitelj može koristiti IKT u učionici?",
+                options: ["Za prikazivanje obrazovnih crtića i prezentacija", "Za spavanje", "Za pranje posuđa"],
+                answer: 0
+            },
+            {
+                question: "Što od ovoga koristi automobilski serviser za dijagnostiku kvara?",
+                options: ["Prijenosno računalo (laptop)", "Mikroskop za biologiju", "Kredu i ploču"],
+                answer: 0
+            },
+            {
+                question: "Koji uređaj nam služi za fotografiranje i snimanje videozapisa?",
+                options: ["Digitalni fotoaparat ili mobitel", "Hladnjak", "Radijator"],
+                answer: 0
+            },
+            {
+                question: "Arhitekti koriste računala kako bi:",
+                options: ["Crtali i projektirali kuće i zgrade", "Sijali pšenicu", "Šišali kosu"],
+                answer: 0
+            },
+            {
+                question: "Što nam omogućuje E-učenje?",
+                options: ["Učenje na daljinu pomoću računala i interneta", "Igranje nogometa na igralištu", "Crtanje vodenim bojama na papiru"],
+                answer: 0
+            },
+            {
+                question: "Može li se IKT koristiti u fotografiji?",
+                options: ["Da, fotografi uređuju slike na računalu", "Ne, fotografi ne smiju koristiti računala", "Samo nedjeljom"],
+                answer: 0
+            },
+            {
+                question: "Koja je glavna uloga računala?",
+                options: ["Obrada i pohrana podataka", "Grijanje prostorije", "Miješanje kolača"],
+                answer: 0
+            },
+            {
+                question: "Koje od ovih zanimanja koristi računalo za pisanje članaka i vijesti?",
+                options: ["Urednik i novinar", "Građevinar", "Frizer"],
+                answer: 0
+            },
+            {
+                question: "Treba li čuvati osobne podatke (lozinke i adresu) dok smo na internetu?",
+                options: ["Da, osobni podaci su tajna!", "Ne, svi trebaju znati našu lozinku", "Samo kad padne mrak"],
+                answer: 0
+            },
+            {
+                question: "Što od navedenog spajamo na računalo da bismo tipkali slova?",
+                options: ["Tipkovnicu", "Zvučnik", "Kameru"],
+                answer: 0
+            },
+            {
+                question: "Što koristimo za pomicanje strelice na zaslonu računala?",
+                options: ["Miš", "Kalkulator", "Pisač"],
+                answer: 0
+            },
+            {
+                question: "Pomaže li tehnologija ljudima da brže i lakše obavljaju posao?",
+                options: ["Da, tehnologija olakšava mnoge poslove", "Ne, tehnologija sve usporava", "Samo ako pada kiša"],
+                answer: 0
+            },
+            {
+                question: "Nakon koliko vremena gledanja u ekran je dobro napraviti pauzu?",
+                options: ["Nakon pola sata ili sat vremena", "Nikada ne treba praviti pauzu", "Nakon 10 dana"],
+                answer: 0
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let shuffledQuestions = [];
+        let canAnswer = true;
+
+        // Funkcija za nasumično miješanje polja (Fisher-Yates Shuffle)
+        function shuffleArray(array) {
+            let curId = array.length;
+            while (0 !== curId) {
+                let randId = Math.floor(Math.random() * curId);
+                curId -= 1;
+                let tmp = array[curId];
+                array[curId] = array[randId];
+                array[randId] = tmp;
+            }
+            return array;
+        }
+
+        function startQuiz() {
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            
+            // Kopiraj i izmiješaj redoslijed pitanja
+            shuffledQuestions = JSON.parse(JSON.stringify(questionsData));
+            shuffleArray(shuffledQuestions);
+
+            currentQuestionIndex = 0;
+            score = 0;
+            document.getElementById('score').innerText = score;
+            
+            showQuestion();
+        }
+
+        function showQuestion() {
+            canAnswer = true;
+            document.getElementById('next-btn').classList.add('hidden');
+            document.getElementById('feedback').innerText = '';
+
+            const currentQ = shuffledQuestions[currentQuestionIndex];
+            
+            // Ažuriraj zaglavlje i progres
+            document.getElementById('question-number').innerText = `Pitanje ${currentQuestionIndex + 1}/${shuffledQuestions.length}`;
+            const progressPercent = ((currentQuestionIndex + 1) / shuffledQuestions.length) * 100;
+            document.getElementById('progress-bar').style.width = `${progressPercent}%`;
+
+            document.getElementById('question-text').innerText = currentQ.question;
+
+            // Pripremi odgovore i zapamti koji je točan
+            let optionsWithCorrectFlag = currentQ.options.map((opt, idx) => {
+                return { text: opt, isCorrect: idx === currentQ.answer };
+            });
+
+            // NASUMIČNO IZMIJEŠAJ ODGOVORE
+            shuffleArray(optionsWithCorrectFlag);
+
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+
+            optionsWithCorrectFlag.forEach((optionObj) => {
+                const button = document.createElement('button');
+                button.className = 'btn-option w-full bg-white border-2 border-gray-200 hover:border-purple-400 text-gray-800 font-bold py-4 px-6 rounded-2xl text-left text-lg shadow-sm flex items-center justify-between';
+                button.innerHTML = `<span>${optionObj.text}</span> <i class="fa-regular fa-circle text-gray-300 text-xl"></i>`;
+                
+                button.onclick = () => checkAnswer(button, optionObj.isCorrect);
+                optionsContainer.appendChild(button);
+            });
+        }
+
+        function checkAnswer(selectedBtn, isCorrect) {
+            if (!canAnswer) return;
+            canAnswer = false;
+
+            const optionsContainer = document.getElementById('options-container');
+            const buttons = optionsContainer.getElementsByTagName('button');
+            const feedback = document.getElementById('feedback');
+
+            if (isCorrect) {
+                selectedBtn.classList.remove('bg-white', 'border-gray-200');
+                selectedBtn.classList.add('bg-green-100', 'border-green-500', 'text-green-800', 'correct-anim');
+                selectedBtn.querySelector('i').className = 'fa-solid fa-circle-check text-green-500 text-xl';
+                
+                feedback.innerHTML = '<span class="text-green-600"><i class="fa-solid fa-thumbs-up"></i> Točno! Bravo!</span>';
+                score++;
+                document.getElementById('score').innerText = score;
+            } else {
+                selectedBtn.classList.remove('bg-white', 'border-gray-200');
+                selectedBtn.classList.add('bg-red-100', 'border-red-500', 'text-red-800', 'wrong-anim');
+                selectedBtn.querySelector('i').className = 'fa-solid fa-circle-xmark text-red-500 text-xl';
+
+                feedback.innerHTML = '<span class="text-red-500"><i class="fa-solid fa-face-frown"></i> Ups! Netatno.</span>';
+            }
+
+            // Sakrij sve opcije od daljnjeg klika
+            Array.from(buttons).forEach(btn => {
+                btn.disabled = true;
+                btn.classList.remove('hover:border-purple-400');
+            });
+
+            // Prikaži gumb za dalje
+            if (currentQuestionIndex < shuffledQuestions.length - 1) {
+                document.getElementById('next-btn').classList.remove('hidden');
+            } else {
+                setTimeout(showResults, 1500);
+            }
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            showQuestion();
+        }
+
+        function showResults() {
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+
+            document.getElementById('final-score').innerText = score;
+
+            const resultMessage = document.getElementById('result-message');
+            const resultIcon = document.getElementById('result-icon');
+
+            if (score === 20) {
+                resultIcon.innerText = '🌟🏆🌟';
+                resultMessage.innerText = 'Savršeno! Ti si pravi IT stručnjak!';
+            } else if (score >= 15) {
+                resultIcon.innerText = '🎉';
+                resultMessage.innerText = 'Odlično znanje! Vrlo malo ti nedostaje do maksimuma.';
+            } else if (score >= 10) {
+                resultIcon.innerText = '👍';
+                resultMessage.innerText = 'Dobro urađeno! Uz malo ponavljanja bit ćeš još bolji/a.';
+            } else {
+                resultIcon.innerText = '📚';
+                resultMessage.innerText = 'Potrebno je još malo ponoviti gradivo. Pokušaj ponovno!';
+            }
+        }
+
+        function restartQuiz() {
+            document.getElementById('result-screen').classList.add('hidden');
+            startQuiz();
+        }
+    </script>
+</body>
+</html>
