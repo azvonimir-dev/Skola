@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Informatika 2. razred - Zabavna Provjera Znanja</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Font Fredoka for kid-friendly visual appeal -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Fredoka', cursive, sans-serif;
+            background-color: #f0f9ff;
+            user-select: none;
+        }
+        .custom-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 4px solid #3b82f6;
+            box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.3);
+        }
+        .btn-option {
+            transition: all 0.2s ease-in-out;
+            border-bottom: 4px solid #cbd5e1;
+        }
+        .btn-option:hover {
+            transform: translateY(-2px);
+        }
+        .btn-option:active {
+            transform: translateY(2px);
+            border-bottom-width: 0px;
+        }
+        .canvas-container {
+            touch-action: none;
+        }
+        .star-anim {
+            animation: bounce 1s infinite alternate;
+        }
+        @keyframes bounce {
+            from { transform: translateY(0); }
+            to { transform: translateY(-8px); }
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-800 p-2 md:p-6 flex flex-col justify-between">
+
+    <!-- Header -->
+    <header class="max-w-4xl mx-auto w-full mb-4 text-center">
+        <div class="bg-gradient-to-r from-amber-400 via-orange-400 to-pink-500 rounded-3xl p-4 shadow-lg text-white relative overflow-hidden border-4 border-white">
+            <div class="flex items-center justify-between px-4">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-laptop-code text-3xl md:text-5xl text-yellow-200"></i>
+                    <div class="text-left">
+                        <h1 class="text-2xl md:text-4xl font-bold tracking-wide drop-shadow">Informatika 2. Razred</h1>
+                        <p class="text-xs md:text-base font-semibold text-amber-100">Veliki interaktivni kviz i projektni zadatak</p>
+                    </div>
+                </div>
+                <div class="hidden sm:flex items-center bg-white/20 backdrop-blur px-4 py-2 rounded-2xl border border-white/40">
+                    <i class="fa-solid fa-star text-yellow-300 text-2xl mr-2 star-anim"></i>
+                    <span id="header-score" class="font-bold text-xl">0 / 35</span>
+                </div>
+            </div>
+            <!-- Progress Bar -->
+            <div class="w-full bg-black/20 rounded-full h-4 mt-3 p-0.5 border border-white/30">
+                <div id="progress-bar" class="bg-gradient-to-r from-green-300 to-emerald-400 h-full rounded-full transition-all duration-300 w-0"></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="max-w-4xl mx-auto w-full flex-grow flex flex-col justify-center">
+
+        <!-- Welcome Card -->
+        <div id="welcome-card" class="custom-card rounded-3xl p-6 md:p-10 text-center border-purple-400">
+            <div class="text-6xl mb-4">🚀</div>
+            <h2 class="text-3xl md:text-4xl font-bold text-purple-600 mb-3">Bok, mladi informatiče!</h2>
+            <p class="text-lg md:text-xl text-slate-600 mb-4 max-w-xl mx-auto">
+                Danas istražujemo računala, zdravlje, programe i IKT! Čeka te <b>35 zabavnih pitanja</b> i poseban <b>crtački zadatak</b>.
+            </p>
+
+            <!-- Student Name Input -->
+            <div class="max-w-md mx-auto mb-6 bg-purple-50 p-4 rounded-2xl border-2 border-purple-200">
+                <label for="student-name" class="block text-left text-purple-800 font-bold mb-2">
+                    <i class="fa-solid fa-user-pen mr-2"></i> Unesi svoje ime i prezime:
+                </label>
+                <input type="text" id="student-name" placeholder="npr. Ana Anić, 2.a" class="w-full px-4 py-2.5 rounded-xl border-2 border-purple-300 focus:outline-none focus:border-purple-500 font-semibold text-slate-700">
+            </div>
+
+            <div class="bg-amber-50 border-2 border-amber-300 rounded-2xl p-4 mb-8 text-left max-w-md mx-auto">
+                <h3 class="font-bold text-amber-800 text-lg mb-1"><i class="fa-solid fa-lightbulb text-amber-500 mr-2"></i>Kratka uputa:</h3>
+                <ul class="list-disc list-inside text-sm md:text-base text-amber-900 space-y-1">
+                    <li>Pažljivo pročitaj svako pitanje.</li>
+                    <li>U zadatcima crtanja pusti mašti na volju i pritisni "Spremi crtež".</li>
+                    <li>Na kraju izračunaj svoj rezultat i preuzmi izvješće sa svim odgovorima!</li>
+                </ul>
+            </div>
+            <button onclick="startQuiz()" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-2xl px-10 py-4 rounded-2xl shadow-lg hover:shadow-xl transition transform active:scale-95 border-b-4 border-emerald-700">
+                Kreni na provjeru! <i class="fa-solid fa-play ml-2"></i>
+            </button>
+        </div>
+
+        <!-- Question Card (Hidden initially) -->
+        <div id="question-card" class="hidden custom-card rounded-3xl p-4 md:p-8 border-blue-400 relative">
+            <!-- Question Number & Category Badge -->
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                <span id="question-badge" class="bg-blue-100 text-blue-700 font-bold px-3 py-1 rounded-full text-sm border border-blue-300">
+                    Pitanje 1 / 35
+                </span>
+                <span id="category-badge" class="bg-purple-100 text-purple-700 font-bold px-3 py-1 rounded-full text-xs md:text-sm border border-purple-300">
+                    Računalo i zdravlje
+                </span>
+            </div>
+
+            <!-- Question Text -->
+            <h3 id="question-text" class="text-xl md:text-2xl font-bold text-slate-800 mb-6 leading-relaxed">
+                Učitavanje pitanja...
+            </h3>
+
+            <!-- Standard Options Container -->
+            <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <!-- Dynamic options injected here -->
+            </div>
+
+            <!-- Drawing Canvas Container (For Drawing Questions) -->
+            <div id="drawing-container" class="hidden flex-col items-center mb-6">
+                <div class="flex flex-wrap items-center justify-between w-full max-w-lg mb-2 gap-2 bg-slate-100 p-2 rounded-xl border border-slate-300">
+                    <div class="flex items-center space-x-2">
+                        <label class="text-xs font-bold text-slate-600">Boja:</label>
+                        <input type="color" id="brush-color" value="#2563eb" class="w-8 h-8 rounded border-none cursor-pointer">
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <label class="text-xs font-bold text-slate-600">Debljina:</label>
+                        <input type="range" id="brush-size" min="2" max="20" value="5" class="w-24">
+                    </div>
+                    <button onclick="clearCanvas()" class="bg-rose-500 hover:bg-rose-600 text-white text-xs px-3 py-1.5 rounded-lg shadow font-bold">
+                        <i class="fa-solid fa-eraser mr-1"></i> Obriši sve
+                    </button>
+                </div>
+                
+                <div class="canvas-container border-4 border-dashed border-blue-300 rounded-2xl overflow-hidden bg-white shadow-inner">
+                    <canvas id="drawing-canvas" width="500" height="300" class="cursor-crosshair max-w-full h-auto"></canvas>
+                </div>
+
+                <p class="text-xs text-slate-500 mt-2"><i class="fa-solid fa-info-circle mr-1"></i> Nacrtaj rukom ili mišem/prstom po bijelom polju!</p>
+                <button onclick="submitDrawing()" class="mt-4 bg-purple-600 hover:bg-purple-700 text-white font-bold px-6 py-2.5 rounded-xl shadow border-b-4 border-purple-800 transition active:scale-95">
+                    <i class="fa-solid fa-check-circle mr-2"></i> Spremi i Potvrdi Crtež
+                </button>
+            </div>
+
+            <!-- Feedback Message Box -->
+            <div id="feedback-box" class="hidden p-4 rounded-2xl font-bold text-center mb-4 transition-all"></div>
+
+            <!-- Next Question Button -->
+            <div class="flex justify-end">
+                <button id="next-btn" onclick="nextQuestion()" class="hidden bg-amber-500 hover:bg-amber-600 text-white font-bold text-lg px-8 py-3 rounded-2xl shadow-lg border-b-4 border-amber-700 transition transform active:scale-95">
+                    Sljedeće pitanje <i class="fa-solid fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Results Card (Hidden initially) -->
+        <div id="results-card" class="hidden custom-card rounded-3xl p-6 md:p-10 text-center border-emerald-400">
+            <div class="text-6xl mb-4 animate-bounce">🏆</div>
+            <h2 class="text-3xl md:text-5xl font-bold text-emerald-600 mb-2">Čestitamo!</h2>
+            <p id="student-result-name" class="text-xl font-bold text-purple-700 mb-1"></p>
+            <p class="text-base md:text-lg text-slate-600 mb-6">Uspješno si završio/la provjeru iz Informatike!</p>
+
+            <div class="bg-gradient-to-br from-emerald-50 to-teal-50 border-4 border-emerald-200 rounded-3xl p-6 mb-8 max-w-md mx-auto shadow-sm">
+                <div class="text-sm font-bold text-emerald-800 uppercase tracking-wider mb-1">Tvoj ukupni rezultat:</div>
+                <div id="final-score-text" class="text-4xl md:text-6xl font-black text-emerald-600 mb-2">0 / 35</div>
+                <div id="final-percentage" class="text-xl font-bold text-emerald-700 mb-4">(0%)</div>
+                
+                <hr class="border-emerald-200 my-4">
+
+                <div id="badge-title" class="text-2xl font-bold text-purple-700 mb-1">Super Informatičar!</div>
+                <p id="badge-desc" class="text-sm text-slate-600">Izvrstan rad i poznavanje gradiva!</p>
+            </div>
+
+            <!-- Download and Review Buttons Section -->
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
+                <button onclick="downloadReport()" class="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-lg px-8 py-3.5 rounded-2xl shadow-lg border-b-4 border-indigo-900 transition transform active:scale-95">
+                    <i class="fa-solid fa-file-arrow-down mr-2"></i> Preuzmi odgovore (.txt)
+                </button>
+
+                <button onclick="toggleSummaryModal()" class="w-full sm:w-auto bg-slate-700 hover:bg-slate-800 text-white font-bold text-lg px-6 py-3.5 rounded-2xl shadow-lg border-b-4 border-slate-900 transition transform active:scale-95">
+                    <i class="fa-solid fa-list-check mr-2"></i> Pregledaj izvješće
+                </button>
+            </div>
+
+            <div>
+                <button onclick="restartQuiz()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold text-lg px-8 py-3 rounded-2xl shadow border-b-4 border-blue-700 transition transform active:scale-95">
+                    <i class="fa-solid fa-rotate-right mr-2"></i> Pokreni ponovno
+                </button>
+            </div>
+        </div>
+
+        <!-- Summary Modal (For reviewing answers on screen) -->
+        <div id="summary-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl border-4 border-blue-400">
+                <div class="p-4 bg-blue-500 text-white font-bold text-xl rounded-t-2xl flex justify-between items-center">
+                    <span><i class="fa-solid fa-clipboard-list mr-2"></i> Detaljno izvješće učenika</span>
+                    <button onclick="toggleSummaryModal()" class="text-white hover:text-red-200 text-2xl font-bold">&times;</button>
+                </div>
+                <div id="modal-content" class="p-6 overflow-y-auto text-left font-sans text-sm space-y-4">
+                    <!-- Dynamic summary report -->
+                </div>
+                <div class="p-4 bg-slate-100 rounded-b-2xl flex justify-between items-center">
+                    <button onclick="downloadReport()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-xl text-sm">
+                        <i class="fa-solid fa-download mr-1"></i> Preuzmi kao .TXT
+                    </button>
+                    <button onclick="toggleSummaryModal()" class="bg-slate-500 hover:bg-slate-600 text-white font-bold px-5 py-2 rounded-xl text-sm">
+                        Zatvori
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-6 text-center text-xs md:text-sm text-slate-500 font-semibold">
+        <p>Pripremljeno za nastavu Informatike u 2. razredu osnovne škole 🏫 | Digitalni materijali</p>
+    </footer>
+
+    <script>
+        const questions = [
+            // --- SEKCIJA 1: RAČUNALO I ZDRAVLJE ---
+            {
+                category: "Računalo i zdravlje",
+                text: "Što moramo izvoditi nakon dužeg sjedenja za računalom kako bismo sačuvali zdravlje?",
+                options: ["Gledati u ekran bez prestanka", "Vježbe razgibavanja", "Jesti slatkiše", "Spavati s upaljenim računalom"],
+                correct: 1,
+                explanation: "Nakon dužeg sjedenja za računalom obavezno moramo raditi vježbe razgibavanja!"
+            },
+            {
+                category: "Računalo i zdravlje",
+                text: "Kako se zove vježba u kojoj podižemo ruke visoko u zrak prema gore?",
+                options: ["Podizanje ramena", "Dohvaćanje sunca", "Pogled u pod", "Slušaj ramena"],
+                correct: 1,
+                explanation: "Visoko podizanje ruku zove se 'Dohvaćanje sunca'."
+            },
+            {
+                category: "Računalo i zdravlje",
+                text: "Točno ili Netočno: Tijekom rada na računalu važno je raditi pauze i odmarati oči.",
+                options: ["Točno", "Netočno"],
+                correct: 0,
+                explanation: "Točno! Odmaranje očiju i odmicanje pogleda s ekrana jako je važno."
+            },
+            {
+                category: "Računalo i zdravlje",
+                text: "Do koliko obično brojimo i ponavljamo pokrete pri vježbama razgibavanja?",
+                options: ["Do 100", "Do 8", "Do 2", "Do 50"],
+                correct: 1,
+                explanation: "Pri vježbama razgibavanja brojimo do 8."
+            },
+            {
+                category: "Računalo i zdravlje",
+                text: "Kod vježbe 'Stablo na vjetru', što radimo s lakatom?",
+                options: ["Uhvatimo lijevi lakat desnom rukom i povučemo iza glave", "Stavimo ruke na leđa", "Čvrsto zatvorimo oči", "Nagnemo glavu prema dolje"],
+                correct: 0,
+                explanation: "Tako je! Uhvatimo lakat rukom i nježno ga povučemo iza glave."
+            },
+            {
+                category: "Računalo i zdravlje",
+                text: "U vježbi 'Pogled u pod', ramena moraju biti čvrsto stisnuta i napeta.",
+                options: ["Točno", "Netočno"],
+                correct: 1,
+                explanation: "Netočno! Ramena moraju biti opuštena, a glavu polagano nagnemo naprijed."
+            },
+            {
+                category: "Računalo i zdravlje",
+                text: "Što od navedenog NIJE dobro činiti uz rad na računalu?",
+                options: ["Raditi pauze", "Šetati u pauzi", "Gledati neprekidno u ekran 5 sati bez odmora", "Odmaknuti pogled s računala"],
+                correct: 2,
+                explanation: "Sjedenje 5 sati bez odmora šteti našem zdravlju!"
+            },
+            {
+                category: "Računalo i zdravlje",
+                text: "U vježbi 'Istežem ručni zglob', kako su okrenuti dlanovi?",
+                options: ["Dlanovi gledaju prema stropu", "Prsti dlanova gledaju u pod", "Šake su čvrsto stisnute", "Ruke su iza leđa"],
+                correct: 1,
+                explanation: "Prstima okrenutim prema podu istežemo ručni zglob."
+            },
+            {
+                category: "Računalo i zdravlje",
+                text: "Vježba 'Brojim prste' uključuje ispružanje, širenje i skupljanje prstiju u šaku.",
+                options: ["Točno", "Netočno"],
+                correct: 0,
+                explanation: "Točno! Širimo i skupljamo prste u šaku brojeći do 8."
+            },
+
+            // --- CRTAČKI ZADATAK 1 (Projektni zadatak) ---
+            {
+                category: "PROJEKTNI ZADATAK: Crtanje 🎨",
+                text: "ZADATAK CRTANJA 1: Nacrtaj jedno stolno ili prijenosno računalo (ili tvoj omiljeni digitalni uređaj) na platno ispod!",
+                type: "drawing",
+                explanation: "Bravo za tvoj prekrasan crtež računala/uređaja!"
+            },
+
+            // --- SEKCIJA 2: DIGITALNI UREĐAJI ---
+            {
+                category: "Digitalni uređaji",
+                text: "Koji od navedenih uređaja je digitalni uređaj?",
+                options: ["Drvena olovka", "Pametni telefon", "Papirnata bilježnica", "Plastična ravnalo"],
+                correct: 1,
+                explanation: "Pametni telefon je moderan digitalni uređaj."
+            },
+            {
+                category: "Digitalni uređaji",
+                text: "Mala ugradbena računala nalaze se unutar raznih uređaja u kućanstvu.",
+                options: ["Točno", "Netočno"],
+                correct: 0,
+                explanation: "Točno! Nalaze se u perilici, pećnici, automobilu i mnogim drugim uređajima."
+            },
+            {
+                category: "Digitalni uređaji",
+                text: "Koji digitalni uređaj u kućanstvu nam pomaže oprati prljavo rublje?",
+                options: ["Perilica rublja", "Toplomjer", "Televizor", "Automobil"],
+                correct: 0,
+                explanation: "Perilica rublja sadrži malo računalo koje upravlja pranjem."
+            },
+            {
+                category: "Digitalni uređaji",
+                text: "Što u automobilu pokazuje točan put vozaču?",
+                options: ["Navigacija", "Budilica", "Mješalica", "Toplomjer"],
+                correct: 0,
+                explanation: "GPS navigacija je digitalni uređaj koji pokazuje put."
+            },
+            {
+                category: "Digitalni uređaji",
+                text: "Koji digitalni uređaj koristimo za mjerenje tjelesne temperature?",
+                options: ["Digitalni toplomjer", "Pametni sat", "Fotoaparat", "Štednjak"],
+                correct: 0,
+                explanation: "Digitalni toplomjer precizno mjeri temperaturu."
+            },
+            {
+                category: "Digitalni uređaji",
+                text: "Što radi budilica kao digitalni uređaj?",
+                options: ["Kuha čaj", "Zvoni i budi nas u zadano vrijeme", "Pere suđe", "Hladi sobu"],
+                correct: 1,
+                explanation: "Digitalna budilica zvoni u točno postavljeno vrijeme."
+            },
+            {
+                category: "Digitalni uređaji",
+                text: "Stolno računalo lako možemo nositi sa sobom u ruksaku.",
+                options: ["Točno", "Netočno"],
+                correct: 1,
+                explanation: "Netočno! Za nošenje koristimo prijenosno računalo (laptop) ili tablet."
+            },
+            {
+                category: "Digitalni uređaji",
+                text: "Koja je glavna razlika između stolnog i prijenosnog računala?",
+                options: ["Stolno računalo stoji na stolu, a prijenosno je lakše i možemo ga nositi", "Stolno računalo ne radi na struju", "Prijenosno računalo nema ekran", "Nema nikakve razlike"],
+                correct: 0,
+                explanation: "Prijenosno računalo je sklopljivo i pogodno za nošenje."
+            },
+            {
+                category: "Digitalni uređaji",
+                text: "Koje od navedenih uređaja možemo pronaći u kuhinji, a imaju malo računalo u sebi?",
+                options: ["Mikrovalna pećnica i perilica posuđa", "Obična drvena žlica", "Staklena čaša", "Papirnati ručnik"],
+                correct: 0,
+                explanation: "Moderne mikrovalne pećnice i perilice posuđa imaju mala računala."
+            },
+            {
+                category: "Digitalni uređaji",
+                text: "Je li digitalni fotoaparat također digitalni uređaj?",
+                options: ["Da", "Ne"],
+                correct: 0,
+                explanation: "Da, digitalni fotoaparat služi za snimanje i pohranu fotografija."
+            },
+
+            // --- SEKCIJA 3: RAČUNALNI PROGRAMI ---
+            {
+                category: "Računalni programi",
+                text: "Na računalu sve radimo pomoću čaša i tanjura.",
+                options: ["Točno", "Netočno"],
+                correct: 1,
+                explanation: "Netočno! Na računalu sve radimo pomoću PROGRAMA i APLIKACIJA."
+            },
+            {
+                category: "Računalni programi",
+                text: "Što je to PROGRAM?",
+                options: ["Dio tipkovnice", "Niz naredbi koje kažu računalu što treba raditi", "Kabel za struju", "Školska torba"],
+                correct: 1,
+                explanation: "Program je niz naredbi po kojima računalo radi."
+            },
+            {
+                category: "Računalni programi",
+                text: "Koji program na računalu koristimo za zbrajanje i oduzimanje brojeva?",
+                options: ["Bojanje", "Kalkulator (Računalo)", "Kamera", "Preglednik slika"],
+                correct: 1,
+                explanation: "Kalkulator je program za računanje."
+            },
+            {
+                category: "Računalni programi",
+                text: "Računalo radi prema uputama. Kako možemo usporediti upute za računalo?",
+                options: ["Kao recept za kuhanje čaja ili kolača korak po korak", "Kao spavanje", "Kao gledanje kroz prozor", "Kao kuhanu rižu"],
+                correct: 0,
+                explanation: "Baš kao što mi pratimo recept korak po korak, tako i računalo prati naredbe."
+            },
+            {
+                category: "Računalni programi",
+                text: "Program koji omogućuje pokretanje i rad samog računala zove se:",
+                options: ["Igra", "Operacijski sustav", "Internet", "Tipkovnica"],
+                correct: 1,
+                explanation: "Operacijski sustav upravlja radom cijelog računala."
+            },
+            {
+                category: "Računalni programi",
+                text: "Koji od navedenih je poznati operacijski sustav za računala ili mobitele?",
+                options: ["Windows", "Android", "iOS", "Svi navedeni odgovori su točni"],
+                correct: 3,
+                explanation: "Tako je! Windows, Android, iOS, Linux i MacOS su operacijski sustavi."
+            },
+            {
+                category: "Računalni programi",
+                text: "U kojem programu učimo slagati naredbe i programe u školi?",
+                options: ["Scratch", "Kalkulator", "Sat", "Svjetiljka"],
+                correct: 0,
+                explanation: "Scratch je odličan program za učenje programiranja kroz igru."
+            },
+            {
+                category: "Računalni programi",
+                text: "Ako želimo nešto nacrtati i obojati na računalu, otvorit ćemo program za:",
+                options: ["Bojanje / Crtanje", "Slušanje zvuka", "Računanje", "Pisanje e-maila"],
+                correct: 0,
+                explanation: "Programi za bojanje i crtanje služe stvaranju slika."
+            },
+
+            // --- CRTAČKI ZADATAK 2 (Projektni zadatak) ---
+            {
+                category: "PROJEKTNI ZADATAK: Crtanje 🎨",
+                text: "ZADATAK CRTANJA 2: Nacrtaj jednu vježbu razgibavanja (npr. dohvaćanje sunca ili stablo) ili ikonu omiljenog programa!",
+                type: "drawing",
+                explanation: "Odličan crtež! Prava mala umjetnička kreacija!"
+            },
+
+            // --- SEKCIJA 4: INFORMACIJSKO-KOMUNIKACIJSKA TEHNOLOGIJA (IKT) ---
+            {
+                category: "IKT i zanimanja",
+                text: "Što skraćeno znači riječ IKT?",
+                options: ["Igra, Kreda, Torba", "Informacijsko-komunikacijska tehnologija", "Istočni Kratki Tekst", "Internet Kroz Telefon"],
+                correct: 1,
+                explanation: "IKT znači Informacijsko-komunikacijska tehnologija."
+            },
+            {
+                category: "IKT i zanimanja",
+                text: "Koriste li liječnici i doktori tehnologiju i računala u svom poslu?",
+                options: ["Da, za pregled pacijenata i nalaza", "Ne, uopće ne koriste računala"],
+                correct: 0,
+                explanation: "Liječnici svakodnevno koriste IKT za rad i pregled pacijenata."
+            },
+            {
+                category: "IKT i zanimanja",
+                text: "Kako se zove stručnjak koji izrađuje programe i održava računala?",
+                options: ["IT stručnjak / Programer", "Vozač autobusa", "Kuhar", "Zidar"],
+                correct: 0,
+                explanation: "IT stručnjaci i programeri stvaraju aplikacije i održavaju sustave."
+            },
+            {
+                category: "IKT i zanimanja",
+                text: "Navedi zanimanja u kojima se danas koristi IKT:",
+                options: ["Učitelji, fotografi, arhitekti, prodavači", "Samo astronauti", "Samo ljudi koji rade u banci", "Niko ne koristi tehnologiju"],
+                correct: 0,
+                explanation: "Danas se IKT koristi u gotovo svim zanimanjima!"
+            },
+            {
+                category: "IKT i zanimanja",
+                text: "Mogu li frizeri šišati kosu bez upotrebe računala?",
+                options: ["Da, šišanje je posao koji se radi rukama i škarama", "Ne, frizer ne može raditi bez računala"],
+                correct: 0,
+                explanation: "Tako je! Šišanje škarama je primjer posla bez izravne upotrebe tehnologije."
+            },
+            {
+                category: "IKT i zanimanja",
+                text: "Pomaže li nam IKT u brzom slanju poruka i učenju na daljinu?",
+                options: ["Da, uvelike nam olakšava komunikaciju i učenje", "Ne, IKT služi samo za spavanje"],
+                correct: 0,
+                explanation: "IKT nam omogućuje brzo slanje poruka, pozive i e-učenje!"
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let answered = false;
+        let studentName = "";
+
+        // Array to store full student response data
+        let userResponses = [];
+
+        // Canvas element references
+        let canvas, ctx;
+        let isDrawing = false;
+        let hasDrawn = false;
+
+        function startQuiz() {
+            const nameInput = document.getElementById('student-name').value.trim();
+            studentName = nameInput.length > 0 ? nameInput : "Učenik / Učenica";
+            
+            userResponses = [];
+            document.getElementById('welcome-card').classList.add('hidden');
+            document.getElementById('question-card').classList.remove('hidden');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            answered = false;
+            const q = questions[currentQuestionIndex];
+
+            // Update Header & Badges
+            document.getElementById('question-badge').innerText = `Pitanje ${currentQuestionIndex + 1} / ${questions.length}`;
+            document.getElementById('category-badge').innerText = q.category;
+            document.getElementById('question-text').innerText = q.text;
+
+            // Hide feedback and next button
+            const feedbackBox = document.getElementById('feedback-box');
+            feedbackBox.classList.add('hidden');
+            feedbackBox.className = "hidden p-4 rounded-2xl font-bold text-center mb-4 transition-all";
+            document.getElementById('next-btn').classList.add('hidden');
+
+            const optionsContainer = document.getElementById('options-container');
+            const drawingContainer = document.getElementById('drawing-container');
+
+            if (q.type === 'drawing') {
+                // Show Canvas Drawing UI
+                optionsContainer.classList.add('hidden');
+                drawingContainer.classList.remove('hidden');
+                drawingContainer.classList.add('flex');
+                initCanvas();
+            } else {
+                // Show Standard Options UI
+                drawingContainer.classList.add('hidden');
+                drawingContainer.classList.remove('flex');
+                optionsContainer.classList.remove('hidden');
+                optionsContainer.innerHTML = '';
+
+                q.options.forEach((opt, idx) => {
+                    const btn = document.createElement('button');
+                    btn.className = "btn-option bg-white hover:bg-blue-50 text-slate-700 font-bold p-4 rounded-2xl border-2 border-slate-200 hover:border-blue-400 text-left text-base md:text-lg flex items-center shadow-sm";
+                    btn.onclick = () => checkAnswer(idx);
+                    btn.innerHTML = `
+                        <span class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 font-bold flex items-center justify-center mr-3 flex-shrink-0">${String.fromCharCode(65 + idx)}</span>
+                        <span>${opt}</span>
+                    `;
+                    optionsContainer.appendChild(btn);
+                });
+            }
+
+            updateProgress();
+        }
+
+        function checkAnswer(selectedIdx) {
+            if (answered) return;
+            answered = true;
+
+            const q = questions[currentQuestionIndex];
+            const optionsContainer = document.getElementById('options-container');
+            const buttons = optionsContainer.children;
+            const feedbackBox = document.getElementById('feedback-box');
+
+            const isCorrect = (selectedIdx === q.correct);
+
+            // Record Response Data
+            userResponses.push({
+                questionNum: currentQuestionIndex + 1,
+                questionText: q.text,
+                category: q.category,
+                type: 'choice',
+                selectedOption: q.options[selectedIdx],
+                correctOption: q.options[q.correct],
+                isCorrect: isCorrect
+            });
+
+            if (isCorrect) {
+                score++;
+                buttons[selectedIdx].classList.remove('bg-white', 'border-slate-200');
+                buttons[selectedIdx].classList.add('bg-green-100', 'border-green-500', 'text-green-800');
+                
+                feedbackBox.innerHTML = `<i class="fa-solid fa-circle-check text-2xl mr-2"></i> Točno! ${q.explanation}`;
+                feedbackBox.classList.add('bg-green-100', 'text-green-800', 'border-2', 'border-green-300');
+            } else {
+                buttons[selectedIdx].classList.remove('bg-white', 'border-slate-200');
+                buttons[selectedIdx].classList.add('bg-rose-100', 'border-rose-500', 'text-rose-800');
+                
+                // Highlight correct option
+                buttons[q.correct].classList.remove('bg-white', 'border-slate-200');
+                buttons[q.correct].classList.add('bg-green-100', 'border-green-500', 'text-green-800');
+
+                feedbackBox.innerHTML = `<i class="fa-solid fa-circle-xmark text-2xl mr-2"></i> Ups! Netočan odgovor. ${q.explanation}`;
+                feedbackBox.classList.add('bg-rose-100', 'text-rose-800', 'border-2', 'border-rose-300');
+            }
+
+            feedbackBox.classList.remove('hidden');
+            document.getElementById('next-btn').classList.remove('hidden');
+            updateProgress();
+        }
+
+        function initCanvas() {
+            canvas = document.getElementById('drawing-canvas');
+            ctx = canvas.getContext('2d');
+            hasDrawn = false;
+
+            // Clear canvas background to white
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Mouse Events
+            canvas.onmousedown = startDrawing;
+            canvas.onmousemove = draw;
+            canvas.onmouseup = stopDrawing;
+            canvas.onmouseleave = stopDrawing;
+
+            // Touch Events for Mobile / Tablet
+            canvas.ontouchstart = (e) => {
+                e.preventDefault();
+                const touch = e.touches[0];
+                startDrawing({ clientX: touch.clientX, clientY: touch.clientY });
+            };
+            canvas.ontouchmove = (e) => {
+                e.preventDefault();
+                const touch = e.touches[0];
+                draw({ clientX: touch.clientX, clientY: touch.clientY });
+            };
+            canvas.ontouchend = stopDrawing;
+        }
+
+        function getCanvasCoords(e) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            return {
+                x: (e.clientX - rect.left) * scaleX,
+                y: (e.clientY - rect.top) * scaleY
+            };
+        }
+
+        function startDrawing(e) {
+            isDrawing = true;
+            hasDrawn = true;
+            const coords = getCanvasCoords(e);
+            ctx.beginPath();
+            ctx.moveTo(coords.x, coords.y);
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+            const coords = getCanvasCoords(e);
+            const color = document.getElementById('brush-color').value;
+            const size = document.getElementById('brush-size').value;
+
+            ctx.strokeStyle = color;
+            ctx.lineWidth = size;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+
+            ctx.lineTo(coords.x, coords.y);
+            ctx.stroke();
+        }
+
+        function stopDrawing() {
+            if (isDrawing) {
+                ctx.closePath();
+                isDrawing = false;
+            }
+        }
+
+        function clearCanvas() {
+            if (!ctx) return;
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            hasDrawn = false;
+        }
+
+        function submitDrawing() {
+            if (answered) return;
+            answered = true;
+
+            const feedbackBox = document.getElementById('feedback-box');
+            const q = questions[currentQuestionIndex];
+
+            // Record Drawing Response Data
+            userResponses.push({
+                questionNum: currentQuestionIndex + 1,
+                questionText: q.text,
+                category: q.category,
+                type: 'drawing',
+                selectedOption: hasDrawn ? "Učenik/ca je nacrtao/la rad na platnu." : "Prazno platno (bez crteža).",
+                correctOption: "Nacrtan rad",
+                isCorrect: true
+            });
+
+            // Award point for participating in drawing
+            score++;
+            feedbackBox.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles text-2xl mr-2"></i> Izvrsno! Tvoj crtež je uspješno spreman! ${q.explanation}`;
+            feedbackBox.className = "p-4 rounded-2xl font-bold text-center mb-4 transition-all bg-purple-100 text-purple-800 border-2 border-purple-300";
+
+            feedbackBox.classList.remove('hidden');
+            document.getElementById('next-btn').classList.remove('hidden');
+            updateProgress();
+        }
+
+        function updateProgress() {
+            document.getElementById('header-score').innerText = `${score} / ${questions.length}`;
+            const percentage = ((currentQuestionIndex) / questions.length) * 100;
+            document.getElementById('progress-bar').style.width = `${percentage}%`;
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < questions.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            document.getElementById('question-card').classList.add('hidden');
+            document.getElementById('results-card').classList.remove('hidden');
+            document.getElementById('progress-bar').style.width = '100%';
+
+            document.getElementById('student-result-name').innerText = `Učenik: ${studentName}`;
+
+            const percentage = Math.round((score / questions.length) * 100);
+            document.getElementById('final-score-text').innerText = `${score} / ${questions.length}`;
+            document.getElementById('final-percentage').innerText = `(${percentage}%)`;
+
+            const badgeTitle = document.getElementById('badge-title');
+            const badgeDesc = document.getElementById('badge-desc');
+
+            if (percentage >= 90) {
+                badgeTitle.innerText = "🥇 Informatički Genijalac!";
+                badgeDesc.innerText = "Fantastično! Znaš baš sve o računalima, zdravlju i programima!";
+            } else if (percentage >= 70) {
+                badgeTitle.innerText = "🥈 Mali Računalni Stručnjak!";
+                badgeDesc.innerText = "Odličan rezultat! Vrlo dobro poznaješ gradivo informatike.";
+            } else if (percentage >= 50) {
+                badgeTitle.innerText = "🥉 Informatičar u usponu!";
+                badgeDesc.innerText = "Dobar rad! Uz još malo vježbe bit ćeš pravi majstor.";
+            } else {
+                badgeTitle.innerText = "🌱 Hrabri Početnik!";
+                badgeDesc.innerText = "Uskoro ćeš znati još više. Pokušaj ponovno!";
+            }
+
+            renderModalContent();
+        }
+
+        // Generate formatted text report for TXT download
+        function generateReportText() {
+            const percentage = Math.round((score / questions.length) * 100);
+            const dateStr = new Date().toLocaleString('hr-HR');
+
+            let report = `=====================================================\n`;
+            report += `    IZVJEŠĆE IZ PROVJERE ZNANJA - INFORMATIKA 2. R.   \n`;
+            report += `=====================================================\n\n`;
+            report += `Učenik / Učenica: ${studentName}\n`;
+            report += `Datum i vrijeme: ${dateStr}\n`;
+            report += `Ukupni rezultat: ${score} od ${questions.length} bodova (${percentage}%)\n`;
+            report += `-----------------------------------------------------\n\n`;
+            report += `DETALJNI ODGOVORI UČENIKA PO PITANJIMA:\n\n`;
+
+            userResponses.forEach((res) => {
+                report += `${res.questionNum}. [${res.category}] ${res.questionText}\n`;
+                if (res.type === 'drawing') {
+                    report += `   Status: PROJEKTNI ZADATAK (CRTANJE)\n`;
+                    report += `   Opis radnje: ${res.selectedOption}\n`;
+                    report += `   Bod: +1 bod\n`;
+                } else {
+                    report += `   Odgovor učenika: ${res.selectedOption}\n`;
+                    report += `   Točan odgovor:   ${res.correctOption}\n`;
+                    report += `   Status: ${res.isCorrect ? 'TOČNO (+1 bod)' : 'NETOČNO (0 bodova)'}\n`;
+                }
+                report += `\n`;
+            });
+
+            report += `=====================================================\n`;
+            report += `Kraj izvješća.\n`;
+            return report;
+        }
+
+        function downloadReport() {
+            const reportText = generateReportText();
+            const filename = `Odgovori_${studentName.replace(/[^a-zA-Z0-9]/g, "_")}_Informatika2R.txt`;
+            
+            const element = document.createElement('a');
+            element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(reportText));
+            element.setAttribute('download', filename);
+            element.style.display = 'none';
+            document.body.appendChild(element);
+            element.click();
+            document.body.removeChild(element);
+        }
+
+        function renderModalContent() {
+            const modalContent = document.getElementById('modal-content');
+            modalContent.innerHTML = '';
+
+            const dateStr = new Date().toLocaleString('hr-HR');
+            const percentage = Math.round((score / questions.length) * 100);
+
+            let headerHtml = `
+                <div class="bg-blue-50 p-4 rounded-xl border border-blue-200 mb-4">
+                    <p class="font-bold text-base text-blue-900">Učenik: ${studentName}</p>
+                    <p class="text-slate-600">Datum: ${dateStr}</p>
+                    <p class="font-bold text-emerald-700 mt-1">Ukupan rezultat: ${score} / ${questions.length} (${percentage}%)</p>
+                </div>
+            `;
+
+            let questionsHtml = '<div class="space-y-3">';
+            userResponses.forEach((res) => {
+                const badgeColor = res.isCorrect ? 'bg-green-100 text-green-800 border-green-300' : 'bg-rose-100 text-rose-800 border-rose-300';
+                const statusText = res.type === 'drawing' ? 'Projektni zadatak (Crtanje)' : (res.isCorrect ? 'Točno' : 'Netočno');
+
+                questionsHtml += `
+                    <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                        <div class="flex justify-between items-start gap-2 mb-1">
+                            <span class="font-bold text-slate-800">${res.questionNum}. ${res.questionText}</span>
+                            <span class="text-xs px-2 py-0.5 rounded-md font-bold border ${badgeColor}">${statusText}</span>
+                        </div>
+                        <p class="text-xs text-slate-600"> Odgovor: <span class="font-semibold text-slate-800">${res.selectedOption}</span></p>
+                        ${(!res.isCorrect && res.type !== 'drawing') ? `<p class="text-xs text-emerald-700"> Točan odgovor: <span class="font-semibold">${res.correctOption}</span></p>` : ''}
+                    </div>
+                `;
+            });
+            questionsHtml += '</div>';
+
+            modalContent.innerHTML = headerHtml + questionsHtml;
+        }
+
+        function toggleSummaryModal() {
+            const modal = document.getElementById('summary-modal');
+            modal.classList.toggle('hidden');
+        }
+
+        function restartQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            userResponses = [];
+            document.getElementById('results-card').classList.add('hidden');
+            document.getElementById('welcome-card').classList.remove('hidden');
+            document.getElementById('progress-bar').style.width = '0%';
+            document.getElementById('header-score').innerText = `0 / ${questions.length}`;
+        }
+    </script>
+</body>
+</html>
