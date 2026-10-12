@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kviz: Pišemo uz pomoć računala (3. razred)</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f8ff;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            margin: 0;
+        }
+        .quiz-container {
+            background-color: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+            max-width: 650px;
+            width: 100%;
+            padding: 25px;
+            border: 3px solid #4a90e2;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        p.subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 16px;
+            margin-top: 0;
+        }
+        .progress-bar {
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            height: 12px;
+            width: 100%;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        .progress {
+            background-color: #27ae60;
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        .question-number {
+            font-weight: bold;
+            color: #4a90e2;
+            margin-bottom: 10px;
+        }
+        .question-text {
+            font-size: 18px;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .btn {
+            background-color: #f8f9fa;
+            border: 2px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 12px 15px;
+            font-size: 16px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s ease;
+        }
+        .btn:hover {
+            background-color: #e2e8f0;
+            border-color: #94a3b8;
+        }
+        .btn.correct {
+            background-color: #d4edda !important;
+            border-color: #28a745 !important;
+            color: #155724;
+            font-weight: bold;
+        }
+        .btn.wrong {
+            background-color: #f8d7da !important;
+            border-color: #dc3545 !important;
+            color: #721c24;
+        }
+        .feedback {
+            margin-top: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            min-height: 24px;
+        }
+        .next-btn {
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 20px;
+            float: right;
+            display: none;
+        }
+        .next-btn:hover {
+            background-color: #357abd;
+        }
+        .result-screen {
+            text-align: center;
+            display: none;
+        }
+        .score {
+            font-size: 28px;
+            color: #2c3e50;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .restart-btn {
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 18px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .restart-btn:hover {
+            background-color: #219150;
+        }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <div id="quiz-screen">
+        <h1>Informatika - 3. razred</h1>
+        <p class="subtitle">3.2. Pišemo uz pomoć računala</p>
+        
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+
+        <div class="question-number" id="question-number">Pitanje 1 od 20</div>
+        <div class="question-text" id="question-text">Učitavanje pitanja...</div>
+
+        <div class="options" id="options-container"></div>
+
+        <div class="feedback" id="feedback"></div>
+        <button class="next-btn" id="next-btn" onclick="nextQuestion()">Sljedeće pitanje ➡</button>
+        <div style="clear: both;"></div>
+    </div>
+
+    <div class="result-screen" id="result-screen">
+        <h1>Čestitamo! Kviz je završen! 🎉</h1>
+        <div class="score" id="score-text">Tvoj rezultat: 0 / 20</div>
+        <p id="result-message"></p>
+        <button class="restart-btn" onclick="restartQuiz()">Pokreni ponovno 🔄</button>
+    </div>
+</div>
+
+<script>
+    const quizData = [
+        {
+            question: "Čime je predstavljen svaki program na računalu?",
+            options: ["Pomoću teksta", "Ikonom (sličicom)", "Pomoću tipkovnice"],
+            answer: 1
+        },
+        {
+            question: "Koja je najduža tipka na tipkovnici?",
+            options: ["Enter", "Backspace", "Razmaknica (Spacebar)"],
+            answer: 2
+        },
+        {
+            question: "Za što služi razmaknica?",
+            options: ["Za brisanje slova", "Za odvajanje riječi", "Za prelazak u novi red"],
+            answer: 1
+        },
+        {
+            question: "Koja tipka služi za prelazak u novi red i započinjanje novog poglavlja?",
+            options: ["Enter", "Shift", "Delete"],
+            answer: 0
+        },
+        {
+            question: "Koju tipku uključujemo kada želimo pisati SVA VELIKA TISKANA SLOVA?",
+            options: ["Backspace", "Caps Lock", "Shift"],
+            answer: 1
+        },
+        {
+            question: "Kako briše tipka Backspace?",
+            options: ["Slijeva nadesno", "Unatrag, tj. zdesna nalijevo", "Briše cijeli dokument"],
+            answer: 1
+        },
+        {
+            question: "Kako briše tipka Delete?",
+            options: ["Slijeva nadesno (ispred pokazivača miša)", "Zdesna nalijevo", "Isto kao i Backspace"],
+            answer: 0
+        },
+        {
+            question: "Koja se tipka drži pritisnutom u kombinaciji sa slovom ako želimo napisati samo JEDNO veliko slovo?",
+            options: ["Caps Lock", "Shift", "Enter"],
+            answer: 1
+        },
+        {
+            question: "Što je potrebno učiniti kako bi se pozicionirao pokazivač miša na određeno mjesto u dokumentu?",
+            options: ["Pritisnuti tipku Enter", "Kliknuti lijevom tipkom miša na to mjesto", "Pritisnuti tipku Caps Lock"],
+            answer: 1
+        },
+        {
+            question: "Kako se naziva uspravna crtica koja treperi na mjestu gdje trenutno pišemo u dokumentu?",
+            options: ["Sličica", "Ikona", "Pokazivač miša (kurzor)"],
+            answer: 2
+        },
+        {
+            question: "Kako označavamo dio teksta u dokumentu?",
+            options: ["Kliknemo desnom tipkom miša", "Držimo lijevu tipku miša i povlačimo preko teksta", "Pritisnemo tipku Delete"],
+            answer: 1
+        },
+        {
+            question: "Koje je obično boje označeni tekst?",
+            options: ["Crvene ili žute", "Plave ili sive", "Zelene ili crne"],
+            answer: 1
+        },
+        {
+            question: "Što mijenjamo odabirom 'Calibri' ili nekog drugog naziva s popisa u programu?",
+            options: ["Veličinu teksta", "Vrstu fonta (izgled slova)", "Poravnanje teksta"],
+            answer: 1
+        },
+        {
+            question: "Oznaka s brojem (npr. 11) u alatnoj traci služi za promjenu:",
+            options: ["Boje teksta", "Veličine teksta", "Slike"],
+            answer: 1
+        },
+        {
+            question: "Što znači ikona sa slovom U (Podcrtani tekst)?",
+            options: ["Tekst će biti nakošen", "Tekst će biti podcrtan linijom", "Tekst će biti podebljan"],
+            answer: 1
+        },
+        {
+            question: "Za što služi ikona sa slovom B?",
+            options: ["Za podebljani tekst", "Za boju teksta", "Za brisanje"],
+            answer: 0
+        },
+        {
+            question: "Za što služi ikona sa slovom I?",
+            options: ["Za podcrtani tekst", "Za nakošeni tekst", "Za izlaz iz programa"],
+            answer: 1
+        },
+        {
+            question: "Ikona sa slovom A i crvenom crtom ispod služi za odabir:",
+            options: ["Veličine teksta", "Boje teksta", "Vrste fonta"],
+            answer: 1
+        },
+        {
+            question: "Koje poravnanje smješta tekst točno u sredinu stranice?",
+            options: ["Lijevo poravnanje", "U sredini (Centrirano)", "Desno poravnanje"],
+            answer: 1
+        },
+        {
+            question: "Koje je važno pravilo kod pisanja rečeničnih znakova (točka, zarez, upitnik, uskliknik)?",
+            options: ["Iza znaka uvijek ide razmak", "Prije znaka ide razmak", "Nikada se ne stavlja razmak"],
+            answer: 0
+        }
+    ];
+
+    let currentQuestion = 0;
+    let score = 0;
+    let answered = false;
+
+    function loadQuestion() {
+        answered = false;
+        const q = quizData[currentQuestion];
+        
+        document.getElementById("question-number").innerText = `Pitanje ${currentQuestion + 1} od ${quizData.length}`;
+        document.getElementById("question-text").innerText = q.question;
+        document.getElementById("feedback").innerText = "";
+        document.getElementById("next-btn").style.display = "none";
+        
+        // Ažuriranje trake napretka
+        const progressPercent = ((currentQuestion) / quizData.length) * 100;
+        document.getElementById("progress").style.width = progressPercent + "%";
+
+        const optionsContainer = document.getElementById("options-container");
+        optionsContainer.innerHTML = "";
+
+        q.options.forEach((option, index) => {
+            const btn = document.createElement("button");
+            btn.className = "btn";
+            btn.innerText = option;
+            btn.onclick = () => selectOption(index);
+            optionsContainer.appendChild(btn);
+        });
+    }
+
+    function selectOption(selectedIndex) {
+        if (answered) return;
+        answered = true;
+
+        const q = quizData[currentQuestion];
+        const buttons = document.querySelectorAll(".options .btn");
+
+        if (selectedIndex === q.answer) {
+            buttons[selectedIndex].classList.add("correct");
+            document.getElementById("feedback").innerText = "Točno! 👏";
+            document.getElementById("feedback").style.color = "#27ae60";
+            score++;
+        } else {
+            buttons[selectedIndex].classList.add("wrong");
+            buttons[q.answer].classList.add("correct");
+            document.getElementById("feedback").innerText = "Netočno. ❌ Točan odgovor je označen zelenom bojom.";
+            document.getElementById("feedback").style.color = "#c0392b";
+        }
+
+        document.getElementById("next-btn").style.display = "block";
+    }
+
+    function nextQuestion() {
+        currentQuestion++;
+        if (currentQuestion < quizData.length) {
+            loadQuestion();
+        } else {
+            showResults();
+        }
+    }
+
+    function showResults() {
+        document.getElementById("quiz-screen").style.display = "none";
+        document.getElementById("result-screen").style.display = "block";
+        
+        document.getElementById("score-text").innerText = `Tvoj rezultat: ${score} / ${quizData.length}`;
+        
+        let message = "";
+        if (score === 20) {
+            message = "Izvrsno! Osvojio/la si sve bodove! Pravi si računalni stručnjak! 🏆";
+        } else if (score >= 15) {
+            message = "Bravo! Vrlo dobro poznaješ rad u programu za pisanje! 👍";
+        } else if (score >= 10) {
+            message = "Dobar rezultat! Još malo vježbe i bit ćeš odličan/na! 😊";
+        } else {
+            message = "Pokušaj ponovno i ponovi gradivo o tipkovnici i oblikovanju teksta! 💪";
+        }
+        document.getElementById("result-message").innerText = message;
+    }
+
+    function restartQuiz() {
+        currentQuestion = 0;
+        score = 0;
+        document.getElementById("result-screen").style.display = "none";
+        document.getElementById("quiz-screen").style.display = "block";
+        loadQuestion();
+    }
+
+    // Pokreni kviz
+    loadQuestion();
+</script>
+
+</body>
+</html>
