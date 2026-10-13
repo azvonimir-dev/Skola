@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digitalni Svijet - Kviz iz Informatike za 4. razred</title>
+    <!-- Tailwind CSS for modern, child-friendly styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Fredoka', 'Inter', sans-serif;
+            background: linear-gradient(135deg, #e0f2fe 0%, #ede9fe 50%, #fce7f3 100%);
+            min-height: 100vh;
+        }
+        .pop-card {
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .pop-card:hover {
+            transform: translateY(-4px);
+        }
+        .bounce-anim {
+            animation: bounce 0.6s infinite alternate;
+        }
+        @keyframes bounce {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-8px); }
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8 flex items-center justify-center">
+
+    <div class="max-w-3xl w-full mx-auto bg-white rounded-3xl shadow-2xl overflow-hidden border-4 border-indigo-200">
+        
+        <!-- Header Banner -->
+        <div class="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 p-6 text-white text-center relative overflow-hidden">
+            <div class="absolute -right-6 -bottom-6 text-white/10 text-9xl font-bold select-none">💻</div>
+            <div class="absolute -left-6 -top-6 text-white/10 text-9xl font-bold select-none">🌐</div>
+            <h1 class="text-3xl md:text-4xl font-bold tracking-wide drop-shadow-md">🚀 Digitalni Svijet</h1>
+            <p class="text-indigo-100 text-base md:text-lg mt-1">Interaktivni kviz iz informatike za 4. razred</p>
+        </div>
+
+        <!-- Start Screen -->
+        <div id="start-screen" class="p-8 text-center">
+            <div class="mb-6 flex justify-center">
+                <div class="bg-amber-100 text-amber-800 p-4 rounded-2xl shadow-inner inline-block text-lg max-w-lg border-2 border-amber-300">
+                    <span class="text-2xl">💡</span> Dobrodošli! Provjeri svoje znanje o internetu, mrežnim stranicama, tražilicama, lozinkama i sigurnom ponašanju na internetu iz lekcije <strong>"Prisjetimo se - digitalni svijet"</strong>!
+                </div>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8 text-center">
+                <div class="bg-blue-50 p-4 rounded-2xl border-2 border-blue-200">
+                    <div class="text-3xl mb-1">❓</div>
+                    <div class="font-bold text-blue-900 text-xl">30 Pitanja</div>
+                    <div class="text-sm text-blue-700">Zabavni zadaci</div>
+                </div>
+                <div class="bg-green-50 p-4 rounded-2xl border-2 border-green-200">
+                    <div class="text-3xl mb-1">⭐</div>
+                    <div class="font-bold text-green-900 text-xl">Bodovi & Zvijezdice</div>
+                    <div class="text-sm text-green-700">Trenutačna provjera</div>
+                </div>
+                <div class="bg-purple-50 p-4 rounded-2xl border-2 border-purple-200">
+                    <div class="text-3xl mb-1">🛡️</div>
+                    <div class="font-bold text-purple-900 text-xl">Internet Bonton</div>
+                    <div class="text-sm text-purple-700">Budi siguran online</div>
+                </div>
+            </div>
+            <button onclick="startQuiz()" class="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold text-2xl px-10 py-4 rounded-2xl shadow-lg transform active:scale-95 transition-all duration-200 border-b-4 border-teal-800">
+                🎮 Započni Kviz!
+            </button>
+        </div>
+
+        <!-- Quiz Screen -->
+        <div id="quiz-screen" class="hidden p-6 md:p-8">
+            <!-- Progress & Score Bar -->
+            <div class="flex justify-between items-center mb-6 bg-slate-100 p-3 rounded-2xl border border-slate-200">
+                <div class="font-semibold text-slate-700 text-sm md:text-base">
+                    Pitanje <span id="current-q-num" class="text-indigo-600 font-bold">1</span> / <span id="total-q-num">30</span>
+                </div>
+                <div class="w-1/3 bg-slate-200 rounded-full h-3 overflow-hidden">
+                    <div id="progress-bar" class="bg-indigo-500 h-full transition-all duration-300" style="width: 3.33%;"></div>
+                </div>
+                <div class="font-semibold text-slate-700 text-sm md:text-base">
+                    Bodovi: <span id="current-score" class="text-emerald-600 font-bold">0</span> ⭐
+                </div>
+            </div>
+
+            <!-- Question Box -->
+            <div class="mb-6">
+                <div id="question-category" class="inline-block bg-indigo-100 text-indigo-700 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider mb-3">Kategorija</div>
+                <h2 id="question-text" class="text-xl md:text-2xl font-bold text-slate-800 leading-snug">Ovdje ide tekst pitanja?</h2>
+            </div>
+
+            <!-- Options Container -->
+            <div id="options-container" class="space-y-3 mb-6">
+                <!-- Dynamic options generated via JS -->
+            </div>
+
+            <!-- Feedback & Next Button Area -->
+            <div id="feedback-area" class="hidden mb-6 p-4 rounded-2xl text-base font-medium flex items-center justify-between">
+                <div id="feedback-text" class="flex items-center gap-2"></div>
+                <button onclick="nextQuestion()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-2.5 rounded-xl shadow transition-all flex items-center gap-2">
+                    Sljedeće ➔
+                </button>
+            </div>
+        </div>
+
+        <!-- Result Screen -->
+        <div id="result-screen" class="hidden p-8 text-center">
+            <div class="text-6xl mb-4 bounce-anim" id="result-emoji">🏆</div>
+            <h2 class="text-3xl font-bold text-slate-800 mb-2">Kviz je završen!</h2>
+            <p id="result-message" class="text-lg text-slate-600 mb-6">Odlično si riješio/la zadatke!</p>
+            
+            <div class="bg-indigo-50 border-2 border-indigo-200 rounded-2xl p-6 max-w-md mx-auto mb-8 shadow-inner">
+                <div class="text-slate-700 text-lg mb-2">Tvoj ukupni rezultat:</div>
+                <div class="text-4xl font-extrabold text-indigo-600 mb-2"><span id="final-score">0</span> / 30</div>
+                <div id="score-percentage" class="text-sm font-bold text-emerald-600 bg-emerald-100 py-1 px-3 rounded-full inline-block">100% točno</div>
+            </div>
+
+            <button onclick="restartQuiz()" class="bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-bold text-xl px-8 py-3.5 rounded-2xl shadow-lg transition-all border-b-4 border-indigo-800">
+                🔄 Pokušaj ponovno
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        // Array of exactly 30 questions aligned with 4th grade CS curriculum and image
+        const questions = [
+            // 1-6: Internet osnovni pojmovi
+            {
+                category: "Internet",
+                question: "Što je točno za internet?",
+                options: [
+                    "Najveća svjetska mreža računala povezanih diljem svijeta",
+                    "Jedno usamljeno računalo u učionici",
+                    "Televizijski kanal za crtiće",
+                    "Igraća konzola"
+                ],
+                correct: 0,
+                explanation: "Internet je najveća svjetska mreža računala razmještenih po cijelom svijetu."
+            },
+            {
+                category: "Internet",
+                question: "Kako su računala na internetu povezana?",
+                options: [
+                    "U veliku mrežu",
+                    "Samo telefonskim žicama izvan kuća bez struje",
+                    "Nisu uopće povezana",
+                    "Povezana su samo crvenim vrpcama"
+                ],
+                correct: 0,
+                explanation: "Računala na internetu povezana su u globalnu mrežu."
+            },
+            {
+                category: "Internet",
+                question: "Tko može koristiti internet?",
+                options: [
+                    "Ljudi diljem svijeta za učenje, igru, zabavu i rad",
+                    "Samo programeri u tvornicama",
+                    "Samo roboti",
+                    "Samo odrasli nedjeljom"
+                ],
+                correct: 0,
+                explanation: "Internet koriste ljudi diljem svijeta u razne svrhe."
+            },
+            {
+                category: "Mrežne stranice",
+                question: "U kojem se obliku nalaze sadržaji na internetu?",
+                options: [
+                    "U obliku mrežnih ili web-stranica",
+                    "Samo u papirnatim knjigama",
+                    "Samo na audio kazetama",
+                    "U obliku plastičnih kartica"
+                ],
+                correct: 0,
+                explanation: "Sadržaji na internetu nalaze se u obliku mrežnih ili web-stranica."
+            },
+            {
+                category: "Mrežni preglednici",
+                question: "Pomoću čega dolazimo do web-stranica na internetu?",
+                options: [
+                    "Mrežnih preglednika (browsera)",
+                    "Kalkulatora",
+                    "Programčića za crtanje",
+                    "Pisača"
+                ],
+                correct: 0,
+                explanation: "Do web-stranica dolazimo pomoću mrežnih preglednika."
+            },
+            {
+                category: "Mrežni preglednici",
+                question: "Koji od sljedećih programa je mrežni preglednik (browser)?",
+                options: [
+                    "Google Chrome (ili Mozilla, Safari, Edge, Opera)",
+                    "Microsoft Word",
+                    "Paint",
+                    "Kalkulator"
+                ],
+                correct: 0,
+                explanation: "Google Chrome, Mozilla Firefox, Safari, Opera i Edge su mrežni preglednici."
+            },
+
+            // 7-12: Tražilice i traženje informacija
+            {
+                category: "Tražilice",
+                question: "Čime najčešće dolazimo do novih informacija i odgovora na pitanja na internetu?",
+                options: [
+                    "Tražilicama (poput Googlea)",
+                    "Slikovnicama",
+                    "Mikrofonom bez struje",
+                    "Skeniranjem bilježnice"
+                ],
+                correct: 0,
+                explanation: "Tražilicama poput Googlea koristimo se za traženje novih informacija."
+            },
+            {
+                category: "Tražilice",
+                question: "Što upisujemo u tražilicu kada želimo nešto pronaći?",
+                options: [
+                    "Ključne riječi vezane uz ono što tražimo",
+                    "Svoje osobne tajne i šifre",
+                    "Cijelu svoju životnu priču",
+                    "Samo nasumične brojeve"
+                ],
+                correct: 0,
+                explanation: "U tražilicu upisujemo ključne riječi za pretraživanje."
+            },
+            {
+                category: "Provjera informacija",
+                question: "Prema lekciji, što moraš paziti kada pronađeš informacije na internetu?",
+                options: [
+                    "Pazi na točnost informacija pronađenih na internetu",
+                    "Sve što piše na internetu uvijek je 100% lažno",
+                    "Nikada ne smiješ pročitati niti jedan tekst",
+                    "Moraš odmah platiti novac za svaku informaciju"
+                ],
+                correct: 0,
+                explanation: "Vrlo je važno paziti na točnost informacija pronađenih na internetu."
+            },
+            {
+                category: "Provjera informacija",
+                question: "Što je poželjno provjeriti kada čitaš neki članak ili stranicu na internetu?",
+                options: [
+                    "Provjeri i pronađi tko je autor napisanga",
+                    "Koje je boje kuća autora",
+                    "Koliko autor ima godina kućnog ljubimca",
+                    "Koja je omiljena slastica web dizajnera"
+                ],
+                correct: 0,
+                explanation: "Treba provjeriti tko je autor napisanga kako bismo znali je li izvor pouzdan."
+            },
+            {
+                category: "Provjera informacija",
+                question: "Što trebamo provjeriti kod izgleda web-stranice prema slici lekcije?",
+                options: [
+                    "Promotri izgled stranice, je li čitljiva i lijepa",
+                    "Ima li stranica prekidač za svjetlo",
+                    "Može li se stranica pojesti",
+                    "Je li stranica teška 5 kilograma"
+                ],
+                correct: 0,
+                explanation: "Promatramo izgled stranice, je li čitljiva i lijepa."
+            },
+            {
+                category: "Provjera informacija",
+                question: "Je li svaka informacija na internetu automatski istinita?",
+                options: [
+                    "Ne, zato moramo provjeravati točnost i autore",
+                    "Da, sve na internetu je uvijek savršeno točno",
+                    "Da, internet nikad ne griješi",
+                    "Samo ako piše velikim crvenim slovima"
+                ],
+                correct: 0,
+                explanation: "Na internetu se mogu naći i netočne informacije, pa oprez!"
+            },
+
+            // 13-20: Sigurnost na internetu i osobni podaci
+            {
+                category: "Sigurnost",
+                question: "Što moraš čuvati na internetu prema pravilima iz lekcije?",
+                options: [
+                    "Čuvaj svoje osobne podatke",
+                    "Svoje stare igračke",
+                    "Kruh u smočnici",
+                    "Sve svoje olovke"
+                ],
+                correct: 0,
+                explanation: "Nužno je čuvati svoje osobne podatke (ime, adresu, školu, broj telefona)."
+            },
+            {
+                category: "Sigurnost",
+                question: "Što spada u tvoje osobne podatke koje ne dijeliš nepoznatima?",
+                options: [
+                    "Adresa stanovanja i broj telefona",
+                    "Omiljena boja u crtanju",
+                    "Najdraži školski predmet",
+                    "Broj dana u tjednu"
+                ],
+                correct: 0,
+                explanation: "Adresa i broj telefona su osobni podaci."
+            },
+            {
+                category: "Sigurnost",
+                question: "Smiješ li dijeliti tuđe fotografije ili videozapise bez dopuštenja?",
+                options: [
+                    "Ne, nemoj dijeliti tuđe fotografije ili videozapise",
+                    "Da, slobodno dijelim sve tuđe slike",
+                    "Da, to je uvijek zabavno",
+                    "Smijem ako su smiješne"
+                ],
+                correct: 0,
+                explanation: "Pravilo nalaže: nemoj dijeliti tuđe fotografije ili videozapise bez odobrenja."
+            },
+            {
+                category: "Sigurnost",
+                question: "Što moraš učiniti s lozinkama?",
+                options: [
+                    "Čuvaj svoje lozinke (ne govori ih nikome osim roditeljima)",
+                    "Napiši ih na papir i zalijepi na ulazna vrata škole",
+                    "Objavi ih na društvenim mrežama",
+                    "Reci ih svakom prolazniku na ulici"
+                ],
+                correct: 0,
+                explanation: "Lozinke su tajne i moramo ih čuvati."
+            },
+            {
+                category: "Sigurnost",
+                question: "Što moraš učiniti prije nego što nešto objaviš na internetu?",
+                options: [
+                    "Dobro razmisli prije nego nešto objaviš",
+                    "Objavi što brže bez razmišljanja",
+                    "Zatvori oči i pritisni tipku miša",
+                    "Pitaj prolaznika na cesti"
+                ],
+                correct: 0,
+                explanation: "Dobro razmisli prije nego nešto objaviš jer ostaje trag."
+            },
+            {
+                category: "Sigurnost",
+                question: "Što je važno učiniti s porukama koje šalješ drugima?",
+                options: [
+                    "Poruke koje šalješ moraju biti prijateljske, istinite i dobronamjerne",
+                    "Mogu biti uvredljive ako si ljut/a",
+                    "Moraju sadržavati laži da bude zanimljivo",
+                    "Moraju biti grube"
+                ],
+                correct: 0,
+                explanation: "Poruke moraju biti prijateljske, istinite i dobronamjerne."
+            },
+            {
+                category: "Sigurnost",
+                question: "Kakve trebaju biti rečenice u porukama prema uputama u slici?",
+                options: [
+                    "Poruke moraju biti jasno napisane",
+                    "Zbrčkane i nečitljive",
+                    "Samo s uskličnicima bez slova",
+                    "Napisane tajnim šiframa vanzemaljaca"
+                ],
+                correct: 0,
+                explanation: "Poruke moraju biti jasno napisane."
+            },
+            {
+                category: "Sigurnost",
+                question: "Kako mora započeti i završiti jedna pristojna poruka?",
+                options: [
+                    "Poruka mora započeti i završiti pozdravom",
+                    "Mora početi uvredom",
+                    "Mora završiti ljutnjom",
+                    "Ne treba imati ni početak ni kraj"
+                ],
+                correct: 0,
+                explanation: "Pristojna poruka započinje i završava pozdravom."
+            },
+
+            // 21-30: Bonton, ponašanje i digitalno okruženje
+            {
+                category: "Bonton",
+                question: "Kako se trebaš ponašati prema drugim osobama na internetu?",
+                options: [
+                    "Poštuj druge osobe na internetu",
+                    "Vrijeđaj ih ako imaju drugačije mišljenje",
+                    "Ispmiši im imena",
+                    "Ignoriraj svačije poruke"
+                ],
+                correct: 0,
+                explanation: "Poštuj druge osobe na internetu - pravilo lijepog ponašanja."
+            },
+            {
+                category: "Bonton",
+                question: "Što trebaš učiniti ako ti netko pošalje ružnu poruku?",
+                options: [
+                    "Ne odgovaraj na ružne poruke",
+                    "Odmah uzvrati još gredom uvredom",
+                    "Proslijedi je cijelom razredu",
+                    "Sakrij se ispod kreveta"
+                ],
+                correct: 0,
+                explanation: "Na ružne poruke se ne odgovara, već se poduzimaju sigurni koraci."
+            },
+            {
+                category: "Bonton",
+                question: "Što učiniti s ružnim porukama ili sadržajima pronađenim na internetu?",
+                options: [
+                    "Prijavi ružne poruke ili sadržaje pronađene na internetu (roditeljima, učitelju/učiteljici)",
+                    "Spremi ih na računalo kao ukras",
+                    "Pošalji ih svima u imeniku",
+                    "Šuti o tome zauvijek"
+                ],
+                correct: 0,
+                explanation: "Ružne poruke i neprimjeren sadržaj treba prijaviti odrasloj osobi od povjerenja."
+            },
+            {
+                category: "Bonton",
+                question: "Jesi li ti kriv/kriva ako se netko ružno ponaša prema tebi na internetu?",
+                options: [
+                    "Nisi kriv/kriva ako se netko ružno ponaša prema tebi",
+                    "Da, uvijek je žrtva kriva",
+                    "Kriv je tvoj računalni miš",
+                    "Kriva je tipkovnica"
+                ],
+                correct: 0,
+                explanation: "Nisi kriv/kriva ako se netko ružno ponaša prema tebi, odmah to reci odraslima."
+            },
+            {
+                category: "Bonton",
+                question: "Smiješ li sudjelovati u ogovaranju ili isključivanju drugih učenika online?",
+                options: [
+                    "Nemoj sudjelovati u ogovaranju",
+                    "Da, to je zabavno",
+                    "Smiješ ako svi drugi to rade",
+                    "Da, obavezno"
+                ],
+                correct: 0,
+                explanation: "Pravilo iz lekcije: nemoj sudjelovati u ogovaranju."
+            },
+            {
+                category: "Internet",
+                question: "Koji od sljedećih uređaja se koristi za spajanje na internet?",
+                options: [
+                    "Računalo, tablet ili pametni telefon",
+                    "Drvena olovka",
+                    "Glinena šalica",
+                    "Drvena klupa"
+                ],
+                correct: 0,
+                explanation: "Računala, tableti i pametni telefoni koriste se za pristup internetu."
+            },
+            {
+                category: "Mrežni preglednici",
+                question: "Koju ikonu ili program obično pokrećemo na računalu da bismo otvorili web stranice?",
+                options: [
+                    "Ikonu mrežnog preglednika (npr. Chrome, Edge, Mozilla)",
+                    "Ikonu za isključivanje struje",
+                    "Kantu za smeće",
+                    "Praznu bilježnicu"
+                ],
+                correct: 0,
+                explanation: "Pokrećemo mrežni preglednik."
+            },
+            {
+                category: "Tražilice",
+                question: "Što je Google?",
+                options: [
+                    "Poznata internetska tražilica",
+                    "Vrsta čokoladnog keksa",
+                    "Naziv za skener",
+                    "Program za pisanje zadaće iz prirode"
+                ],
+                correct: 0,
+                explanation: "Google je najpoznatija internetska tražilica."
+            },
+            {
+                category: "Sigurnost",
+                question: "Zašto ne smijemo dijeliti svoju kućnu adresu i broj mobitela na internetu nepoznatim osobama?",
+                options: [
+                    "Zato što netko može zloupotrijebiti naše podatke i ugroziti našu sigurnost",
+                    "Zato što će nam se računalo pokvariti",
+                    "Zato što će internetska veza postati spora",
+                    "Zato što je to zabranjeno zakonima o pisanju"
+                ],
+                correct: 0,
+                explanation: "Osobne podatke čuvamo radi vlastite sigurnosti."
+            },
+            {
+                category: "Bonton",
+                question: "Koja je glavna poruka lekcije 'Prisjetimo se - digitalni svijet' o našem ponašanju online?",
+                options: [
+                    "Budimo pametni, oprezni, pristojni i sigurni na internetu",
+                    "Budimo zlobni prema svima",
+                    "Brisimo sve stranice na svijetu",
+                    "Nikada ne palimo računalo"
+                ],
+                correct: 0,
+                explanation: "Glavna poruka je sigurno, pristojno i pametno korištenje interneta."
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let answered = false;
+
+        const startScreen = document.getElementById('start-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const resultScreen = document.getElementById('result-screen');
+        
+        const currentQNumEl = document.getElementById('current-q-num');
+        const totalQNumEl = document.getElementById('total-q-num');
+        const progressBar = document.getElementById('progress-bar');
+        const currentScoreEl = document.getElementById('current-score');
+        const questionCategoryEl = document.getElementById('question-category');
+        const questionTextEl = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const feedbackArea = document.getElementById('feedback-area');
+        const feedbackText = document.getElementById('feedback-text');
+        
+        const finalScoreEl = document.getElementById('final-score');
+        const scorePercentageEl = document.getElementById('score-percentage');
+        const resultEmoji = document.getElementById('result-emoji');
+        const resultMessage = document.getElementById('result-message');
+
+        totalQNumEl.textContent = questions.length;
+
+        function startQuiz() {
+            startScreen.classList.add('hidden');
+            quizScreen.classList.remove('hidden');
+            currentQuestionIndex = 0;
+            score = 0;
+            currentScoreEl.textContent = score;
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            answered = false;
+            feedbackArea.classList.add('hidden');
+            
+            const q = questions[currentQuestionIndex];
+            currentQNumEl.textContent = currentQuestionIndex + 1;
+            progressBar.style.width = `${((currentQuestionIndex + 1) / questions.length) * 100}%`;
+            
+            questionCategoryEl.textContent = q.category;
+            questionTextEl.textContent = q.question;
+            
+            optionsContainer.innerHTML = '';
+            
+            // Randomize options order for extra fun
+            let indices = [0, 1, 2, 3];
+            // shuffle indices
+            indices.sort(() => Math.random() - 0.5);
+
+            indices.forEach(originalIndex => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left p-4 rounded-2xl border-2 border-slate-200 hover:border-indigo-400 bg-slate-50 hover:bg-indigo-50/50 font-medium text-slate-700 transition-all shadow-sm flex items-center justify-between group";
+                
+                const textSpan = document.createElement('span');
+                textSpan.textContent = q.options[originalIndex];
+                btn.appendChild(textSpan);
+                
+                const iconSpan = document.createElement('span');
+                iconSpan.className = "text-slate-300 group-hover:text-indigo-500 font-bold text-lg";
+                iconSpan.textContent = "➡️";
+                btn.appendChild(iconSpan);
+
+                btn.onclick = () => selectOption(originalIndex, q.correct, btn);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function selectOption(selectedIndex, correctIndex, selectedBtn) {
+            if (answered) return;
+            answered = true;
+
+            const buttons = optionsContainer.getElementsByTagName('button');
+            
+            if (selectedIndex === correctIndex) {
+                score += 1;
+                currentScoreEl.textContent = score;
+                selectedBtn.classList.remove('bg-slate-50', 'hover:bg-indigo-50/50', 'border-slate-200');
+                selectedBtn.classList.add('bg-emerald-100', 'border-emerald-500', 'text-emerald-900', 'font-bold');
+                feedbackText.innerHTML = `<span class="text-2xl">✅</span> <span class="text-emerald-800 font-bold">Točno!</span> <span class="text-emerald-700 ml-1">${questions[currentQuestionIndex].explanation}</span>`;
+                feedbackArea.className = "mb-6 p-4 rounded-2xl bg-emerald-50 border-2 border-emerald-300 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3";
+            } else {
+                selectedBtn.classList.remove('bg-slate-50', 'hover:bg-indigo-50/50', 'border-slate-200');
+                selectedBtn.classList.add('bg-rose-100', 'border-rose-500', 'text-rose-900', 'font-bold');
+                
+                // Highlight correct one
+                for (let btn of buttons) {
+                    if (btn.textContent.includes(questions[currentQuestionIndex].options[correctIndex])) {
+                        btn.classList.remove('bg-slate-50', 'hover:bg-indigo-50/50', 'border-slate-200');
+                        btn.classList.add('bg-emerald-100', 'border-emerald-500', 'text-emerald-900');
+                    }
+                }
+                
+                feedbackText.innerHTML = `<span class="text-2xl">❌</span> <span class="text-rose-800 font-bold">Netočno!</span> <span class="text-slate-700 ml-1">${questions[currentQuestionIndex].explanation}</span>`;
+                feedbackArea.className = "mb-6 p-4 rounded-2xl bg-rose-50 border-2 border-rose-300 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3";
+            }
+
+            feedbackArea.classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < questions.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            quizScreen.classList.add('hidden');
+            resultScreen.classList.remove('hidden');
+            finalScoreEl.textContent = score;
+            
+            const percentage = Math.round((score / questions.length) * 100);
+            scorePercentageEl.textContent = `${percentage}% točno`;
+
+            if (score === 30) {
+                resultEmoji.textContent = "🏆";
+                resultMessage.textContent = "Nevjerojatno! Pravi si stručnjak za digitalni svijet i internet bonton!";
+            } else if (score >= 22) {
+                resultEmoji.textContent = "🌟";
+                resultMessage.textContent = "Odličan posao! Vrlo dobro poznaješ pravila sigurnosti i internet!";
+            } else if (score >= 15) {
+                resultEmoji.textContent = "👍";
+                resultMessage.textContent = "Dobar trud! Ponovi još jednom lekciju o digitalnom svijetu i bit ćeš još bolji/a.";
+            } else {
+                resultEmoji.textContent = "📚";
+                resultMessage.textContent = "Možeš ti to i bolje! Pročitaj lekciju još jednom pa pokušaj ponovno.";
+            }
+        }
+
+        function restartQuiz() {
+            resultScreen.classList.add('hidden');
+            startScreen.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
