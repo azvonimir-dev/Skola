@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Informatička Čarobna Bojanka</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0f172a;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        #game-container {
+            width: 950px;
+            height: 650px;
+            background: #1e293b;
+            border: 6px solid #a855f7;
+            border-radius: 24px;
+            box-shadow: 0 15px 35px rgba(168, 85, 247, 0.3);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Zaglavlje i Alati */
+        #top-bar {
+            height: 70px;
+            background: rgba(15, 23, 42, 0.9);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            border-bottom: 3px solid #a855f7;
+        }
+
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #c084fc;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+        }
+
+        .action-btn {
+            background: #9333ea;
+            border: 2px solid #c084fc;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            padding: 10px 18px;
+            border-radius: 14px;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #6b21a8;
+            transition: transform 0.1s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .action-btn:active {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 #6b21a8;
+        }
+
+        .action-btn.green {
+            background: #16a34a;
+            border-color: #4ade80;
+            box-shadow: 0 4px 0 #15803d;
+        }
+
+        /* Glavni prostor */
+        #workspace {
+            flex: 1;
+            display: flex;
+            padding: 15px;
+            gap: 15px;
+            background: #0f172a;
+        }
+
+        /* Lijevo: Platno za bojanje */
+        #canvas-holder {
+            flex: 1;
+            background: #ffffff;
+            border-radius: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+            cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24'><text y='20' font-size='20'>🎨</text></svg>"), auto;
+        }
+
+        canvas {
+            display: block;
+            border-radius: 16px;
+        }
+
+        /* Desno: Paleta boja */
+        #palette-zone {
+            width: 220px;
+            background: #1e293b;
+            border-radius: 16px;
+            padding: 15px;
+            border: 2px solid #334155;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .palette-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #c084fc;
+            margin-bottom: 12px;
+        }
+
+        .colors-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            width: 100%;
+        }
+
+        .color-swatch {
+            width: 50px;
+            height: 50px;
+            border-radius: 14px;
+            cursor: pointer;
+            border: 3px solid rgba(255,255,255,0.2);
+            transition: transform 0.15s, border-color 0.15s;
+        }
+
+        .color-swatch:hover {
+            transform: scale(1.1);
+        }
+
+        .color-swatch.active {
+            border-color: #ffffff;
+            box-shadow: 0 0 12px rgba(255,255,255,0.8);
+            transform: scale(1.15);
+        }
+
+        .custom-color-picker {
+            margin-top: 15px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #0f172a;
+            padding: 8px 12px;
+            border-radius: 12px;
+        }
+
+        input[type="color"] {
+            border: none;
+            width: 35px;
+            height: 35px;
+            border-radius: 8px;
+            cursor: pointer;
+            background: none;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <!-- Zaglavlje -->
+    <div id="top-bar">
+        <div class="title">🎨 Informatička Čarobna Bojanka</div>
+        <div class="btn-group">
+            <button class="action-btn" onclick="generateNewPicture()">🎲 Nova Slika</button>
+            <button class="action-btn green" onclick="savePicture()">💾 Spremi Sliku</button>
+        </div>
+    </div>
+
+    <!-- Glavni Radni Prostor -->
+    <div id="workspace">
+        <div id="canvas-holder">
+            <canvas id="colorCanvas" width="680" height="520"></canvas>
+        </div>
+
+        <div id="palette-zone">
+            <div class="palette-title">Odaberi Boju 🖌️</div>
+            <div class="colors-grid" id="swatch-container"></div>
+
+            <div class="custom-color-picker">
+                <span style="font-size: 13px; font-weight: bold;">Moja Boja:</span>
+                <input type="color" id="customColor" value="#38bdf8" onchange="selectCustomColor(this.value)">
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Audio zvučni efekti
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playSfx() {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(700, audioCtx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+    }
+
+    const canvas = document.getElementById('colorCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // Paleta zadanih boja
+    const PRESET_COLORS = [
+        '#ef4444', '#f97316', '#facc15', '#22c55e', 
+        '#38bdf8', '#3b82f6', '#a855f7', '#ec4899', 
+        '#a16207', '#64748b', '#000000', '#ffffff'
+    ];
+
+    let currentColor = '#ef4444';
+
+    function initPalette() {
+        const container = document.getElementById('swatch-container');
+        container.innerHTML = '';
+
+        PRESET_COLORS.forEach((hex, idx) => {
+            const swatch = document.createElement('div');
+            swatch.className = 'color-swatch' + (idx === 0 ? ' active' : '');
+            swatch.style.backgroundColor = hex;
+            swatch.onclick = () => {
+                document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+                swatch.classList.add('active');
+                currentColor = hex;
+            };
+            container.appendChild(swatch);
+        });
+    }
+
+    function selectCustomColor(hex) {
+        document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+        currentColor = hex;
+    }
+
+    // Generator Crteža na gumb "Nova Slika"
+    const DRAWINGS = [
+        // Slika 1: Stolno Računalo sa Smajlićem
+        ctx => {
+            ctx.lineWidth = 6;
+            ctx.strokeStyle = '#000000';
+            ctx.lineCap = 'round';
+
+            // Ekran
+            ctx.strokeRect(180, 80, 320, 220);
+            ctx.strokeRect(200, 100, 280, 180);
+            
+            // Smajli na ekranu
+            ctx.beginPath();
+            ctx.arc(280, 170, 15, 0, Math.PI * 2);
+            ctx.arc(400, 170, 15, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.arc(340, 200, 45, 0.1 * Math.PI, 0.9 * Math.PI);
+            ctx.stroke();
+
+            // Stalak
+            ctx.fillRect(320, 300, 40, 50);
+            ctx.strokeRect(260, 350, 160, 20);
+
+            // Tipkovnica
+            ctx.strokeRect(150, 390, 280, 70);
+            for (let x = 170; x <= 400; x += 30) {
+                for (let y = 405; y <= 440; y += 20) {
+                    ctx.strokeRect(x, y, 20, 12);
+                }
+            }
+
+            // Miš
+            ctx.strokeRect(460, 400, 50, 60);
+            ctx.beginPath();
+            ctx.moveTo(485, 400); ctx.lineTo(485, 425);
+            ctx.stroke();
+        },
+        // Slika 2: Slatki Robot
+        ctx => {
+            ctx.lineWidth = 6;
+            ctx.strokeStyle = '#000000';
+
+            // Glava
+            ctx.strokeRect(240, 80, 200, 150);
+            // Oči
+            ctx.strokeRect(270, 120, 45, 45);
+            ctx.strokeRect(365, 120, 45, 45);
+            // Antena
+            ctx.beginPath();
+            ctx.moveTo(340, 80); ctx.lineTo(340, 30);
+            ctx.arc(340, 20, 10, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Tijelo
+            ctx.strokeRect(220, 260, 240, 180);
+            // Gumbi na prsima
+            ctx.beginPath();
+            ctx.arc(280, 320, 20, 0, Math.PI * 2);
+            ctx.arc(340, 320, 20, 0, Math.PI * 2);
+            ctx.arc(400, 320, 20, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Ruke
+            ctx.strokeRect(140, 280, 70, 35);
+            ctx.strokeRect(470, 280, 70, 35);
+        },
+        // Slika 3: Pametni Sat i Tablet
+        ctx => {
+            ctx.lineWidth = 6;
+            ctx.strokeStyle = '#000000';
+
+            // Tablet
+            ctx.strokeRect(120, 80, 280, 360);
+            ctx.strokeRect(140, 110, 240, 300);
+            ctx.beginPath();
+            ctx.arc(260, 425, 10, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Pametni sat
+            ctx.strokeRect(480, 180, 120, 140);
+            ctx.strokeRect(500, 200, 80, 100);
+            // Remen
+            ctx.strokeRect(510, 80, 60, 100);
+            ctx.strokeRect(510, 320, 60, 100);
+        }
+    ];
+
+    let currentDrawingIndex = 0;
+
+    function generateNewPicture() {
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Nacrtaj trenutni predložak
+        DRAWINGS[currentDrawingIndex](ctx);
+
+        currentDrawingIndex = (currentDrawingIndex + 1) % DRAWINGS.length;
+    }
+
+    // Algoritam Kantice (Flood Fill za bojanje polja)
+    canvas.addEventListener('click', e => {
+        const rect = canvas.getBoundingClientRect();
+        const startX = Math.floor(e.clientX - rect.left);
+        const startY = Math.floor(e.clientY - rect.top);
+
+        floodFill(startX, startY, currentColor);
+        playSfx();
+    });
+
+    function floodFill(startX, startY, fillHex) {
+        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imgData.data;
+
+        const targetColor = getPixelColor(data, startX, startY);
+        const fillColor = hexToRgb(fillHex);
+
+        if (colorsMatch(targetColor, fillColor)) return;
+
+        const pixelsToCheck = [startX, startY];
+        const width = canvas.width;
+        const height = canvas.height;
+
+        while (pixelsToCheck.length > 0) {
+            const y = pixelsToCheck.pop();
+            const x = pixelsToCheck.pop();
+
+            const currentColor = getPixelColor(data, x, y);
+
+            if (colorsMatch(currentColor, targetColor) && !isBlackBorder(currentColor)) {
+                setPixelColor(data, x, y, fillColor);
+
+                if (x > 0) pixelsToCheck.push(x - 1, y);
+                if (x < width - 1) pixelsToCheck.push(x + 1, y);
+                if (y > 0) pixelsToCheck.push(x, y - 1);
+                if (y < height - 1) pixelsToCheck.push(x, y + 1);
+            }
+        }
+
+        ctx.putImageData(imgData, 0, 0);
+    }
+
+    function getPixelColor(data, x, y) {
+        const i = (y * canvas.width + x) * 4;
+        return [data[i], data[i + 1], data[i + 2], data[i + 3]];
+    }
+
+    function setPixelColor(data, x, y, color) {
+        const i = (y * canvas.width + x) * 4;
+        data[i] = color[0];
+        data[i + 1] = color[1];
+        data[i + 2] = color[2];
+        data[i + 3] = 255;
+    }
+
+    function colorsMatch(c1, c2) {
+        return Math.abs(c1[0] - c2[0]) < 20 &&
+               Math.abs(c1[1] - c2[1]) < 20 &&
+               Math.abs(c1[2] - c2[2]) < 20;
+    }
+
+    function isBlackBorder(c) {
+        return c[0] < 50 && c[1] < 50 && c[2] < 50;
+    }
+
+    function hexToRgb(hex) {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? [
+            parseInt(result[1], 16),
+            parseInt(result[2], 16),
+            parseInt(result[3], 16)
+        ] : [0, 0, 0];
+    }
+
+    function savePicture() {
+        const link = document.createElement('a');
+        link.download = 'moj_informaticki_crtez.png';
+        link.href = canvas.toDataURL();
+        link.click();
+    }
+
+    // Inicijalizacija
+    initPalette();
+    generateNewPicture();
+</script>
+
+</body>
+</html>
