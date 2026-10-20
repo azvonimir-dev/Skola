@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Mario: Informatička Avantura</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0f172a;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        #game-container {
+            width: 900px;
+            height: 500px;
+            background: linear-gradient(to bottom, #38bdf8, #818cf8, #c084fc);
+            border: 6px solid #2563eb;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+            position: relative;
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Zaglavlje s bodovima */
+        #top-bar {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        .stat-box {
+            background: rgba(15, 23, 42, 0.85);
+            padding: 8px 18px;
+            border-radius: 12px;
+            border: 2px solid #38bdf8;
+            font-size: 20px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        /* Kontrole na dodir za pametnu ploču / tablet */
+        #touch-controls {
+            width: 900px;
+            margin-top: 15px;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 20px;
+        }
+
+        .ctrl-group {
+            display: flex;
+            gap: 15px;
+        }
+
+        .ctrl-btn {
+            background: #2563eb;
+            border: 3px solid #38bdf8;
+            color: white;
+            font-size: 28px;
+            width: 70px;
+            height: 65px;
+            border-radius: 18px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 5px 0 #1e40af;
+            transition: transform 0.1s;
+        }
+
+        .ctrl-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 1px 0 #1e40af;
+        }
+
+        .ctrl-btn.jump {
+            background: #e11d48;
+            border-color: #fda4af;
+            box-shadow: 0 5px 0 #9f1239;
+            width: 100px;
+        }
+
+        .ctrl-btn.jump:active {
+            box-shadow: 0 1px 0 #9f1239;
+        }
+
+        /* Modal s pitanjem */
+        .modal {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .modal h2 {
+            font-size: 32px;
+            color: #38bdf8;
+            margin-bottom: 15px;
+            text-shadow: 0 0 10px rgba(56,189,248,0.5);
+        }
+
+        .modal p {
+            font-size: 22px;
+            max-width: 650px;
+            line-height: 1.4;
+            margin-bottom: 25px;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .opt-btn {
+            background: #1e293b;
+            border: 3px solid #38bdf8;
+            color: white;
+            font-size: 20px;
+            padding: 15px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        .opt-btn:hover {
+            background: #2563eb;
+            transform: scale(1.03);
+        }
+
+        .start-btn {
+            background: #16a34a;
+            border: none;
+            color: white;
+            font-size: 26px;
+            padding: 15px 40px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(22, 163, 74, 0.4);
+        }
+
+        .start-btn:hover {
+            transform: scale(1.05);
+            background: #22c55e;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <!-- Pokretni Zaslon -->
+    <div id="start-screen" class="modal">
+        <h1>🍄 Super Mario: Informatička Avantura!</h1>
+        <p>Pomozite Mariju proći kroz informatički svijet! Skupljajte Bajtove 🪙, izbjegavajte viruse 👾 i udarajte glavom u blokove ❓ za rješavanje kvizova!</p>
+        <button class="start-btn" onclick="startGame()">ZAPOČNI PUSTOLOVINU!</button>
+    </div>
+
+    <!-- Modal s Pitanjem -->
+    <div id="quiz-modal" class="modal" style="display: none;">
+        <h2>❓ Informatičko Pitanje!</h2>
+        <p id="quiz-question">Tekst pitanja...</p>
+        <div class="options-grid" id="quiz-options"></div>
+    </div>
+
+    <!-- Kraj Igre Zaslon -->
+    <div id="end-screen" class="modal" style="display: none;">
+        <h1 id="end-title">🎉 POBJEDA!</h1>
+        <p id="end-msg">Uspješno ste stigli do cilja!</p>
+        <button class="start-btn" onclick="startGame()">IGRAJ PONOVNO</button>
+    </div>
+
+    <!-- Zaglavlje -->
+    <div id="top-bar">
+        <div class="stat-box">⭐ Bodovi: <span id="score">0</span></div>
+        <div class="stat-box">🪙 Bajtovi: <span id="coins">0</span></div>
+        <div class="stat-box">❤️ Životi: <span id="lives">3</span></div>
+    </div>
+
+    <canvas id="gameCanvas" width="900" height="500"></canvas>
+</div>
+
+<!-- Komandne tipke na dodir ispod ekrana -->
+<div id="touch-controls">
+    <div class="ctrl-group">
+        <div class="ctrl-btn" onmousedown="setKey('Left', true)" onmouseup="setKey('Left', false)" ontouchstart="setKey('Left', true); event.preventDefault();" ontouchend="setKey('Left', false)">⬅️</div>
+        <div class="ctrl-btn" onmousedown="setKey('Right', true)" onmouseup="setKey('Right', false)" ontouchstart="setKey('Right', true); event.preventDefault();" ontouchend="setKey('Right', false)">➡️</div>
+    </div>
+    <div class="ctrl-group">
+        <div class="ctrl-btn jump" onmousedown="setKey('Jump', true)" onmouseup="setKey('Jump', false)" ontouchstart="setKey('Jump', true); event.preventDefault();" ontouchend="setKey('Jump', false)">SKOK ⬆️</div>
+    </div>
+</div>
+
+<script>
+    // Audio zvučni efekti (Web Audio API)
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playSfx(type) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        if (type === 'jump') {
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(400, audioCtx.currentTime + 0.15);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.15);
+        } else if (type === 'coin') {
+            osc.frequency.setValueAtTime(987.77, audioCtx.currentTime);
+            osc.frequency.setValueAtTime(1318.51, audioCtx.currentTime + 0.08);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.25);
+        } else if (type === 'block') {
+            osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+        } else if (type === 'hit') {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(120, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+        }
+    }
+
+    // Pitanja za 1. razred
+    const QUIZZES = [
+        {
+            q: "Što od navedenog služi za pretipkavanje slova u računalo?",
+            opts: ["🖱️ Miš", "⌨️ Tipkovnica", "🔊 Zvučnik", "🖨️ Pisač"],
+            ans: 1
+        },
+        {
+            q: "Koji uređaj nam prikazuje sliku i ono što radimo na računalu?",
+            opts: ["🖥️ Monitor", "🧠 Procesor", "🖱️ Miš", "🔌 Kabel"],
+            ans: 0
+        },
+        {
+            q: "Kako se zove mali streličasti pokazivač kojim klikamo po ekranu?",
+            opts: ["🐛 Buba", "🖱️ Pokazivač miša", "🚀 Raketa", "⚡ Blic"],
+            ans: 1
+        },
+        {
+            q: "Što nam omogućuje da čujemo glazbu i zvukove iz igrice?",
+            opts: ["⌨️ Tipkovnica", "🔊 Zvučnici", "💻 Kućište", "🖱️ Miš"],
+            ans: 1
+        }
+    ];
+
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // Kontrole
+    const keys = { Left: false, Right: false, Jump: false };
+    function setKey(key, value) { keys[key] = value; }
+
+    window.addEventListener('keydown', e => {
+        if (e.key === 'ArrowLeft' || e.key === 'a') keys.Left = true;
+        if (e.key === 'ArrowRight' || e.key === 'd') keys.Right = true;
+        if (e.key === 'ArrowUp' || e.key === 'w' || e.key === ' ') keys.Jump = true;
+    });
+
+    window.addEventListener('keyup', e => {
+        if (e.key === 'ArrowLeft' || e.key === 'a') keys.Left = false;
+        if (e.key === 'ArrowRight' || e.key === 'd') keys.Right = false;
+        if (e.key === 'ArrowUp' || e.key === 'w' || e.key === ' ') keys.Jump = false;
+    });
+
+    // Objekt Igrača (Mario)
+    let player = {
+        x: 50, y: 300, w: 35, h: 50,
+        vx: 0, vy: 0,
+        speed: 5, jumpPower: -12,
+        grounded: false,
+        lives: 3, score: 0, coins: 0
+    };
+
+    let cameraX = 0;
+    let isPaused = false;
+    let activeQuizIndex = -1;
+
+    // Elementi Svijeta
+    let platforms = [];
+    let questionBlocks = [];
+    let coins = [];
+    let enemies = [];
+    let flag = { x: 2600, y: 150, w: 20, h: 250 };
+
+    function initWorld() {
+        // Platforme (Pod i uzvisine)
+        platforms = [
+            { x: 0, y: 400, w: 1000, h: 100 },
+            { x: 1100, y: 400, w: 800, h: 100 },
+            { x: 2000, y: 400, w: 1000, h: 100 },
+
+            // Lebdeće platforme
+            { x: 300, y: 280, w: 120, h: 25 },
+            { x: 600, y: 220, w: 150, h: 25 },
+            { x: 1300, y: 270, w: 160, h: 25 },
+            { x: 1650, y: 210, w: 140, h: 25 },
+            { x: 2200, y: 280, w: 150, h: 25 }
+        ];
+
+        // Upitnik Blokovi
+        questionBlocks = [
+            { x: 340, y: 160, w: 40, h: 40, hit: false, quizIdx: 0 },
+            { x: 700, y: 100, w: 40, h: 40, hit: false, quizIdx: 1 },
+            { x: 1400, y: 150, w: 40, h: 40, hit: false, quizIdx: 2 },
+            { x: 1700, y: 90, w: 40, h: 40, hit: false, quizIdx: 3 }
+        ];
+
+        // Bajtovi (Kovanice)
+        coins = [
+            { x: 200, y: 350, collected: false },
+            { x: 250, y: 350, collected: false },
+            { x: 620, y: 170, collected: false },
+            { x: 660, y: 170, collected: false },
+            { x: 1200, y: 350, collected: false },
+            { x: 1350, y: 220, collected: false },
+            { x: 2100, y: 350, collected: false },
+            { x: 2250, y: 230, collected: false }
+        ];
+
+        // Neprijatelji (Virusi)
+        enemies = [
+            { x: 500, y: 360, w: 35, h: 35, vx: -2, minX: 400, maxX: 800 },
+            { x: 1350, y: 360, w: 35, h: 35, vx: -2.5, minX: 1200, maxX: 1600 },
+            { x: 2300, y: 360, w: 35, h: 35, vx: -3, minX: 2100, maxX: 2500 }
+        ];
+    }
+
+    function startGame() {
+        player.x = 50; player.y = 300;
+        player.vx = 0; player.vy = 0;
+        player.lives = 3; player.score = 0; player.coins = 0;
+        cameraX = 0; isPaused = false;
+
+        updateHud();
+        initWorld();
+
+        document.getElementById('start-screen').style.display = 'none';
+        document.getElementById('end-screen').style.display = 'none';
+        document.getElementById('quiz-modal').style.display = 'none';
+
+        requestAnimationFrame(gameLoop);
+    }
+
+    function updateHud() {
+        document.getElementById('score').innerText = player.score;
+        document.getElementById('coins').innerText = player.coins;
+        document.getElementById('lives').innerText = player.lives;
+    }
+
+    // Glavna Petlja
+    function gameLoop() {
+        if (isPaused) return;
+
+        updatePhysics();
+        render();
+
+        requestAnimationFrame(gameLoop);
+    }
+
+    function updatePhysics() {
+        // Vodoravno kretanje
+        if (keys.Left) player.vx = -player.speed;
+        else if (keys.Right) player.vx = player.speed;
+        else player.vx = 0;
+
+        // Skok
+        if (keys.Jump && player.grounded) {
+            player.vy = player.jumpPower;
+            player.grounded = false;
+            playSfx('jump');
+        }
+
+        // Gravitacija
+        player.vy += 0.6;
+
+        player.x += player.vx;
+        player.y += player.vy;
+        player.grounded = false;
+
+        // Kolizija s platformama
+        platforms.forEach(p => {
+            if (player.x < p.x + p.w && player.x + player.w > p.x &&
+                player.y + player.h > p.y && player.y + player.h < p.y + p.h + player.vy) {
+                if (player.vy > 0) {
+                    player.grounded = true;
+                    player.vy = 0;
+                    player.y = p.y - player.h;
+                }
+            }
+        });
+
+        // Kolizija s Blokovima Upitnika
+        questionBlocks.forEach(b => {
+            if (player.x < b.x + b.w && player.x + player.w > b.x &&
+                player.y < b.y + b.h && player.y + player.h > b.y) {
+                // Udario glavom odozdo
+                if (player.vy < 0 && player.y > b.y + b.h - 15) {
+                    player.vy = 2;
+                    if (!b.hit) {
+                        b.hit = true;
+                        playSfx('block');
+                        openQuiz(b.quizIdx);
+                    }
+                } else if (player.vy > 0) { // Stao na blok
+                    player.grounded = true;
+                    player.vy = 0;
+                    player.y = b.y - player.h;
+                }
+            }
+        });
+
+        // Skupljanje Bajtova
+        coins.forEach(c => {
+            if (!c.collected && Math.hypot((player.x + player.w/2) - c.x, (player.y + player.h/2) - c.y) < 30) {
+                c.collected = true;
+                player.coins++;
+                player.score += 50;
+                playSfx('coin');
+                updateHud();
+            }
+        });
+
+        // Kretanje i kolizija s Neprijateljima (Virusima)
+        enemies.forEach(e => {
+            e.x += e.vx;
+            if (e.x < e.minX || e.x > e.maxX) e.vx *= -1;
+
+            if (player.x < e.x + e.w && player.x + player.w > e.x &&
+                player.y < e.y + e.h && player.y + player.h > e.y) {
+                // Doskok na glavu virusa
+                if (player.vy > 0 && player.y + player.h < e.y + 20) {
+                    player.vy = -8;
+                    e.x = -9999; // Ukloni neprijatelja
+                    player.score += 100;
+                    playSfx('coin');
+                    updateHud();
+                } else {
+                    // Igrač je ozlijeđen
+                    playSfx('hit');
+                    player.lives--;
+                    updateHud();
+                    player.x -= 80;
+                    player.vy = -5;
+                    if (player.lives <= 0) endGame(false);
+                }
+            }
+        });
+
+        // Pad u provaliju
+        if (player.y > 550) {
+            playSfx('hit');
+            player.lives--;
+            updateHud();
+            if (player.lives <= 0) endGame(false);
+            else { player.x = Math.max(50, player.x - 200); player.y = 200; player.vy = 0; }
+        }
+
+        // Dolazak na cilj (Zastavica)
+        if (player.x + player.w >= flag.x) {
+            endGame(true);
+        }
+
+        // Praćenje kamere
+        cameraX = Math.max(0, player.x - 250);
+    }
+
+    function openQuiz(idx) {
+        isPaused = true;
+        activeQuizIndex = idx;
+        const qData = QUIZZES[idx];
+
+        document.getElementById('quiz-question').innerText = qData.q;
+        const optGrid = document.getElementById('quiz-options');
+        optGrid.innerHTML = '';
+
+        qData.opts.forEach((opt, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'opt-btn';
+            btn.innerText = opt;
+            btn.onclick = () => answerQuiz(i === qData.ans);
+            optGrid.appendChild(btn);
+        });
+
+        document.getElementById('quiz-modal').style.display = 'flex';
+    }
+
+    function answerQuiz(isCorrect) {
+        document.getElementById('quiz-modal').style.display = 'none';
+        isPaused = false;
+
+        if (isCorrect) {
+            playSfx('coin');
+            player.score += 200;
+            alert("🎉 Točan odgovor! Osvojili ste +200 bodova!");
+        } else {
+            playSfx('hit');
+            alert("❌ Više sreće drugi put!");
+        }
+        updateHud();
+        requestAnimationFrame(gameLoop);
+    }
+
+    function render() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        ctx.save();
+        ctx.translate(-cameraX, 0);
+
+        // Crtanje Platformi (Trava i Zemlja)
+        platforms.forEach(p => {
+            ctx.fillStyle = '#15803d';
+            ctx.fillRect(p.x, p.y, p.w, 15); // Trava
+            ctx.fillStyle = '#78350f';
+            ctx.fillRect(p.x, p.y + 15, p.w, p.h - 15); // Zemlja
+        });
+
+        // Crtanje Blokova Upitnika
+        questionBlocks.forEach(b => {
+            ctx.fillStyle = b.hit ? '#94a3b8' : '#f59e0b';
+            ctx.fillRect(b.x, b.y, b.w, b.h);
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#ffffff';
+            ctx.strokeRect(b.x, b.y, b.w, b.h);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 24px Arial';
+            ctx.fillText(b.hit ? '✓' : '?', b.x + 12, b.y + 28);
+        });
+
+        // Crtanje Bajtova (Kovanica)
+        coins.forEach(c => {
+            if (!c.collected) {
+                ctx.fillStyle = '#facc15';
+                ctx.beginPath();
+                ctx.arc(c.x, c.y, 12, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#000';
+                ctx.font = 'bold 12px Arial';
+                ctx.fillText('B', c.x - 4, c.y + 4);
+            }
+        });
+
+        // Crtanje Virusa (Neprijatelja)
+        enemies.forEach(e => {
+            ctx.fillStyle = '#ef4444';
+            ctx.beginPath();
+            ctx.arc(e.x + e.w/2, e.y + e.h/2, e.w/2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '16px Arial';
+            ctx.fillText('👾', e.x + 4, e.y + 24);
+        });
+
+        // Zastavica na Cilju
+        ctx.fillStyle = '#cbd5e1';
+        ctx.fillRect(flag.x, flag.y, flag.w, flag.h);
+        ctx.fillStyle = '#22c55e';
+        ctx.beginPath();
+        ctx.moveTo(flag.x + flag.w, flag.y);
+        ctx.lineTo(flag.x + flag.w + 60, flag.y + 30);
+        ctx.lineTo(flag.x + flag.w, flag.y + 60);
+        ctx.fill();
+
+        // Crtanje Marija (Igrač)
+        ctx.fillStyle = '#dc2626'; // Crvena kapa/majica
+        ctx.fillRect(player.x, player.y, player.w, 25);
+        ctx.fillStyle = '#1d4ed8'; // Plave hlače
+        ctx.fillRect(player.x, player.y + 25, player.w, 25);
+        ctx.fillStyle = '#fde047'; // Lice
+        ctx.fillRect(player.x + 5, player.y + 8, 25, 15);
+
+        ctx.restore();
+    }
+
+    function endGame(victory) {
+        isPaused = true;
+        document.getElementById('end-screen').style.display = 'flex';
+        if (victory) {
+            playSfx('coin');
+            document.getElementById('end-title').innerText = '🎉 STIGLI STE DO CILJA!';
+            document.getElementById('end-msg').innerText = `Bravo! Uspješno ste prošli stazu, osvojili ${player.score} bodova i sakupili ${player.coins} Bajtova!`;
+        } else {
+            playSfx('hit');
+            document.getElementById('end-title').innerText = '💥 VISE SREĆE DRUGI PUT!';
+            document.getElementById('end-msg').innerText = 'Izgubili ste sve živote. Pokušajte ponovno!';
+        }
+    }
+</script>
+
+</body>
+</html>
