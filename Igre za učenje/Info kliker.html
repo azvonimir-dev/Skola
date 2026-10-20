@@ -210,4 +210,114 @@
         gain.connect(audioCtx.destination);
 
         if (type === 'click') {
-            osc.frequency.setValueAtTime(300 + Math.
+            osc.frequency.setValueAtTime(300 + Math.random() * 200, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.08);
+        } else if (type === 'buy') {
+            osc.frequency.setValueAtTime(523, audioCtx.currentTime);
+            osc.frequency.setValueAtTime(783, audioCtx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.25);
+        }
+    }
+
+    // Stanje Igre
+    let bytes = 0;
+    let clickPower = 1;
+
+    // Popis Nadogradnji
+    const upgrades = [
+        { id: 'mouse', name: 'Bolji Miš', icon: '🖱️', cost: 15, clickAdd: 1, bpsAdd: 0, count: 0 },
+        { id: 'panda', name: 'Panda Pomoćnik', icon: '🐼', cost: 50, clickAdd: 0, bpsAdd: 1, count: 0 },
+        { id: 'keyboard', name: 'Mehanička Tipkovnica', icon: '⌨️', cost: 150, clickAdd: 5, bpsAdd: 0, count: 0 },
+        { id: 'internet', name: 'Brzi Optički Internet', icon: '🌐', cost: 500, clickAdd: 0, bpsAdd: 10, count: 0 },
+        { id: 'cpu', name: 'Super Procesor', icon: '⚡', cost: 1200, clickAdd: 25, bpsAdd: 0, count: 0 },
+        { id: 'cloud', name: 'Oblak Pohrana (Cloud)', icon: '☁️', cost: 3000, clickAdd: 0, bpsAdd: 60, count: 0 },
+        { id: 'ai', name: 'Pametni AI Robot', icon: '🤖', cost: 10000, clickAdd: 0, bpsAdd: 250, count: 0 }
+    ];
+
+    function clickPC(event) {
+        bytes += clickPower;
+        playSfx('click');
+
+        // Prikaz letećeg broja pri kliku
+        const text = document.createElement('div');
+        text.className = 'click-text';
+        text.innerText = `+${clickPower}`;
+        
+        // Pozicija broja oko klika
+        const rect = document.getElementById('clicker-zone').getBoundingClientRect();
+        text.style.left = `${event.clientX - rect.left - 10}px`;
+        text.style.top = `${event.clientY - rect.top - 20}px`;
+
+        document.getElementById('clicker-zone').appendChild(text);
+
+        setTimeout(() => text.remove(), 800);
+
+        updateUI();
+    }
+
+    function calculateBPS() {
+        return upgrades.reduce((total, item) => total + (item.bpsAdd * item.count), 0);
+    }
+
+    function buyUpgrade(index) {
+        const up = upgrades[index];
+        if (bytes >= up.cost) {
+            bytes -= up.cost;
+            up.count++;
+            clickPower += up.clickAdd;
+            up.cost = Math.floor(up.cost * 1.35); // Povećanje cijene
+            playSfx('buy');
+            updateUI();
+        }
+    }
+
+    function renderUpgrades() {
+        const list = document.getElementById('upgrades-list');
+        list.innerHTML = '';
+
+        upgrades.forEach((up, idx) => {
+            const card = document.createElement('div');
+            card.className = `upgrade-card ${bytes < up.cost ? 'disabled' : ''}`;
+            card.onclick = () => buyUpgrade(idx);
+
+            let effectText = up.clickAdd > 0 ? `+${up.clickAdd} po kliku` : `+${up.bpsAdd} po sekundi`;
+
+            card.innerHTML = `
+                <div class="upgrade-icon">${up.icon}</div>
+                <div class="upgrade-info">
+                    <div class="upgrade-name">${up.name}</div>
+                    <div class="upgrade-effect">${effectText}</div>
+                </div>
+                <div class="upgrade-cost">${up.cost} B</div>
+                <div class="upgrade-count">${up.count}</div>
+            `;
+
+            list.appendChild(card);
+        });
+    }
+
+    function updateUI() {
+        document.getElementById('bytes-count').innerText = Math.floor(bytes);
+        document.getElementById('bps-count').innerText = calculateBPS();
+        renderUpgrades();
+    }
+
+    // Automatsko skupljanje bajtova u sekundi (BPS)
+    setInterval(() => {
+        const bps = calculateBPS();
+        if (bps > 0) {
+            bytes += bps / 10; // Izvršava se svakih 100ms
+            updateUI();
+        }
+    }, 100);
+
+    // Početno renderiranje
+    updateUI();
+</script>
+
+</body>
+</html>
