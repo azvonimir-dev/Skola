@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Informatički Monopol - 1. Razred</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Canvas Confetti za pobjedu -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        /* Standardni sistemski fontovi koji osiguravaju besprijekoran prikaz hrvatskih znakova (č, ć, š, đ, ž) */
+        body {
+            font-family: 'Segoe UI', Arial, 'Trebuchet MS', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);
+            color: #f8fafc;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .font-header {
+            font-family: 'Trebuchet MS', 'Segoe UI', Arial, sans-serif;
+            font-weight: 800;
+        }
+
+        /* Animacija bacanja kockice */
+        @keyframes dice-shake {
+            0% { transform: rotate(0deg) scale(1); }
+            25% { transform: rotate(-20deg) scale(1.15); }
+            50% { transform: rotate(20deg) scale(1.15); }
+            75% { transform: rotate(-10deg) scale(1.1); }
+            100% { transform: rotate(0deg) scale(1); }
+        }
+
+        .dice-rolling {
+            animation: dice-shake 0.5s ease-in-out;
+        }
+
+        /* Isticanje aktivnog igrača */
+        .active-turn-card {
+            box-shadow: 0 0 15px #facc15;
+            border-color: #facc15 !important;
+        }
+
+        .btn-shadow {
+            box-shadow: 0 5px 0 rgba(0, 0, 0, 0.25);
+        }
+        .btn-shadow:active {
+            box-shadow: 0 2px 0 rgba(0, 0, 0, 0.25);
+            transform: translateY(3px);
+        }
+
+        /* Monopol Ploča Mreža */
+        .monopoly-board {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            grid-template-rows: repeat(6, 1fr);
+            aspect-ratio: 1 / 1;
+            width: 100%;
+            max-width: 720px;
+            margin: 0 auto;
+            gap: 4px;
+            background-color: #1e293b;
+            padding: 8px;
+            border-radius: 24px;
+            border: 6px solid #6366f1;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+        }
+
+        .tile {
+            background-color: #ffffff;
+            color: #1e293b;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px;
+            position: relative;
+            font-size: 0.72rem;
+            font-weight: 700;
+            overflow: hidden;
+            text-align: center;
+            border: 2px solid #cbd5e1;
+            transition: all 0.2s;
+        }
+
+        @media (min-width: 640px) {
+            .tile {
+                font-size: 0.85rem;
+                padding: 6px;
+            }
+        }
+
+        .center-area {
+            grid-column: 2 / 6;
+            grid-row: 2 / 6;
+            background: linear-gradient(135deg, #312e81 0%, #1e1b4b 100%);
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 12px;
+            text-align: center;
+            border: 3px dashed #6366f1;
+        }
+
+        .star-level {
+            position: absolute;
+            top: 2px;
+            right: 4px;
+            color: #eab308;
+            font-size: 0.75rem;
+        }
+
+        .owner-bar {
+            width: 100%;
+            height: 6px;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            border-bottom-left-radius: 8px;
+            border-bottom-right-radius: 8px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between p-2 md:p-4">
+
+    <!-- ZAGLAVLJE IGRE -->
+    <header class="w-full max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-2 mb-2 bg-indigo-900/80 backdrop-blur-md p-3 rounded-2xl border border-indigo-500/30">
+        <div class="flex items-center gap-3">
+            <span class="text-3xl md:text-4xl">💻</span>
+            <div>
+                <h1 class="font-header text-xl md:text-3xl text-yellow-400 tracking-wide leading-none">
+                    INFORMATIČKI MONOPOL
+                </h1>
+                <p class="text-xs md:text-sm text-indigo-200 font-bold">Igra za 1. razred • Sakupljaj Bajtove i računala!</p>
+            </div>
+        </div>
+
+        <!-- Odabir broja igrača -->
+        <div class="flex items-center gap-2 bg-indigo-950 p-2 rounded-xl border border-indigo-700">
+            <label class="text-xs font-bold text-indigo-200">Način igre:</label>
+            <select id="game-mode-select" onchange="setupGameMode()" class="bg-indigo-800 text-white font-bold rounded-lg px-2 py-1 text-xs md:text-sm focus:outline-none cursor-pointer">
+                <option value="vs-bot">1 Igrač vs Robo-Bajt 🤖</option>
+                <option value="2p">2 Igrača 👥</option>
+                <option value="3p">3 Igrača 👥👤</option>
+                <option value="4p">4 Igrača 👥👥</option>
+            </select>
+            <button onclick="resetGame()" class="bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs px-3 py-1 rounded-lg btn-shadow ml-2 cursor-pointer">
+                Nova Igra 🔄
+            </button>
+        </div>
+    </header>
+
+    <!-- GLAVNO PODRUČJE (Ploča + Kontrole) -->
+    <main class="w-full max-w-6xl mx-auto flex flex-col lg:flex-row gap-4 items-start justify-center flex-1">
+
+        <!-- MONOPOL STAZA (20 POLJA OKO RUBA) -->
+        <div class="w-full lg:w-2/3 max-w-[650px] mx-auto">
+            <div class="monopoly-board" id="board-grid">
+                <!-- Dinamički se generira u JavaScriptu -->
+            </div>
+        </div>
+
+        <!-- BOČNA TRAKA (Kockica + Stanje Igrača) -->
+        <div class="w-full lg:w-1/3 flex flex-col gap-3">
+
+            <!-- KONTROLNA KUTIJA (Bacanje kockice) -->
+            <div class="bg-indigo-900/90 rounded-2xl p-4 border-2 border-indigo-500 shadow-lg flex flex-col items-center text-center">
+                <div id="status-turn-text" class="font-header text-lg md:text-xl text-yellow-300 mb-1">
+                    Na redu je: Piksel Maca
+                </div>
+                <div id="status-desc-text" class="text-xs md:text-sm text-indigo-200 font-bold mb-3">
+                    Baci kockicu i započni svoju pustolovinu!
+                </div>
+
+                <div class="flex items-center justify-center gap-4 w-full">
+                    <div id="dice-view" class="w-16 h-16 bg-white rounded-2xl border-4 border-yellow-400 flex items-center justify-center text-4xl font-header text-indigo-900 shadow-md">
+                        🎲
+                    </div>
+                    <button id="roll-dice-btn" onclick="handleRollDice()" class="flex-1 bg-amber-500 hover:bg-amber-400 text-indigo-950 font-header text-lg md:text-xl py-3 px-4 rounded-2xl btn-shadow transition-all cursor-pointer">
+                        BACI KOCKICU 🎲
+                    </button>
+                </div>
+            </div>
+
+            <!-- KARTICE SA STANJEM IGRAČA -->
+            <div class="grid grid-cols-2 lg:grid-cols-1 gap-2" id="players-cards-container">
+                <!-- Generira se dinamički -->
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- MODAL ZA KUPNJU OPREME -->
+    <div id="buy-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-indigo-900 border-4 border-yellow-400 rounded-3xl p-6 max-w-md w-full text-center shadow-2xl">
+            <span class="text-5xl mb-2 inline-block" id="buy-icon">🖱️</span>
+            <h2 class="font-header text-2xl text-yellow-300" id="buy-title">Računalni Miš</h2>
+            <p class="text-indigo-200 text-sm font-bold my-2" id="buy-desc">Želiš li kupiti ovu opremu za svoje računalo?</p>
+            
+            <div class="bg-indigo-950/80 p-3 rounded-xl border border-indigo-700 my-4 text-center">
+                <span class="text-xs text-indigo-300 font-bold block">CIJENA:</span>
+                <span class="font-header text-2xl text-emerald-400" id="buy-price">100 Bajtova</span>
+            </div>
+
+            <div class="flex gap-3">
+                <button onclick="confirmBuyProperty()" class="flex-1 bg-emerald-500 hover:bg-emerald-400 text-white font-header text-lg py-3 rounded-xl btn-shadow cursor-pointer">
+                    KUPI! 🛒
+                </button>
+                <button onclick="closeModal('buy-modal'); finishTurn();" class="flex-1 bg-slate-600 hover:bg-slate-500 text-white font-header text-lg py-3 rounded-xl btn-shadow cursor-pointer">
+                    ODUSTANI ❌
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL ZA INFORMATIČKI KVIZ -->
+    <div id="quiz-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-indigo-900 border-4 border-blue-400 rounded-3xl p-6 max-w-lg w-full text-center shadow-2xl">
+            <div class="flex items-center justify-between mb-3">
+                <span class="bg-blue-500/30 text-blue-300 font-header px-3 py-1 rounded-full text-xs border border-blue-400">
+                    ❓ INFORMATIČKI KVIZ
+                </span>
+                <span id="quiz-reward-tag" class="font-bold text-yellow-400 text-xs">
+                    NAGRADA: +100 Bajtova
+                </span>
+            </div>
+
+            <h3 class="font-header text-xl md:text-2xl text-white mb-4" id="quiz-question-text">
+                Što koristimo za pisanje slova i brojeva na računalu?
+            </h3>
+
+            <div id="quiz-options-container" class="grid grid-cols-1 gap-2 mb-4">
+                <!-- Opcije se dinamički ucitavaju -->
+            </div>
+
+            <div id="quiz-feedback" class="hidden p-3 rounded-xl font-bold text-sm mb-3"></div>
+
+            <button id="quiz-continue-btn" onclick="closeModal('quiz-modal'); finishTurn();" class="hidden w-full bg-amber-500 hover:bg-amber-400 text-indigo-950 font-header text-lg py-3 rounded-xl btn-shadow cursor-pointer">
+                NASTAVI IGRU ➔
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL ZA KARTICU IZNENAĐENJA (SREĆA) -->
+    <div id="chance-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-indigo-900 border-4 border-purple-400 rounded-3xl p-6 max-w-md w-full text-center shadow-2xl">
+            <span class="text-6xl mb-2 inline-block">⭐</span>
+            <h2 class="font-header text-2xl text-purple-300 mb-2">KARTICA IZNENAĐENJA!</h2>
+            <p class="text-indigo-100 text-base font-bold my-4 bg-indigo-950 p-4 rounded-xl border border-purple-500/40" id="chance-text">
+                Pronašao si novi USB štapić! Dobivaš +100 Bajtova!
+            </p>
+            <button onclick="closeModal('chance-modal'); finishTurn();" class="w-full bg-purple-500 hover:bg-purple-400 text-white font-header text-lg py-3 rounded-xl btn-shadow cursor-pointer">
+                ODLIČNO! 👍
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL ZA POBJEDU -->
+    <div id="victory-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-indigo-900 border-4 border-yellow-400 rounded-3xl p-8 max-w-lg w-full text-center shadow-2xl">
+            <span class="text-7xl mb-2 inline-block animate-bounce">🏆</span>
+            <h2 class="font-header text-3xl md:text-4xl text-yellow-400 mb-2">POBJEDA!</h2>
+            <p id="winner-name-text" class="text-xl font-bold text-white mb-2">
+                Piksel Maca je Pobjednik Informatičkog Monopola!
+            </p>
+            <p id="winner-stats-text" class="text-sm text-indigo-200 mb-6 font-bold">
+                Sakupljeno Bajtova: 1500 B | Kupljeno opreme: 5
+            </p>
+            <button onclick="resetGame()" class="bg-emerald-500 hover:bg-emerald-400 text-white font-header text-xl px-8 py-4 rounded-2xl btn-shadow cursor-pointer transition-transform hover:scale-105">
+                IGRAJ PONOVNO 🔄
+            </button>
+        </div>
+    </div>
+
+    <!-- PODNOŽJE -->
+    <footer class="text-center text-xs text-indigo-300 font-bold my-1">
+        Informatika za 1. razred osnovne škole • Interaktivna obrazovna igra
+    </footer>
+
+    <!-- SKRIPTA LOGIKE IGRE -->
+    <script>
+        // --- INFORMACIJE O POLJIMA NA STAZI (20 POLJA UNUTAR KVADRATA 6x6) ---
+        const boardTilesData = [
+            // Donja linija (S desna na lijevo)
+            { id: 0, gridPos: [6, 1], name: "START", type: "start", icon: "🚀", color: "bg-emerald-500 text-white", price: 0, rent: 0, desc: "+200 Bajtova pri svakom prolasku!" },
+            { id: 1, gridPos: [6, 2], name: "Miš", type: "property", group: "hardware", icon: "🖱️", color: "bg-sky-200 border-sky-400", price: 100, rent: 30, desc: "Služi za pomicanje strelice po zaslonu." },
+            { id: 2, gridPos: [6, 3], name: "Tipkovnica", type: "property", group: "hardware", icon: "⌨️", color: "bg-sky-200 border-sky-400", price: 120, rent: 40, desc: "Služi za pisanje slova i brojeva." },
+            { id: 3, gridPos: [6, 4], name: "Kviz Pitanje", type: "quiz", icon: "❓", color: "bg-amber-300 border-amber-500", price: 0, rent: 0, desc: "Odgovori točno i osvoji nagradu!" },
+            { id: 4, gridPos: [6, 5], name: "Monitor", type: "property", group: "hardware", icon: "🖥️", color: "bg-sky-200 border-sky-400", price: 150, rent: 50, desc: "Prikazuje sliku i rad na računalu." },
+            { id: 5, gridPos: [6, 6], name: "Virus / Antivirus", type: "jail", icon: "👾", color: "bg-rose-500 text-white", price: 0, rent: 0, desc: "Odmor 1 krug u antivirusnom programu!" },
+
+            // Lijeva okomita linija (Gore)
+            { id: 6, gridPos: [5, 6], name: "Crtanje", type: "property", group: "software", icon: "🎨", color: "bg-purple-200 border-purple-400", price: 180, rent: 60, desc: "Program za crtanje i bojanje." },
+            { id: 7, gridPos: [4, 6], name: "Sreća", type: "chance", icon: "⭐", color: "bg-yellow-300 border-yellow-500", price: 0, rent: 0, desc: "Iznenadjenje na stazi!" },
+            { id: 8, gridPos: [3, 6], name: "Slušalice", type: "property", group: "software", icon: "🎧", color: "bg-purple-200 border-purple-400", price: 200, rent: 70, desc: "Za tiho slušanje zvuka." },
+            { id: 9, gridPos: [2, 6], name: "Igrica", type: "property", group: "software", icon: "🎮", color: "bg-purple-200 border-purple-400", price: 220, rent: 80, desc: "Zabavna poučna igra." },
+            { id: 10, gridPos: [1, 6], name: "Školski Odmor", type: "parking", icon: "☕", color: "bg-teal-400 text-white", price: 0, rent: 0, desc: "Besplatno parkiralište i predah." },
+
+            // Gornja linija (Lijevo)
+            { id: 11, gridPos: [1, 5], name: "Pametni sat", type: "property", group: "devices", icon: "⌚", color: "bg-pink-200 border-pink-400", price: 250, rent: 90, desc: "Mali sat s aplikacijama." },
+            { id: 12, gridPos: [1, 4], name: "Kviz Pitanje", type: "quiz", icon: "❓", color: "bg-amber-300 border-amber-500", price: 0, rent: 0, desc: "Odgovori točno za bonus!" },
+            { id: 13, gridPos: [1, 3], name: "Tablet", type: "property", group: "devices", icon: "📱", color: "bg-pink-200 border-pink-400", price: 280, rent: 100, desc: "Malo računalo na dodir." },
+            { id: 14, gridPos: [1, 2], name: "Porez na Internet", type: "tax", icon: "💸", color: "bg-orange-300 border-orange-500", price: 0, rent: 0, desc: "Plati 50 Bajtova za brzu mrežu!" },
+            { id: 15, gridPos: [1, 1], name: "Uhvati Virus!", type: "gotojail", icon: "🚨", color: "bg-rose-600 text-white", price: 0, rent: 0, desc: "Idi direktno u Antivirus!" },
+
+            // Desna okomita linija (Dolje)
+            { id: 16, gridPos: [2, 1], name: "Tajni Kod", type: "property", group: "safety", icon: "🔒", color: "bg-emerald-200 border-emerald-400", price: 300, rent: 110, desc: "Tajna lozinka za sigurnost." },
+            { id: 17, gridPos: [3, 1], name: "Sreća", type: "chance", icon: "⭐", color: "bg-yellow-300 border-yellow-500", price: 0, rent: 0, desc: "Iznenadjenje na stazi!" },
+            { id: 18, gridPos: [4, 1], name: "Zvučnici", type: "property", group: "safety", icon: "🔊", color: "bg-emerald-200 border-emerald-400", price: 320, rent: 120, desc: "Puštaju glazbu i zvukove." },
+            { id: 19, gridPos: [5, 1], name: "Internet", type: "property", group: "safety", icon: "🌐", color: "bg-emerald-200 border-emerald-400", price: 350, rent: 140, desc: "Mreža koja spaja cijeli svijet." }
+        ];
+
+        // --- PITANJA ZA KVIZ (JEDNOSTAVNA I ČITKA ZA 1. RAZRED OSNOVNE ŠKOLE) ---
+        const quizQuestions = [
+            {
+                q: "Što koristimo za pisanje slova i brojeva na računalu?",
+                options: [
+                    { text: "Tipkovnicu ⌨️", correct: true },
+                    { text: "Zvučnik 🔊", correct: false },
+                    { text: "Olovku ✏️", correct: false }
+                ],
+                explanation: "Tako je! Na tipkovnici se nalaze sva slova i brojevi."
+            },
+            {
+                q: "Što radimo s računalnim mišem?",
+                options: [
+                    { text: "Pomičemo strelicu po zaslonu 🖱️", correct: true },
+                    { text: "Gledamo crtić na njemu 📺", correct: false },
+                    { text: "Slušamo pjesmice 🎶", correct: false }
+                ],
+                explanation: "Točno! Miš nam pomaže za pomicanje i klikanje na zaslonu."
+            },
+            {
+                q: "Smijemo li svoju tajnu lozinku reći nepoznatoj osobi?",
+                options: [
+                    { text: "Nikada! Lozinka mora ostati tajna 🔒", correct: true },
+                    { text: "Da, svima u parku 🌳", correct: false }
+                ],
+                explanation: "Odlično! Lozinku čuvamo samo za sebe i roditelje."
+            },
+            {
+                q: "Gdje vidimo sliku dok radimo na računalu?",
+                options: [
+                    { text: "Na monitoru ili zaslonu 🖥️", correct: true },
+                    { text: "U zvučniku 🔊", correct: false },
+                    { text: "Na tipkovnici ⌨️", correct: false }
+                ],
+                explanation: "Bravo! Monitor prikazuje sve slike i igrice."
+            },
+            {
+                q: "Iz kojeg dijela računala izlaze glazba i zvuci?",
+                options: [
+                    { text: "Iz zvučnika 🔊", correct: true },
+                    { text: "Iz miša 🖱️", correct: false },
+                    { text: "Iz pisača 🖨️", correct: false }
+                ],
+                explanation: "Sjajno! Zvučnici puštaju zvuke i pjesmice."
+            },
+            {
+                q: "Što trebamo učiniti kada završimo s radom na računalu?",
+                options: [
+                    { text: "Pravilno ga ugasiti 🔌", correct: true },
+                    { text: "Ostaviti ga upaljenog cijelu noć 🌙", correct: false }
+                ],
+                explanation: "Točno! Računalo uvijek ugasimo kako bi štedjeli energiju."
+            },
+            {
+                q: "Što napraviš ako na računalu vidiš nešto neobično ili strašno?",
+                options: [
+                    { text: "Pozoveš učiteljicu ili roditelje 🧑‍🏫", correct: true },
+                    { text: "Šutiš i ne govoriš nikome 🤫", correct: false }
+                ],
+                explanation: "Bravo! Odrasli su tu da nam uvijek pomognu."
+            }
+        ];
+
+        // --- KARTICE IZNENAĐENJA (SREĆA) ---
+        const chanceCards = [
+            { text: "Pronašao si novi USB štapić sa slikama! Dobivaš +100 Bajtova! 💾", bytes: 100 },
+            { text: "Učiteljica te pohvalila za lijepo ponašanje u učionici! Dobivaš +150 Bajtova! 🌟", bytes: 150 },
+            { text: "Zaboravio si ugasiti monitor na vrijeme! Plati 50 Bajtova struje 🔌", bytes: -50 },
+            { text: "Očistio si tipkovnicu od mrvica! Dobivaš nagradu od +80 Bajtova! 🧹", bytes: 80 }
+        ];
+
+        // --- DEFINICIJA IGRAČA ---
+        const defaultPlayers = [
+            { id: 1, name: "Piksel Maca", icon: "🐱", color: "bg-blue-500", textCol: "text-blue-400", borderCol: "border-blue-400", bytes: 1000, pos: 0, inJail: false, jailTurns: 0, properties: [] },
+            { id: 2, name: "Robo-Bajt", icon: "🤖", color: "bg-pink-500", textCol: "text-pink-400", borderCol: "border-pink-400", bytes: 1000, pos: 0, inJail: false, jailTurns: 0, properties: [] },
+            { id: 3, name: "Raketa", icon: "🚀", color: "bg-amber-500", textCol: "text-amber-400", borderCol: "border-amber-400", bytes: 1000, pos: 0, inJail: false, jailTurns: 0, properties: [] },
+            { id: 4, name: "Gamepad", icon: "🎮", color: "bg-emerald-500", textCol: "text-emerald-400", borderCol: "border-emerald-400", bytes: 1000, pos: 0, inJail: false, jailTurns: 0, properties: [] }
+        ];
+
+        let players = [];
+        let activePlayerIndex = 0;
+        let isRolling = false;
+        let gameMode = "vs-bot";
+        let boardState = {}; // { tileId: { ownerId, stars: 0 } }
+
+        // --- ZVUČNI EFEKTI (Web Audio API) ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            const now = audioCtx.currentTime;
+
+            if (type === 'step') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(320, now);
+                osc.frequency.exponentialRampToValueAtTime(520, now + 0.08);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+                osc.start(now);
+                osc.stop(now + 0.08);
+            } else if (type === 'buy') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(420, now);
+                osc.frequency.setValueAtTime(640, now + 0.1);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                osc.start(now);
+                osc.stop(now + 0.25);
+            } else if (type === 'correct') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(523, now);
+                osc.frequency.setValueAtTime(659, now + 0.1);
+                osc.frequency.setValueAtTime(783, now + 0.2);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+                osc.start(now);
+                osc.stop(now + 0.35);
+            } else if (type === 'wrong') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(220, now);
+                osc.frequency.setValueAtTime(160, now + 0.15);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            }
+        }
+
+        // --- INICIJALIZACIJA MREŽE IGRAĆE PLOČE ---
+        function initBoardGrid() {
+            const boardElem = document.getElementById('board-grid');
+            boardElem.innerHTML = '';
+
+            // Središnji prostor s logotipom
+            const centerArea = document.createElement('div');
+            centerArea.className = 'center-area';
+            centerArea.innerHTML = `
+                <span class="text-4xl md:text-5xl mb-1">💻</span>
+                <h2 class="font-header text-lg md:text-2xl text-yellow-400">INFORMATIKA</h2>
+                <p class="text-xs text-indigo-200 font-bold">1. RAZRED</p>
+                <div class="mt-2 text-[10px] md:text-xs text-indigo-300 border border-indigo-500/40 px-2 py-1 rounded-lg bg-indigo-950/60">
+                    Sakupljaj opremu i dodaj zvjezdice ⭐
+                </div>
+            `;
+            boardElem.appendChild(centerArea);
+
+            // Generiranje 20 rubnih polja
+            boardTilesData.forEach(tile => {
+                const tileDiv = document.createElement('div');
+                tileDiv.id = `tile-${tile.id}`;
+                tileDiv.className = `tile ${tile.color}`;
+                tileDiv.style.gridRow = tile.gridPos[0];
+                tileDiv.style.gridColumn = tile.gridPos[1];
+
+                // Zvjezdice
+                const starSpan = document.createElement('span');
+                starSpan.id = `star-tile-${tile.id}`;
+                starSpan.className = 'star-level';
+                starSpan.innerText = '';
+                tileDiv.appendChild(starSpan);
+
+                // Naziv polja
+                const titleSpan = document.createElement('span');
+                titleSpan.className = 'leading-tight font-bold text-[10px] md:text-xs';
+                titleSpan.innerText = tile.name;
+                tileDiv.appendChild(titleSpan);
+
+                // Ikona
+                const iconSpan = document.createElement('span');
+                iconSpan.className = 'text-base md:text-2xl my-auto';
+                iconSpan.innerText = tile.icon;
+                tileDiv.appendChild(iconSpan);
+
+                // Cijena
+                if (tile.type === 'property') {
+                    const priceSpan = document.createElement('span');
+                    priceSpan.className = 'text-[9px] md:text-[11px] font-header text-indigo-900';
+                    priceSpan.innerText = `${tile.price} B`;
+                    tileDiv.appendChild(priceSpan);
+                }
+
+                // Traka s bojom vlasnika
+                const ownerBar = document.createElement('div');
+                ownerBar.id = `owner-bar-${tile.id}`;
+                ownerBar.className = 'owner-bar';
+                tileDiv.appendChild(ownerBar);
+
+                // Kontejner za igrače
+                const pawnsDiv = document.createElement('div');
+                pawnsDiv.id = `tile-pawns-${tile.id}`;
+                pawnsDiv.className = 'flex items-center justify-center gap-0.5 absolute inset-0 bg-black/10 backdrop-blur-[1px] opacity-0 transition-opacity p-1 flex-wrap';
+                tileDiv.appendChild(pawnsDiv);
+
+                boardElem.appendChild(tileDiv);
+            });
+
+            renderPlayersAndBoard();
+        }
+
+        // --- AŽURIRANJE PRIKAZA IGRAČA I VLASNIŠTVA ---
+        function renderPlayersAndBoard() {
+            boardTilesData.forEach(tile => {
+                const pawnDiv = document.getElementById(`tile-pawns-${tile.id}`);
+                if (pawnDiv) {
+                    pawnDiv.innerHTML = '';
+                    pawnDiv.classList.add('opacity-0');
+                }
+
+                const ownerBar = document.getElementById(`owner-bar-${tile.id}`);
+                const starSpan = document.getElementById(`star-tile-${tile.id}`);
+                const state = boardState[tile.id];
+
+                if (state && state.ownerId) {
+                    const owner = players.find(p => p.id === state.ownerId);
+                    if (owner && ownerBar) {
+                        ownerBar.style.backgroundColor = getPlayerHexColor(owner.id);
+                    }
+                    if (starSpan && state.stars > 0) {
+                        starSpan.innerText = '⭐'.repeat(state.stars);
+                    }
+                } else if (ownerBar) {
+                    ownerBar.style.backgroundColor = 'transparent';
+                }
+            });
+
+            // Postavi avatare na trenutno polje
+            players.forEach(player => {
+                const pawnDiv = document.getElementById(`tile-pawns-${player.pos}`);
+                if (pawnDiv) {
+                    pawnDiv.classList.remove('opacity-0');
+                    const pIcon = document.createElement('span');
+                    pIcon.className = `text-sm md:text-xl transform hover:scale-125 transition-transform drop-shadow`;
+                    pIcon.innerText = player.icon;
+                    pIcon.title = `${player.name} (${player.bytes} B)`;
+                    pawnDiv.appendChild(pIcon);
+                }
+            });
+
+            renderPlayerCards();
+        }
+
+        function getPlayerHexColor(id) {
+            switch(id) {
+                case 1: return '#3b82f6';
+                case 2: return '#ec4899';
+                case 3: return '#f59e0b';
+                case 4: return '#10b981';
+                default: return '#6366f1';
+            }
+        }
+
+        // --- RENDERIRANJE BOČNIH KARTICA IGRAČA ---
+        function renderPlayerCards() {
+            const container = document.getElementById('players-cards-container');
+            container.innerHTML = '';
+
+            players.forEach((player, idx) => {
+                const isCurrent = (idx === activePlayerIndex);
+                const card = document.createElement('div');
+                card.className = `bg-indigo-900/90 p-3 rounded-2xl border-2 ${player.borderCol} transition-all flex items-center justify-between ${isCurrent ? 'active-turn-card bg-indigo-800' : 'opacity-80'}`;
+
+                card.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <span class="text-2xl md:text-3xl">${player.icon}</span>
+                        <div>
+                            <div class="font-header text-sm md:text-base ${player.textCol}">${player.name}</div>
+                            <div class="text-xs text-indigo-200 font-bold">Oprema: ${player.properties.length}</div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="font-header text-emerald-400 text-base md:text-lg">${player.bytes} B</div>
+                        ${player.inJail ? '<span class="text-[10px] bg-rose-500 text-white font-bold px-1.5 py-0.5 rounded">VIRUS 👾</span>' : ''}
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // --- POSTAVLJANJE NAČINA IGRE ---
+        function setupGameMode() {
+            const select = document.getElementById('game-mode-select');
+            gameMode = select.value;
+
+            players = [];
+            boardState = {};
+
+            if (gameMode === 'vs-bot') {
+                players = [
+                    { ...defaultPlayers[0] },
+                    { ...defaultPlayers[1], name: "Robo-Bajt", isBot: true }
+                ];
+            } else if (gameMode === '2p') {
+                players = [
+                    { ...defaultPlayers[0] },
+                    { ...defaultPlayers[1], isBot: false }
+                ];
+            } else if (gameMode === '3p') {
+                players = [
+                    { ...defaultPlayers[0] },
+                    { ...defaultPlayers[1], isBot: false },
+                    { ...defaultPlayers[2], isBot: false }
+                ];
+            } else if (gameMode === '4p') {
+                players = [
+                    { ...defaultPlayers[0] },
+                    { ...defaultPlayers[1], isBot: false },
+                    { ...defaultPlayers[2], isBot: false },
+                    { ...defaultPlayers[3], isBot: false }
+                ];
+            }
+
+            activePlayerIndex = 0;
+            updateTurnHeader();
+            initBoardGrid();
+        }
+
+        // --- AŽURIRANJE ZAGLAVLJA TURN-A ---
+        function updateTurnHeader() {
+            const p = players[activePlayerIndex];
+            document.getElementById('status-turn-text').innerText = `Na redu je: ${p.name} ${p.icon}`;
+            document.getElementById('status-turn-text').className = `font-header text-lg md:text-xl ${p.textCol}`;
+
+            if (p.inJail) {
+                document.getElementById('status-desc-text').innerText = `Odmaraš u antivirusu (Preostalo: ${p.jailTurns} krug).`;
+            } else {
+                document.getElementById('status-desc-text').innerText = 'Baci kockicu i pomakni svoj avatar!';
+            }
+
+            renderPlayerCards();
+        }
+
+        // --- BACANJE KOCKICE ---
+        function handleRollDice() {
+            if (isRolling) return;
+
+            const p = players[activePlayerIndex];
+
+            if (p.inJail) {
+                p.jailTurns--;
+                if (p.jailTurns <= 0) {
+                    p.inJail = false;
+                }
+                finishTurn();
+                return;
+            }
+
+            isRolling = true;
+            const diceBtn = document.getElementById('roll-dice-btn');
+            diceBtn.disabled = true;
+            diceBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+            const diceView = document.getElementById('dice-view');
+            diceView.classList.add('dice-rolling');
+
+            playSound('step');
+
+            let rollCount = 0;
+            const interval = setInterval(() => {
+                const tempVal = Math.floor(Math.random() * 6) + 1;
+                diceView.innerText = tempVal;
+                rollCount++;
+
+                if (rollCount > 8) {
+                    clearInterval(interval);
+                    diceView.classList.remove('dice-rolling');
+
+                    const finalRoll = Math.floor(Math.random() * 6) + 1;
+                    diceView.innerText = finalRoll;
+
+                    movePlayerSteps(p, finalRoll);
+                }
+            }, 60);
+        }
+
+        // --- KRETANJE PIJUNA POLJE PO POLJE ---
+        function movePlayerSteps(player, steps) {
+            let stepsLeft = steps;
+
+            const stepInterval = setInterval(() => {
+                if (stepsLeft > 0) {
+                    player.pos = (player.pos + 1) % 20;
+
+                    if (player.pos === 0) {
+                        player.bytes += 200;
+                        playSound('correct');
+                    } else {
+                        playSound('step');
+                    }
+
+                    renderPlayersAndBoard();
+                    stepsLeft--;
+                } else {
+                    clearInterval(stepInterval);
+                    setTimeout(() => {
+                        handleTileAction(player);
+                    }, 300);
+                }
+            }, 300);
+        }
+
+        // --- REAKCIJA NA STAJANJE NA POLJE ---
+        function handleTileAction(player) {
+            const tile = boardTilesData.find(t => t.id === player.pos);
+            const state = boardState[tile.id] || { ownerId: null, stars: 0 };
+
+            if (tile.type === 'property') {
+                if (!state.ownerId) {
+                    if (player.isBot) {
+                        if (player.bytes >= tile.price) {
+                            player.bytes -= tile.price;
+                            player.properties.push(tile.id);
+                            boardState[tile.id] = { ownerId: player.id, stars: 0 };
+                            playSound('buy');
+                        }
+                        finishTurn();
+                    } else {
+                        openBuyModal(tile);
+                    }
+                } else if (state.ownerId === player.id) {
+                    if (state.stars < 3) {
+                        openQuizModal(player, true, tile);
+                    } else {
+                        finishTurn();
+                    }
+                } else {
+                    const owner = players.find(p => p.id === state.ownerId);
+                    const totalRent = tile.rent + (state.stars * 40);
+
+                    const rentAmount = Math.min(player.bytes, totalRent);
+                    player.bytes -= rentAmount;
+                    owner.bytes += rentAmount;
+
+                    playSound('wrong');
+                    finishTurn();
+                }
+            } else if (tile.type === 'quiz') {
+                openQuizModal(player, false, null);
+            } else if (tile.type === 'chance') {
+                openChanceModal(player);
+            } else if (tile.type === 'tax') {
+                player.bytes = Math.max(0, player.bytes - 50);
+                playSound('wrong');
+                finishTurn();
+            } else if (tile.type === 'gotojail') {
+                player.pos = 5;
+                player.inJail = true;
+                player.jailTurns = 1;
+                renderPlayersAndBoard();
+                finishTurn();
+            } else {
+                finishTurn();
+            }
+        }
+
+        // --- MODAL ZA KUPNJU ---
+        let currentBuyTile = null;
+
+        function openBuyModal(tile) {
+            currentBuyTile = tile;
+            document.getElementById('buy-icon').innerText = tile.icon;
+            document.getElementById('buy-title').innerText = tile.name;
+            document.getElementById('buy-desc').innerText = tile.desc;
+            document.getElementById('buy-price').innerText = `${tile.price} Bajtova`;
+
+            const p = players[activePlayerIndex];
+            if (p.bytes < tile.price) {
+                document.getElementById('buy-desc').innerText = "Nemaš dovoljno Bajtova za kupnju ove opreme!";
+            }
+
+            document.getElementById('buy-modal').classList.remove('hidden');
+        }
+
+        function confirmBuyProperty() {
+            const p = players[activePlayerIndex];
+            if (currentBuyTile && p.bytes >= currentBuyTile.price) {
+                p.bytes -= currentBuyTile.price;
+                p.properties.push(currentBuyTile.id);
+                boardState[currentBuyTile.id] = { ownerId: p.id, stars: 0 };
+                playSound('buy');
+            }
+            closeModal('buy-modal');
+            finishTurn();
+        }
+
+        // --- MODAL ZA KVIZ ---
+        let isUpgradeQuiz = false;
+        let quizTileRef = null;
+
+        function openQuizModal(player, isUpgrade, tile) {
+            isUpgradeQuiz = isUpgrade;
+            quizTileRef = tile;
+
+            const randomQ = quizQuestions[Math.floor(Math.random() * quizQuestions.length)];
+            
+            document.getElementById('quiz-question-text').innerText = randomQ.q;
+            document.getElementById('quiz-reward-tag').innerText = isUpgrade ? "NAGRADA: Dodatna Zvjezdica ⭐" : "NAGRADA: +100 Bajtova 💰";
+
+            const container = document.getElementById('quiz-options-container');
+            container.innerHTML = '';
+
+            const feedback = document.getElementById('quiz-feedback');
+            feedback.classList.add('hidden');
+
+            document.getElementById('quiz-continue-btn').classList.add('hidden');
+
+            randomQ.options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'w-full bg-indigo-950 hover:bg-indigo-800 border-2 border-indigo-600 text-white p-3 rounded-xl font-bold text-sm md:text-base transition-all text-left flex justify-between cursor-pointer';
+                btn.innerHTML = `<span>${opt.text}</span> <span>👉</span>`;
+                btn.onclick = () => handleQuizAnswer(opt, randomQ, btn, player);
+                container.appendChild(btn);
+            });
+
+            document.getElementById('quiz-modal').classList.remove('hidden');
+
+            if (player.isBot) {
+                setTimeout(() => {
+                    const correctOpt = randomQ.options.find(o => o.correct) || randomQ.options[0];
+                    handleQuizAnswer(correctOpt, randomQ, null, player);
+                }, 1200);
+            }
+        }
+
+        function handleQuizAnswer(opt, q, btnElem, player) {
+            const feedback = document.getElementById('quiz-feedback');
+            feedback.classList.remove('hidden');
+
+            if (opt.correct) {
+                playSound('correct');
+                feedback.className = "p-3 rounded-xl font-bold text-sm mb-3 bg-emerald-500/20 border border-emerald-400 text-emerald-300";
+                feedback.innerText = `✅ TOČNO! ${q.explanation}`;
+
+                if (isUpgradeQuiz && quizTileRef) {
+                    boardState[quizTileRef.id].stars = Math.min(3, (boardState[quizTileRef.id].stars || 0) + 1);
+                } else {
+                    player.bytes += 100;
+                }
+            } else {
+                playSound('wrong');
+                feedback.className = "p-3 rounded-xl font-bold text-sm mb-3 bg-rose-500/20 border border-rose-400 text-rose-300";
+                feedback.innerText = `❌ VIŠE SREĆE DRUGI PUT! ${q.explanation}`;
+            }
+
+            document.getElementById('quiz-continue-btn').classList.remove('hidden');
+
+            if (player.isBot) {
+                setTimeout(() => {
+                    closeModal('quiz-modal');
+                    finishTurn();
+                }, 2000);
+            }
+        }
+
+        // --- MODAL ZA SREĆU ---
+        function openChanceModal(player) {
+            const card = chanceCards[Math.floor(Math.random() * chanceCards.length)];
+            player.bytes = Math.max(0, player.bytes + card.bytes);
+
+            document.getElementById('chance-text').innerText = card.text;
+            document.getElementById('chance-modal').classList.remove('hidden');
+
+            playSound(card.bytes >= 0 ? 'correct' : 'wrong');
+
+            if (player.isBot) {
+                setTimeout(() => {
+                    closeModal('chance-modal');
+                    finishTurn();
+                }, 1800);
+            }
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        // --- ZAVRŠETAK POTEZA ---
+        function finishTurn() {
+            renderPlayersAndBoard();
+
+            const winner = players.find(p => p.bytes >= 2500);
+            if (winner) {
+                showVictoryModal(winner);
+                return;
+            }
+
+            isRolling = false;
+            const diceBtn = document.getElementById('roll-dice-btn');
+            diceBtn.disabled = false;
+            diceBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+
+            activePlayerIndex = (activePlayerIndex + 1) % players.length;
+            updateTurnHeader();
+
+            const nextPlayer = players[activePlayerIndex];
+            if (nextPlayer.isBot) {
+                setTimeout(() => {
+                    handleRollDice();
+                }, 1000);
+            }
+        }
+
+        // --- PRIKAZ POBJEDE ---
+        function showVictoryModal(winner) {
+            playSound('correct');
+            if (typeof confetti === 'function') {
+                confetti({ particleCount: 150, spread: 90, origin: { y: 0.6 } });
+            }
+
+            document.getElementById('winner-name-text').innerText = `${winner.name} ${winner.icon} Je Šampion Informatičkog Monopola!`;
+            document.getElementById('winner-stats-text').innerText = `Ukupno Bajtova: ${winner.bytes} B | Kupljena oprema: ${winner.properties.length}`;
+            document.getElementById('victory-modal').classList.remove('hidden');
+        }
+
+        // --- RESTART IGRE ---
+        function resetGame() {
+            closeModal('victory-modal');
+            setupGameMode();
+        }
+
+        window.onload = function() {
+            setupGameMode();
+        };
+    </script>
+</body>
+</html>
