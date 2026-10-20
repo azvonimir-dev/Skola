@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panda IT Shop Simulator</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0f172a;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        #game-container {
+            width: 950px;
+            height: 580px;
+            background: #1e293b;
+            border: 6px solid #22c55e;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+            position: relative;
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Zaglavlje */
+        #top-bar {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        .stat-box {
+            background: rgba(15, 23, 42, 0.85);
+            padding: 10px 20px;
+            border-radius: 14px;
+            border: 2px solid #22c55e;
+            font-size: 20px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        /* Kontrole na dodir za pametnu ploču / tablet */
+        #touch-controls {
+            width: 950px;
+            margin-top: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 10px;
+        }
+
+        .dpad {
+            display: grid;
+            grid-template-columns: repeat(3, 50px);
+            grid-template-rows: repeat(2, 50px);
+            gap: 5px;
+        }
+
+        .ctrl-btn {
+            background: #16a34a;
+            border: 2px solid #86efac;
+            color: white;
+            font-size: 22px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #15803d;
+        }
+
+        .ctrl-btn:active {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 #15803d;
+        }
+
+        .action-btn {
+            background: #eab308;
+            border: 2px solid #fef08a;
+            color: #000;
+            font-size: 18px;
+            font-weight: bold;
+            padding: 15px 30px;
+            border-radius: 18px;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #ca8a04;
+        }
+
+        /* Preklapajući zasloni */
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.92);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .overlay h1 {
+            font-size: 42px;
+            color: #4ade80;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(74,222,128,0.5);
+        }
+
+        .overlay p {
+            font-size: 19px;
+            max-width: 650px;
+            line-height: 1.5;
+            margin-bottom: 25px;
+            color: #cbd5e1;
+        }
+
+        .start-btn {
+            background: #22c55e;
+            color: white;
+            font-size: 24px;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(34, 197, 94, 0.4);
+        }
+
+        .start-btn:hover {
+            transform: scale(1.05);
+            background: #16a34a;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <!-- Pokretni Zaslon -->
+    <div id="start-screen" class="overlay">
+        <h1>🐼 Panda IT Shop Simulator</h1>
+        <p>Vodi svoju vlastitu informatičku trgovinu! Odi u skladište po robu, napuni police miševa i tipkovnica, naplati kupcima na blagajni i proširi trgovinu novim odjelima i radnicima!</p>
+        <button class="start-btn" onclick="startGame()">OTVORI TRGOVINU!</button>
+    </div>
+
+    <!-- Zaglavlje -->
+    <div id="top-bar">
+        <div class="stat-box">🪙 Bajtovi: <span id="money">100</span> B</div>
+        <div class="stat-box">📦 U rukama: <span id="carrying">0 / 3</span></div>
+        <div class="stat-box">⭐ Zadovoljstvo: <span id="reputation">100</span>%</div>
+    </div>
+
+    <canvas id="shopCanvas" width="950" height="580"></canvas>
+</div>
+
+<!-- Kontrole ispod ekrana -->
+<div id="touch-controls">
+    <div class="dpad">
+        <div></div>
+        <div class="ctrl-btn" onmousedown="setKey('Up', true)" onmouseup="setKey('Up', false)" ontouchstart="setKey('Up', true); event.preventDefault();" ontouchend="setKey('Up', false)">⬆️</div>
+        <div></div>
+        <div class="ctrl-btn" onmousedown="setKey('Left', true)" onmouseup="setKey('Left', false)" ontouchstart="setKey('Left', true); event.preventDefault();" ontouchend="setKey('Left', false)">⬅️</div>
+        <div class="ctrl-btn" onmousedown="setKey('Down', true)" onmouseup="setKey('Down', false)" ontouchstart="setKey('Down', true); event.preventDefault();" ontouchend="setKey('Down', false)">⬇️</div>
+        <div class="ctrl-btn" onmousedown="setKey('Right', true)" onmouseup="setKey('Right', false)" ontouchstart="setKey('Right', true); event.preventDefault();" ontouchend="setKey('Right', false)">➡️</div>
+    </div>
+    <button class="action-btn" onclick="wakeWorker()">😴 Probudi Radnika!</button>
+</div>
+
+<script>
+    // Audio zvučni efekti
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playSfx(type) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        if (type === 'pop') {
+            osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+        } else if (type === 'money') {
+            osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+            osc.frequency.setValueAtTime(1200, audioCtx.currentTime + 0.08);
+            gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+        } else if (type === 'unlock') {
+            osc.frequency.setValueAtTime(523, audioCtx.currentTime);
+            osc.frequency.setValueAtTime(659, audioCtx.currentTime + 0.1);
+            osc.frequency.setValueAtTime(783, audioCtx.currentTime + 0.2);
+            gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.35);
+        }
+    }
+
+    const canvas = document.getElementById('shopCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // Stanje Igre
+    let money = 100;
+    let reputation = 100;
+    const keys = { Up: false, Down: false, Left: false, Right: false };
+
+    function setKey(k, val) { keys[k] = val; }
+
+    window.addEventListener('keydown', e => {
+        if (e.key === 'ArrowUp' || e.key === 'w') keys.Up = true;
+        if (e.key === 'ArrowDown' || e.key === 's') keys.Down = true;
+        if (e.key === 'ArrowLeft' || e.key === 'a') keys.Left = true;
+        if (e.key === 'ArrowRight' || e.key === 'd') keys.Right = true;
+    });
+
+    window.addEventListener('keyup', e => {
+        if (e.key === 'ArrowUp' || e.key === 'w') keys.Up = false;
+        if (e.key === 'ArrowDown' || e.key === 's') keys.Down = false;
+        if (e.key === 'ArrowLeft' || e.key === 'a') keys.Left = false;
+        if (e.key === 'ArrowRight' || e.key === 'd') keys.Right = false;
+    });
+
+    // Panda Igrač
+    const panda = {
+        x: 450, y: 300, r: 22,
+        speed: 4.5,
+        carrying: 0,
+        maxCarry: 3,
+        itemType: null
+    };
+
+    // Pomoćni Radnik
+    const worker = {
+        x: 100, y: 100, r: 20,
+        unlocked: false,
+        sleeping: false,
+        targetX: 100, targetY: 100
+    };
+
+    // Objekti u trgovini
+    const warehouse = { x: 50, y: 450, w: 120, h: 90, label: '📦 Skladište' };
+    const register = { x: 780, y: 450, w: 120, h: 90, label: '💵 Blagajna', queue: [] };
+
+    // Police Proizvoda
+    const shelves = [
+        { id: 'mouse', x: 250, y: 150, w: 120, h: 80, name: '🖱️ Miševi', count: 0, max: 5, price: 30, unlocked: true },
+        { id: 'keyboard', x: 550, y: 150, w: 120, h: 80, name: '⌨️ Tipkovnice', count: 0, max: 5, price: 50, unlocked: true },
+        { id: 'monitor', x: 250, y: 320, w: 120, h: 80, name: '🖥️ Monitori', count: 0, max: 5, price: 100, unlocked: false, cost: 200 },
+        { id: 'tablet', x: 550, y: 320, w: 120, h: 80, name: '📱 Tableti', count: 0, max: 5, price: 150, unlocked: false, cost: 400 }
+    ];
+
+    // Otključavanje Radnika zona
+    const workerUnlockZone = { x: 80, y: 180, w: 120, h: 80, cost: 300, unlocked: false };
+
+    // Kupci
+    let customers = [];
+    const CUSTOMER_AVATARS = ['🐰', '🦊', '🐻', '🦒', '🐶'];
+
+    function startGame() {
+        document.getElementById('start-screen').style.display = 'none';
+        setInterval(gameLoop, 1000 / 60);
+        setInterval(spawnCustomer, 4000);
+        setInterval(workerLogic, 3000);
+    }
+
+    function gameLoop() {
+        update();
+        render();
+    }
+
+    function update() {
+        // Kretanje Pande
+        if (keys.Up && panda.y > 50) panda.y -= panda.speed;
+        if (keys.Down && panda.y < 530) panda.y += panda.speed;
+        if (keys.Left && panda.x > 50) panda.x -= panda.speed;
+        if (keys.Right && panda.x < 900) panda.x += panda.speed;
+
+        // Interakcija sa Skladištem (Uzimanje robe)
+        if (isColliding(panda, warehouse)) {
+            if (panda.carrying < panda.maxCarry) {
+                panda.carrying++;
+                playSfx('pop');
+                updateHud();
+            }
+        }
+
+        // Interakcija s Policama (Punjenje robe)
+        shelves.forEach(s => {
+            if (s.unlocked) {
+                if (isColliding(panda, s) && panda.carrying > 0 && s.count < s.max) {
+                    s.count++;
+                    panda.carrying--;
+                    playSfx('pop');
+                    updateHud();
+                }
+            } else {
+                // Otključavanje nove police
+                if (isColliding(panda, s) && money >= s.cost) {
+                    money -= s.cost;
+                    s.unlocked = true;
+                    playSfx('unlock');
+                    updateHud();
+                }
+            }
+        });
+
+        // Interakcija s Blagajnom (Uzimanje novca od kupaca)
+        if (isColliding(panda, register) && register.queue.length > 0) {
+            register.queue.forEach(c => {
+                money += c.toPay;
+            });
+            register.queue = [];
+            playSfx('money');
+            updateHud();
+        }
+
+        // Interakcija s Otključavanjem Radnika
+        if (!worker.unlocked && isColliding(panda, workerUnlockZone) && money >= workerUnlockZone.cost) {
+            money -= workerUnlockZone.cost;
+            worker.unlocked = true;
+            workerUnlockZone.unlocked = true;
+            playSfx('unlock');
+            updateHud();
+        }
+
+        // Kretanje Kupaca
+        customers.forEach((c, index) => {
+            if (c.state === 'walking_to_shelf') {
+                moveTo(c, c.targetShelf.x + 60, c.targetShelf.y + 90);
+                if (dist(c, { x: c.targetShelf.x + 60, y: c.targetShelf.y + 90 }) < 10) {
+                    if (c.targetShelf.count > 0) {
+                        c.targetShelf.count--;
+                        c.toPay = c.targetShelf.price;
+                        c.state = 'walking_to_register';
+                    } else {
+                        // Nema robe! Kupac odlazi razočaran
+                        reputation = Math.max(0, reputation - 5);
+                        customers.splice(index, 1);
+                        updateHud();
+                    }
+                }
+            } else if (c.state === 'walking_to_register') {
+                moveTo(c, register.x + 20, register.y + 20);
+                if (dist(c, { x: register.x + 20, y: register.y + 20 }) < 15) {
+                    c.state = 'waiting_in_queue';
+                    register.queue.push(c);
+                }
+            }
+        });
+    }
+
+    function workerLogic() {
+        if (!worker.unlocked) return;
+
+        // Radnik ima 30% šanse da zaspi
+        if (!worker.sleeping && Math.random() < 0.3) {
+            worker.sleeping = true;
+            return;
+        }
+
+        // Ako radi, automatski dopunjava prazne police
+        if (!worker.sleeping) {
+            shelves.forEach(s => {
+                if (s.unlocked && s.count < s.max) {
+                    s.count++;
+                    playSfx('pop');
+                }
+            });
+        }
+    }
+
+    function wakeWorker() {
+        if (worker.sleeping) {
+            worker.sleeping = false;
+            playSfx('unlock');
+        }
+    }
+
+    function spawnCustomer() {
+        const availableShelves = shelves.filter(s => s.unlocked);
+        if (availableShelves.length === 0 || customers.length >= 4) return;
+
+        const targetShelf = availableShelves[Math.floor(Math.random() * availableShelves.length)];
+        customers.push({
+            x: 900, y: 100,
+            avatar: CUSTOMER_AVATARS[Math.floor(Math.random() * CUSTOMER_AVATARS.length)],
+            targetShelf: targetShelf,
+            state: 'walking_to_shelf',
+            toPay: 0
+        });
+    }
+
+    function moveTo(obj, tx, ty) {
+        const dx = tx - obj.x;
+        const dy = ty - obj.y;
+        const d = Math.hypot(dx, dy);
+        if (d > 2) {
+            obj.x += (dx / d) * 2.5;
+            obj.y += (dy / d) * 2.5;
+        }
+    }
+
+    function dist(a, b) {
+        return Math.hypot(a.x - b.x, a.y - b.y);
+    }
+
+    function isColliding(p, rect) {
+        return p.x > rect.x - 20 && p.x < rect.x + rect.w + 20 &&
+               p.y > rect.y - 20 && p.y < rect.y + rect.h + 20;
+    }
+
+    function updateHud() {
+        document.getElementById('money').innerText = money;
+        document.getElementById('carrying').innerText = `${panda.carrying} / ${panda.maxCarry}`;
+        document.getElementById('reputation').innerText = reputation;
+    }
+
+    function render() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Pod trgovine (Pločice)
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Skladište
+        ctx.fillStyle = '#64748b';
+        ctx.fillRect(warehouse.x, warehouse.y, warehouse.w, warehouse.h);
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 16px Arial';
+        ctx.fillText(warehouse.label, warehouse.x + 10, warehouse.y + 50);
+
+        // Blagajna
+        ctx.fillStyle = '#eab308';
+        ctx.fillRect(register.x, register.y, register.w, register.h);
+        ctx.fillStyle = '#000';
+        ctx.fillText(register.label, register.x + 15, register.y + 50);
+
+        // Police
+        shelves.forEach(s => {
+            if (s.unlocked) {
+                ctx.fillStyle = '#1e293b';
+                ctx.strokeStyle = '#22c55e';
+                ctx.lineWidth = 3;
+                ctx.fillRect(s.x, s.y, s.w, s.h);
+                ctx.strokeRect(s.x, s.y, s.w, s.h);
+
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 14px Arial';
+                ctx.fillText(s.name, s.x + 10, s.y + 30);
+                ctx.fillText(`Količina: ${s.count}/${s.max}`, s.x + 10, s.y + 60);
+            } else {
+                // Otključaj polje
+                ctx.fillStyle = 'rgba(234, 179, 8, 0.15)';
+                ctx.strokeStyle = '#eab308';
+                ctx.lineWidth = 2;
+                ctx.fillRect(s.x, s.y, s.w, s.h);
+                ctx.strokeRect(s.x, s.y, s.w, s.h);
+
+                ctx.fillStyle = '#eab308';
+                ctx.font = 'bold 14px Arial';
+                ctx.fillText(`🔓 Otključaj:`, s.x + 15, s.y + 35);
+                ctx.fillText(`${s.cost} B`, s.x + 35, s.y + 60);
+            }
+        });
+
+        // Radnik Otključavanje Zona
+        if (!worker.unlocked) {
+            ctx.fillStyle = 'rgba(59, 130, 246, 0.15)';
+            ctx.strokeStyle = '#3b82f6';
+            ctx.fillRect(workerUnlockZone.x, workerUnlockZone.y, workerUnlockZone.w, workerUnlockZone.h);
+            ctx.strokeRect(workerUnlockZone.x, workerUnlockZone.y, workerUnlockZone.w, workerUnlockZone.h);
+            ctx.fillStyle = '#3b82f6';
+            ctx.font = 'bold 13px Arial';
+            ctx.fillText('🐼 Zaposli Radnika', workerUnlockZone.x + 5, workerUnlockZone.y + 35);
+            ctx.fillText(`Cijena: ${workerUnlockZone.cost} B`, workerUnlockZone.x + 15, workerUnlockZone.y + 60);
+        } else {
+            // Crtanje Pomoćnog Radnika
+            ctx.font = '32px Arial';
+            ctx.fillText(worker.sleeping ? '😴' : '🐼', worker.x, worker.y);
+        }
+
+        // Kupci
+        customers.forEach(c => {
+            ctx.font = '32px Arial';
+            ctx.fillText(c.avatar, c.x, c.y);
+        });
+
+        // Igrač (Panda)
+        ctx.font = '38px Arial';
+        ctx.fillText('🐼', panda.x - 18, panda.y + 12);
+
+        // Teret iznad glave Pande
+        if (panda.carrying > 0) {
+            ctx.fillStyle = '#eab308';
+            ctx.font = 'bold 16px Arial';
+            ctx.fillText(`📦 x${panda.carrying}`, panda.x - 15, panda.y - 25);
+        }
+    }
+</script>
+
+</body>
+</html>
