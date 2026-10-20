@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tvornica Računala: Ludi Servis</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #1a1a2e;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        #game-container {
+            width: 1000px;
+            height: 650px;
+            background: linear-gradient(to bottom, #16213e, #0f3460);
+            border: 6px solid #e94560;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Zaglavlje i Rezultat */
+        #top-bar {
+            height: 70px;
+            background: rgba(0, 0, 0, 0.4);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 0 20px;
+            border-bottom: 3px solid #e94560;
+        }
+
+        .stat-box {
+            background: #0f3460;
+            padding: 8px 18px;
+            border-radius: 12px;
+            border: 2px solid #00fff5;
+            font-size: 20px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Zona Kupaca */
+        #customers-zone {
+            height: 220px;
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-end;
+            padding: 10px;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.05), transparent);
+            position: relative;
+        }
+
+        .customer {
+            width: 180px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            transition: transform 0.3s ease;
+        }
+
+        .speech-bubble {
+            background: #ffffff;
+            color: #000000;
+            border-radius: 15px;
+            padding: 10px;
+            width: 160px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            position: relative;
+            margin-bottom: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .speech-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 10px 10px 0;
+            border-style: solid;
+            border-color: #ffffff transparent;
+        }
+
+        .order-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            justify-content: center;
+            margin-top: 5px;
+        }
+
+        .order-item-icon {
+            font-size: 22px;
+            background: #eef2f5;
+            padding: 4px;
+            border-radius: 6px;
+        }
+
+        .patience-bar {
+            width: 100%;
+            height: 8px;
+            background: #ddd;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 6px;
+        }
+
+        .patience-fill {
+            height: 100%;
+            background: #4caf50;
+            width: 100%;
+            transition: width 0.2s linear, background-color 0.3s;
+        }
+
+        .avatar {
+            font-size: 65px;
+            filter: drop-shadow(0 4px 4px rgba(0,0,0,0.4));
+        }
+
+        /* Radni Pult */
+        #counter {
+            height: 15px;
+            background: #e94560;
+            box-shadow: 0 -2px 10px rgba(233, 69, 96, 0.5);
+        }
+
+        /* Radna Površina i Police */
+        #workspace {
+            flex: 1;
+            display: flex;
+            padding: 15px;
+            gap: 20px;
+            background: #1a1a2e;
+        }
+
+        /* Police s komponentama */
+        #parts-shelf {
+            flex: 2;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 15px;
+            border-radius: 15px;
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+        }
+
+        .part-btn {
+            background: #16213e;
+            border: 2px solid #00fff5;
+            border-radius: 12px;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            padding: 8px;
+        }
+
+        .part-btn:hover {
+            background: #0f3460;
+            transform: scale(1.05);
+            border-color: #ff2e63;
+        }
+
+        .part-btn:active {
+            transform: scale(0.95);
+        }
+
+        .part-icon {
+            font-size: 32px;
+            margin-bottom: 4px;
+        }
+
+        .part-name {
+            font-size: 13px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        /* Radni Stol za Slaganje */
+        #assembly-table {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.3);
+            border: 3px solid #00fff5;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px;
+            position: relative;
+        }
+
+        .table-title {
+            font-weight: bold;
+            color: #00fff5;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        #built-pc {
+            width: 100%;
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 10px;
+            align-content: flex-start;
+            justify-content: center;
+            overflow-y: auto;
+        }
+
+        .built-item {
+            background: #0f3460;
+            border: 1px solid #00fff5;
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            animation: popIn 0.2s ease;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0); }
+            100% { transform: scale(1); }
+        }
+
+        #action-buttons {
+            display: flex;
+            width: 100%;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .btn-trash {
+            background: #e94560;
+            color: white;
+        }
+
+        .btn-serve {
+            background: #4caf50;
+            color: white;
+        }
+
+        /* Preklapajući zasloni (Start, GameOver, Victory) */
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 52, 96, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .overlay h1 {
+            font-size: 42px;
+            color: #00fff5;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(0,255,245,0.5);
+        }
+
+        .overlay p {
+            font-size: 20px;
+            max-width: 600px;
+            line-height: 1.5;
+            margin-bottom: 25px;
+        }
+
+        .start-btn {
+            background: #e94560;
+            color: white;
+            font-size: 26px;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(233, 69, 96, 0.4);
+            font-weight: bold;
+        }
+
+        .start-btn:hover {
+            transform: scale(1.05);
+            background: #ff2e63;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <!-- Pokretni Zaslon -->
+    <div id="start-screen" class="overlay">
+        <h1>🛠️ Tvornica Računala: Ludi Servis!</h1>
+        <p>Pomozite učenicima i učiteljima složiti njihova nova računala! Pogledajte što žele u oblačiću, kliknite na točne dijelove računala na polici i isporučite im gotovu narudžbu prije nego izgube strpljenje!</p>
+        <button class="start-btn" onclick="startGame()">ZAPOČNI IGRU!</button>
+    </div>
+
+    <!-- Završni Zaslon -->
+    <div id="end-screen" class="overlay" style="display: none;">
+        <h1 id="end-title">Vrijeme Isteklo!</h1>
+        <p id="end-msg">Osvojili ste bodove!</p>
+        <button class="start-btn" onclick="startGame()">IGRAJ PONOVNO</button>
+    </div>
+
+    <!-- Zaglavlje -->
+    <div id="top-bar">
+        <div class="stat-box">⭐ Bodovi: <span id="score">0</span> B</div>
+        <div class="stat-box">⏱️ Vrijeme: <span id="timer">60</span>s</div>
+        <div class="stat-box">😊 Sretni kupci: <span id="happy-count">0</span></div>
+    </div>
+
+    <!-- Zona Kupaca -->
+    <div id="customers-zone">
+        <!-- Kupci se generiraju putem JS-a -->
+    </div>
+
+    <!-- Radni Pult -->
+    <div id="counter"></div>
+
+    <!-- Radna Površina -->
+    <div id="workspace">
+        <!-- Police s Dijelovima -->
+        <div id="parts-shelf">
+            <div class="part-btn" onclick="addPart('cpu')">
+                <span class="part-icon">⚡</span>
+                <span class="part-name">Procesor</span>
+            </div>
+            <div class="part-btn" onclick="addPart('ram')">
+                <span class="part-icon">🧠</span>
+                <span class="part-name">RAM Memorija</span>
+            </div>
+            <div class="part-btn" onclick="addPart('gpu')">
+                <span class="part-icon">💳</span>
+                <span class="part-name">Grafička</span>
+            </div>
+            <div class="part-btn" onclick="addPart('motherboard')">
+                <span class="part-icon">🟫</span>
+                <span class="part-name">Matična Ploča</span>
+            </div>
+            <div class="part-btn" onclick="addPart('monitor')">
+                <span class="part-icon">🖥️</span>
+                <span class="part-name">Monitor</span>
+            </div>
+            <div class="part-btn" onclick="addPart('keyboard')">
+                <span class="part-icon">⌨️</span>
+                <span class="part-name">Tipkovnica</span>
+            </div>
+            <div class="part-btn" onclick="addPart('mouse')">
+                <span class="part-icon">🖱️</span>
+                <span class="part-name">Miš</span>
+            </div>
+            <div class="part-btn" onclick="addPart('speakers')">
+                <span class="part-icon">🔊</span>
+                <span class="part-name">Zvučnici</span>
+            </div>
+        </div>
+
+        <!-- Radni Stol za Slaganje -->
+        <div id="assembly-table">
+            <div class="table-title">🧰 Tvoje novo računalo:</div>
+            <div id="built-pc"></div>
+            <div id="action-buttons">
+                <button class="btn btn-trash" onclick="clearTable()">🗑️ Baci</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Zvučni efekti (Web Audio API)
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    function playSound(type) {
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        if (type === 'click') {
+            osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.1);
+        } else if (type === 'success') {
+            osc.frequency.setValueAtTime(523.25, audioCtx.currentTime);
+            osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.3);
+        } else if (type === 'trash') {
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.2);
+        }
+    }
+
+    // Informatičke Komponente
+    const PARTS = {
+        motherboard: { name: 'Matična Ploča', icon: '🟫' },
+        cpu: { name: 'Procesor', icon: '⚡' },
+        ram: { name: 'RAM Memorija', icon: '🧠' },
+        gpu: { name: 'Grafička', icon: '💳' },
+        monitor: { name: 'Monitor', icon: '🖥️' },
+        keyboard: { name: 'Tipkovnica', icon: '⌨️' },
+        mouse: { name: 'Miš', icon: '🖱️' },
+        speakers: { name: 'Zvučnici', icon: '🔊' }
+    };
+
+    const AVATARS = ['👧', '👦', '👩‍🏫', '👨‍🏫', '🤖', '🧒'];
+
+    // Stanje Igre
+    let score = 0;
+    let happyCustomers = 0;
+    let timeLeft = 60;
+    let gameInterval;
+    let customerInterval;
+    let currentBuiltParts = [];
+    let customers = [];
+    const maxCustomers = 3;
+
+    function startGame() {
+        score = 0;
+        happyCustomers = 0;
+        timeLeft = 60;
+        currentBuiltParts = [];
+        customers = [];
+
+        document.getElementById('score').innerText = score;
+        document.getElementById('happy-count').innerText = happyCustomers;
+        document.getElementById('timer').innerText = timeLeft;
+        document.getElementById('start-screen').style.display = 'none';
+        document.getElementById('end-screen').style.display = 'none';
+
+        renderTable();
+        document.getElementById('customers-zone').innerHTML = '';
+
+        // Pokreni mjerat vremena
+        clearInterval(gameInterval);
+        clearInterval(customerInterval);
+
+        gameInterval = setInterval(() => {
+            timeLeft--;
+            document.getElementById('timer').innerText = timeLeft;
+            if (timeLeft <= 0) {
+                endGame();
+            }
+        }, 1000);
+
+        // Stvaranje kupaca
+        spawnCustomer();
+        customerInterval = setInterval(() => {
+            if (customers.length < maxCustomers) {
+                spawnCustomer();
+            }
+        }, 3500);
+    }
+
+    function spawnCustomer() {
+        if (customers.length >= maxCustomers) return;
+
+        // Generiraj nasumičnu narudžbu od 2 do 4 komponente
+        const partKeys = Object.keys(PARTS);
+        const orderLength = Math.floor(Math.random() * 2) + 2; // 2 ili 3 komponente za 1. razred
+        const order = [];
+        
+        while (order.length < orderLength) {
+            const randomPart = partKeys[Math.floor(Math.random() * partKeys.length)];
+            if (!order.includes(randomPart)) {
+                order.push(randomPart);
+            }
+        }
+
+        const customer = {
+            id: Date.now() + Math.random(),
+            avatar: AVATARS[Math.floor(Math.random() * AVATARS.length)],
+            order: order,
+            patience: 100,
+            maxPatience: 100
+        };
+
+        customers.push(customer);
+        renderCustomers();
+    }
+
+    function renderCustomers() {
+        const zone = document.getElementById('customers-zone');
+        zone.innerHTML = '';
+
+        customers.forEach((c) => {
+            const custEl = document.createElement('div');
+            custEl.className = 'customer';
+            
+            const orderIconsHtml = c.order.map(p => `<span class="order-item-icon">${PARTS[p].icon}</span>`).join('');
+            
+            let color = '#4caf50';
+            if (c.patience < 50) color = '#ff9800';
+            if (c.patience < 25) color = '#f44336';
+
+            custEl.innerHTML = `
+                <div class="speech-bubble" onclick="serveCustomer(${c.id})">
+                    <span style="font-size:12px; font-weight:bold; color:#555;">Želim:</span>
+                    <div class="order-items">${orderIconsHtml}</div>
+                    <div class="patience-bar">
+                        <div class="patience-fill" style="width: ${c.patience}%; background-color: ${color};"></div>
+                    </div>
+                </div>
+                <div class="avatar" onclick="serveCustomer(${c.id})">${c.avatar}</div>
+            `;
+            zone.appendChild(custEl);
+        });
+    }
+
+    // Smanjuj strpljenje kupaca svakih 200ms
+    setInterval(() => {
+        if (timeLeft <= 0) return;
+        
+        let changed = false;
+        customers.forEach((c, index) => {
+            c.patience -= 1.2; // Brzina gubljenja strpljenja
+            if (c.patience <= 0) {
+                // Kupac odlazi ljut
+                customers.splice(index, 1);
+                changed = true;
+                playSound('trash');
+            }
+        });
+        
+        if (changed || customers.length > 0) {
+            renderCustomers();
+        }
+    }, 200);
+
+    function addPart(partKey) {
+        if (timeLeft <= 0) return;
+        currentBuiltParts.push(partKey);
+        playSound('click');
+        renderTable();
+    }
+
+    function clearTable() {
+        if (currentBuiltParts.length > 0) {
+            playSound('trash');
+        }
+        currentBuiltParts = [];
+        renderTable();
+    }
+
+    function renderTable() {
+        const table = document.getElementById('built-pc');
+        table.innerHTML = '';
+        currentBuiltParts.forEach((p) => {
+            const item = document.createElement('div');
+            item.className = 'built-item';
+            item.innerHTML = `<span>${PARTS[p].icon}</span> <span style="font-size:14px;">${PARTS[p].name}</span>`;
+            table.appendChild(item);
+        });
+    }
+
+    function serveCustomer(customerId) {
+        if (currentBuiltParts.length === 0) return;
+
+        const customerIndex = customers.findIndex(c => c.id === customerId);
+        if (customerIndex === -1) return;
+
+        const customer = customers[customerIndex];
+
+        // Provjeri odgovara li složeno računalo narudžbi (bez obzira na redoslijed)
+        const isCorrect = customer.order.length === currentBuiltParts.length &&
+            customer.order.every(val => currentBuiltParts.includes(val));
+
+        if (isCorrect) {
+            // Uspjeh!
+            playSound('success');
+            score += 100 + Math.floor(customer.patience);
+            happyCustomers++;
+            document.getElementById('score').innerText = score;
+            document.getElementById('happy-count').innerText = happyCustomers;
+
+            customers.splice(customerIndex, 1);
+            currentBuiltParts = [];
+            renderTable();
+            renderCustomers();
+        } else {
+            // Pogrešna narudžba
+            playSound('trash');
+            alert('❌ Ups! Dijelovi se ne podudaraju s onim što kupac želi! Provjeri oblačić!');
+        }
+    }
+
+    function endGame() {
+        clearInterval(gameInterval);
+        clearInterval(customerInterval);
+
+        document.getElementById('end-screen').style.display = 'flex';
+        document.getElementById('end-title').innerText = '🎉 Vrijeme Isteklo!';
+        document.getElementById('end-msg').innerText = `Odlično odrađeno! Poslužili ste ${happyCustomers} sretnih kupaca i osvojili ukupno ${score} Bajt bodova!`;
+    }
+</script>
+
+</body>
+</html>
