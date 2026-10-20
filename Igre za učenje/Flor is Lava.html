@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Informatički Bijeg: Pod je Lava!</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0f172a;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        #game-container {
+            width: 500px;
+            height: 700px;
+            background: linear-gradient(to bottom, #1e1b4b, #311042);
+            border: 6px solid #ef4444;
+            border-radius: 24px;
+            box-shadow: 0 15px 35px rgba(239, 68, 68, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Zaglavlje s bodovima */
+        #top-bar {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            right: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        .stat-box {
+            background: rgba(15, 23, 42, 0.85);
+            padding: 8px 16px;
+            border-radius: 12px;
+            border: 2px solid #ef4444;
+            font-size: 18px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+        }
+
+        /* Kontrole na dodir za Pametnu ploču */
+        #touch-controls {
+            width: 500px;
+            margin-top: 12px;
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+        }
+
+        .ctrl-btn {
+            flex: 1;
+            background: #dc2626;
+            border: 3px solid #fca5a5;
+            color: white;
+            font-size: 26px;
+            height: 60px;
+            border-radius: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #991b1b;
+            font-weight: bold;
+        }
+
+        .ctrl-btn:active {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 #991b1b;
+        }
+
+        /* Preklapajući zasloni */
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            text-align: center;
+            padding: 25px;
+        }
+
+        .overlay h1 {
+            font-size: 36px;
+            color: #f87171;
+            margin-bottom: 10px;
+            text-shadow: 0 0 12px rgba(248, 113, 113, 0.6);
+        }
+
+        .overlay p {
+            font-size: 18px;
+            line-height: 1.5;
+            margin-bottom: 25px;
+            color: #cbd5e1;
+        }
+
+        .start-btn {
+            background: #ef4444;
+            color: white;
+            font-size: 22px;
+            padding: 14px 36px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(239, 68, 68, 0.5);
+            transition: transform 0.1s;
+        }
+
+        .start-btn:hover {
+            transform: scale(1.05);
+            background: #dc2626;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <!-- Pokretni Zaslon -->
+    <div id="start-screen" class="overlay">
+        <h1>🌋 Pod je Lava!</h1>
+        <p>Pazi! Usijana lava raste dnu ekrana!<br><br>
+           Skači po sigurnim računalnim uređajima (🖥️, ⌨️, 🖱️) i popni se što više u zrak!</p>
+        <button class="start-btn" onclick="startGame()">BEŽI OD LAVE!</button>
+    </div>
+
+    <!-- Završni Zaslon -->
+    <div id="end-screen" class="overlay" style="display: none;">
+        <h1>🔥 Uhvatila te lava!</h1>
+        <p id="end-msg">Osvojio si 0 metara visine!</p>
+        <button class="start-btn" onclick="startGame()">POKUŠAJ PONOVNO</button>
+    </div>
+
+    <!-- Zaglavlje -->
+    <div id="top-bar">
+        <div class="stat-box">📏 Visina: <span id="height-score">0</span>m</div>
+        <div class="stat-box">🪙 Bajtovi: <span id="coins-score">0</span></div>
+    </div>
+
+    <canvas id="lavaCanvas" width="500" height="700"></canvas>
+</div>
+
+<!-- Kontrole na dodir -->
+<div id="touch-controls">
+    <div class="ctrl-btn" onmousedown="setKey('Left', true)" onmouseup="setKey('Left', false)" ontouchstart="setKey('Left', true); event.preventDefault();" ontouchend="setKey('Left', false)">⬅️ LIJEVO</div>
+    <div class="ctrl-btn" onmousedown="setKey('Right', true)" onmouseup="setKey('Right', false)" ontouchstart="setKey('Right', true); event.preventDefault();" ontouchend="setKey('Right', false)">➡️ DESNO</div>
+</div>
+
+<script>
+    // Audio zvučni efekti
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playSfx(type) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        if (type === 'jump') {
+            osc.frequency.setValueAtTime(250, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(500, audioCtx.currentTime + 0.12);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.12);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.12);
+        } else if (type === 'superjump') {
+            osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(900, audioCtx.currentTime + 0.3);
+            gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+        } else if (type === 'burn') {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(120, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.35);
+        }
+    }
+
+    const canvas = document.getElementById('lavaCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const keys = { Left: false, Right: false };
+    function setKey(k, v) { keys[k] = v; }
+
+    window.addEventListener('keydown', e => {
+        if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.Left = true;
+        if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.Right = true;
+    });
+
+    window.addEventListener('keyup', e => {
+        if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.Left = false;
+        if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.Right = false;
+    });
+
+    // Igrač
+    let player = {
+        x: 230, y: 500, w: 40, h: 40,
+        vx: 0, vy: 0,
+        jumpForce: -11
+    };
+
+    let lavaY = 650;
+    let lavaSpeed = 0.8;
+    let scoreHeight = 0;
+    let coinsCount = 0;
+    let isGameOver = false;
+
+    // Platforme
+    const PLATFORM_ICONS = ['🖥️', '⌨️', '🖱️', '📱', '🎧', '💻'];
+    let platforms = [];
+
+    function initPlatforms() {
+        platforms = [];
+        // Početna velika platforma pod nogama
+        platforms.push({ x: 180, y: 580, w: 140, h: 20, icon: '🖥️' });
+
+        for (let i = 0; i < 9; i++) {
+            spawnPlatform(500 - i * 75);
+        }
+    }
+
+    function spawnPlatform(yPos) {
+        platforms.push({
+            x: Math.random() * (canvas.width - 110),
+            y: yPos,
+            w: 100,
+            h: 18,
+            icon: PLATFORM_ICONS[Math.floor(Math.random() * PLATFORM_ICONS.length)],
+            hasPowerup: Math.random() < 0.2 ? '⚡' : (Math.random() < 0.25 ? '🪙' : null)
+        });
+    }
+
+    function startGame() {
+        player.x = 230; player.y = 500;
+        player.vx = 0; player.vy = -8;
+        lavaY = 680;
+        lavaSpeed = 0.7;
+        scoreHeight = 0;
+        coinsCount = 0;
+        isGameOver = false;
+
+        initPlatforms();
+        document.getElementById('start-screen').style.display = 'none';
+        document.getElementById('end-screen').style.display = 'none';
+
+        updateHud();
+        requestAnimationFrame(gameLoop);
+    }
+
+    function gameLoop() {
+        if (isGameOver) return;
+
+        update();
+        render();
+
+        requestAnimationFrame(gameLoop);
+    }
+
+    function update() {
+        // Kontrola lijevo/desno
+        if (keys.Left) player.vx = -6;
+        else if (keys.Right) player.vx = 6;
+        else player.vx = 0;
+
+        player.vy += 0.45; // Gravitacija
+        player.x += player.vx;
+        player.y += player.vy;
+
+        // Prolazak kroz rubove ekrana
+        if (player.x < -20) player.x = canvas.width - 20;
+        if (player.x > canvas.width - 20) player.x = -20;
+
+        // Lava se diže
+        lavaY -= lavaSpeed;
+
+        // Doskok na platforme
+        if (player.vy > 0) { // Kada igrač pada prema dolje
+            platforms.forEach(p => {
+                if (player.x + player.w > p.x && player.x < p.x + p.w &&
+                    player.y + player.h >= p.y && player.y + player.h <= p.y + 15) {
+                    
+                    player.vy = player.jumpForce; // Automatski skok
+                    playSfx('jump');
+
+                    // Pokupi bonus ako ga ima na platformi
+                    if (p.hasPowerup === '⚡') {
+                        player.vy = -18; // Super skok!
+                        playSfx('superjump');
+                        p.hasPowerup = null;
+                    } else if (p.hasPowerup === '🪙') {
+                        coinsCount += 10;
+                        p.hasPowerup = null;
+                        updateHud();
+                    }
+                }
+            });
+        }
+
+        // Pomicanje kamere kad se igrač penje uvis
+        if (player.y < 300) {
+            let diff = 300 - player.y;
+            player.y = 300;
+            lavaY += diff * 0.5; // Lava malo zaostaje dok se igrač brzo penje
+            scoreHeight += Math.floor(diff / 10);
+            lavaSpeed += 0.001; // Igra posteno postaje brža
+
+            // Pomakni platforme dolje i generiraj nove na vrhu
+            platforms.forEach(p => p.y += diff);
+            platforms = platforms.filter(p => p.y < canvas.height + 50);
+
+            while (platforms.length < 9) {
+                const topY = Math.min(...platforms.map(p => p.y));
+                spawnPlatform(topY - 75);
+            }
+
+            updateHud();
+        }
+
+        // Pad u lavu
+        if (player.y + player.h >= lavaY) {
+            playSfx('burn');
+            endGame();
+        }
+    }
+
+    function updateHud() {
+        document.getElementById('height-score').innerText = scoreHeight;
+        document.getElementById('coins-score').innerText = coinsCount;
+    }
+
+    function render() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Pozadina s gradijentom
+        let grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        grad.addColorStop(0, '#1e1b4b');
+        grad.addColorStop(1, '#451212');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Crtanje Platformi
+        platforms.forEach(p => {
+            ctx.fillStyle = '#334155';
+            ctx.strokeStyle = '#38bdf8';
+            ctx.lineWidth = 2;
+            ctx.fillRect(p.x, p.y, p.w, p.h);
+            ctx.strokeRect(p.x, p.y, p.w, p.h);
+
+            // Ikona uređaja
+            ctx.font = '16px Arial';
+            ctx.fillText(p.icon, p.x + p.w / 2 - 8, p.y + 14);
+
+            // Powerup na platformi
+            if (p.hasPowerup) {
+                ctx.font = '20px Arial';
+                ctx.fillText(p.hasPowerup, p.x + p.w / 2 - 10, p.y - 6);
+            }
+        });
+
+        // Crtanje Igrača (Piko lik)
+        ctx.font = '36px Arial';
+        ctx.fillText('🏃', player.x - 5, player.y + 32);
+
+        // Crtanje Lave na dnu
+        let lavaGrad = ctx.createLinearGradient(0, lavaY, 0, canvas.height);
+        lavaGrad.addColorStop(0, '#f97316');
+        lavaGrad.addColorStop(0.3, '#dc2626');
+        lavaGrad.addColorStop(1, '#7f1d1d');
+        ctx.fillStyle = lavaGrad;
+        ctx.fillRect(0, lavaY, canvas.width, canvas.height - lavaY);
+
+        // Valoviti vrh lave
+        ctx.fillStyle = '#facc15';
+        for (let x = 0; x < canvas.width; x += 30) {
+            ctx.beginPath();
+            ctx.arc(x + 15, lavaY, 15, 0, Math.PI, true);
+            ctx.fill();
+        }
+    }
+
+    function endGame() {
+        isGameOver = true;
+        document.getElementById('end-screen').style.display = 'flex';
+        document.getElementById('end-msg').innerText = `Dosegnuo si ${scoreHeight} metara visine i sakupio ${coinsCount} Bajtova prije nego te lava stigla!`;
+    }
+</script>
+
+</body>
+</html>
