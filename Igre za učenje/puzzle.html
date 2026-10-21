@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Informatičke Čarobne Puzzle</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 15px;
+            background-color: #0f172a;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        #game-container {
+            width: 100%;
+            max-width: 1000px;
+            background: #1e293b;
+            border: 6px solid #38bdf8;
+            border-radius: 24px;
+            box-shadow: 0 15px 35px rgba(56, 189, 248, 0.3);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            align-items: center;
+            position: relative;
+        }
+
+        /* Zaglavlje i kontrole */
+        #top-bar {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 20px;
+            background: rgba(15, 23, 42, 0.85);
+            padding: 12px 20px;
+            border-radius: 16px;
+            border: 2px solid #38bdf8;
+        }
+
+        .selector-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: #334155;
+            border: 2px solid #38bdf8;
+            color: white;
+            padding: 8px 14px;
+            border-radius: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn:hover {
+            background: #0284c7;
+        }
+
+        .btn.active {
+            background: #0284c7;
+            border-color: #facc15;
+            box-shadow: 0 0 12px rgba(250, 204, 21, 0.5);
+        }
+
+        .stats-group {
+            display: flex;
+            gap: 20px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #38bdf8;
+        }
+
+        .stat-value {
+            color: #facc15;
+        }
+
+        /* Glavni Radni Prostor za Puzzle */
+        #puzzle-workspace {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            width: 100%;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        /* Okvir za Mrežu Slagalice */
+        #target-board {
+            width: 420px;
+            height: 420px;
+            background-color: #0f172a;
+            border: 4px dashed #38bdf8;
+            border-radius: 16px;
+            display: grid;
+            position: relative;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.6);
+            overflow: hidden;
+        }
+
+        /* Prozirna skica u pozadini pozicije */
+        #hint-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.25;
+            pointer-events: none;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .target-slot {
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Spremnik s razbacanim komadićima */
+        #pieces-bank {
+            width: 420px;
+            min-height: 420px;
+            background: #0f172a;
+            border: 3px solid #64748b;
+            border-radius: 16px;
+            padding: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            align-content: center;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
+        }
+
+        /* Pojedinačni komadić slagalice */
+        .puzzle-piece {
+            cursor: grab;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            transition: transform 0.15s, border-color 0.15s;
+            border: 2px solid #ffffff;
+            background-repeat: no-repeat;
+            touch-action: none;
+        }
+
+        .puzzle-piece:active {
+            cursor: grabbing;
+        }
+
+        .puzzle-piece.selected {
+            border: 4px solid #facc15;
+            transform: scale(1.08);
+            box-shadow: 0 0 18px rgba(250, 204, 21, 0.8);
+            z-index: 10;
+        }
+
+        .puzzle-piece.correct {
+            border: none;
+            box-shadow: none;
+            cursor: default;
+            border-radius: 0;
+        }
+
+        /* Preklapajući zaslon za kraj igre */
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+            border-radius: 18px;
+            text-align: center;
+            padding: 25px;
+        }
+
+        .overlay h1 {
+            font-size: 42px;
+            color: #facc15;
+            margin-bottom: 15px;
+            text-shadow: 0 0 15px rgba(250, 204, 21, 0.5);
+        }
+
+        .overlay p {
+            font-size: 22px;
+            margin-bottom: 30px;
+            color: #cbd5e1;
+        }
+
+        .start-btn {
+            background: #22c55e;
+            color: white;
+            font-size: 24px;
+            padding: 14px 40px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 5px 20px rgba(34, 197, 94, 0.5);
+            transition: transform 0.1s;
+        }
+
+        .start-btn:hover {
+            transform: scale(1.06);
+            background: #16a34a;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <!-- Završni Zaslon sa Slavljem -->
+    <div id="end-screen" class="overlay" style="display: none;">
+        <h1>🎉 BRAVO! BRAVO! 🎉</h1>
+        <p id="end-msg">Uspješno si složio cijelu informatičku slagalicu!</p>
+        <button class="start-btn" onclick="initPuzzle()">IGRAJ PONOVNO 🧩</button>
+    </div>
+
+    <!-- Kontrole i Opcije -->
+    <div id="top-bar">
+        <div class="selector-group">
+            <span style="font-weight: bold; color: #94a3b8;">Motiv:</span>
+            <button class="btn active" onclick="setMotif(0, this)">🖥️ Računalo</button>
+            <button class="btn" onclick="setMotif(1, this)">🤖 Robot</button>
+            <button class="btn" onclick="setMotif(2, this)">📱 Uređaji</button>
+        </div>
+
+        <div class="selector-group">
+            <span style="font-weight: bold; color: #94a3b8;">Težina:</span>
+            <button class="btn active" onclick="setDifficulty(2, this)">Lako (2x2)</button>
+            <button class="btn" onclick="setDifficulty(3, this)">Srednje (3x3)</button>
+            <button class="btn" onclick="setDifficulty(4, this)">Izazov (4x4)</button>
+        </div>
+
+        <div class="stats-group">
+            <div class="stat-item">⏱️ Vrijeme: <span id="timer" class="stat-value">0</span>s</div>
+            <div class="stat-item">🔄 Potezi: <span id="moves" class="stat-value">0</span></div>
+        </div>
+    </div>
+
+    <!-- Radni prostor sa slagalicom -->
+    <div id="puzzle-workspace">
+        <!-- Odredišna Mreža -->
+        <div id="target-board">
+            <div id="hint-bg"></div>
+        </div>
+
+        <!-- Spremnik s pomiješanim dijelovima -->
+        <div id="pieces-bank"></div>
+    </div>
+</div>
+
+<script>
+    // Audio zvučni efekti (Web Audio API)
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playSfx(type) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        if (type === 'select') {
+            osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.08);
+        } else if (type === 'place') {
+            osc.frequency.setValueAtTime(523, audioCtx.currentTime);
+            osc.frequency.setValueAtTime(659, audioCtx.currentTime + 0.08);
+            gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+        } else if (type === 'win') {
+            osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+            osc.frequency.setValueAtTime(554, audioCtx.currentTime + 0.12);
+            osc.frequency.setValueAtTime(659, audioCtx.currentTime + 0.24);
+            osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.36);
+            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.6);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.6);
+        }
+    }
+
+    // Dinamički SVG Generator Informatičkih Slika (radi pouzdanog rada bez eksternih slika)
+    function createMotifSvg(type) {
+        let content = '';
+        if (type === 0) { // 🖥️ Moje Računalo
+            content = `
+                <rect width="400" height="400" fill="#1e1b4b"/>
+                <rect x="50" y="40" width="300" height="220" rx="16" fill="#334155" stroke="#38bdf8" stroke-width="8"/>
+                <rect x="70" y="60" width="260" height="180" rx="8" fill="#0f172a"/>
+                <circle cx="200" cy="130" r="40" fill="#facc15"/>
+                <path d="M 140 190 Q 200 230 260 190" stroke="#38bdf8" stroke-width="8" fill="none" stroke-linecap="round"/>
+                <rect x="180" y="260" width="40" height="50" fill="#475569"/>
+                <rect x="130" y="310" width="140" height="15" rx="6" fill="#64748b"/>
+                <rect x="40" y="340" width="220" height="40" rx="8" fill="#334155" stroke="#94a3b8" stroke-width="4"/>
+                <rect x="280" y="340" width="70" height="40" rx="12" fill="#ef4444" stroke="#fca5a5" stroke-width="4"/>
+            `;
+        } else if (type === 1) { // 🤖 IT Robot
+            content = `
+                <rect width="400" height="400" fill="#0f2942"/>
+                <rect x="120" y="50" width="160" height="130" rx="20" fill="#0284c7" stroke="#38bdf8" stroke-width="6"/>
+                <rect x="145" y="80" width="40" height="40" rx="8" fill="#facc15"/>
+                <rect x="215" y="80" width="40" height="40" rx="8" fill="#facc15"/>
+                <circle cx="165" cy="100" r="8" fill="#000"/>
+                <circle cx="235" cy="100" r="8" fill="#000"/>
+                <path d="M 160 150 L 240 150" stroke="#ffffff" stroke-width="6" stroke-linecap="round"/>
+                <line x1="200" y1="50" x2="200" y2="15" stroke="#38bdf8" stroke-width="6"/>
+                <circle cx="200" cy="15" r="12" fill="#ef4444"/>
+                <rect x="100" y="200" width="200" height="150" rx="16" fill="#0369a1" stroke="#38bdf8" stroke-width="6"/>
+                <circle cx="150" cy="250" r="18" fill="#4ade80"/>
+                <circle cx="200" cy="250" r="18" fill="#facc15"/>
+                <circle cx="250" cy="250" r="18" fill="#f87171"/>
+                <rect x="130" y="295" width="140" height="30" rx="8" fill="#1e293b"/>
+            `;
+        } else { // 📱 Pametni Uređaji
+            content = `
+                <rect width="400" height="400" fill="#311042"/>
+                <rect x="40" y="60" width="180" height="280" rx="20" fill="#1e293b" stroke="#c084fc" stroke-width="6"/>
+                <rect x="55" y="85" width="150" height="220" rx="8" fill="#a855f7"/>
+                <circle cx="130" cy="195" r="35" fill="#facc15"/>
+                <rect x="250" y="100" width="110" height="200" rx="18" fill="#1e293b" stroke="#38bdf8" stroke-width="6"/>
+                <rect x="260" y="120" width="90" height="150" rx="6" fill="#38bdf8"/>
+                <circle cx="305" cy="283" r="8" fill="#ffffff"/>
+            `;
+        }
+        return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400">${content}</svg>`)}`;
+    }
+
+    let currentMotif = 0;
+    let gridDimension = 2; // Default 2x2
+    let selectedPiece = null;
+    let placedPiecesCount = 0;
+    let totalPieces = 4;
+    let moves = 0;
+    let seconds = 0;
+    let timerInterval;
+    let currentImageSrc = '';
+
+    function setMotif(idx, btn) {
+        currentMotif = idx;
+        document.querySelectorAll('.selector-group')[0].querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        initPuzzle();
+    }
+
+    function setDifficulty(dim, btn) {
+        gridDimension = dim;
+        document.querySelectorAll('.selector-group')[1].querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        initPuzzle();
+    }
+
+    function initPuzzle() {
+        clearInterval(timerInterval);
+        seconds = 0;
+        moves = 0;
+        placedPiecesCount = 0;
+        selectedPiece = null;
+        totalPieces = gridDimension * gridDimension;
+
+        document.getElementById('timer').innerText = seconds;
+        document.getElementById('moves').innerText = moves;
+        document.getElementById('end-screen').style.display = 'none';
+
+        currentImageSrc = createMotifSvg(currentMotif);
+
+        // Postavi prozirnu pozadinu podloge za pomoć prvašićima
+        const hintBg = document.getElementById('hint-bg');
+        hintBg.style.backgroundImage = `url("${currentImageSrc}")`;
+
+        // Postavi ciljnu mrežu
+        const targetBoard = document.getElementById('target-board');
+        // Očisti staru mrežu
+        targetBoard.querySelectorAll('.target-slot').forEach(s => s.remove());
+        targetBoard.style.gridTemplateColumns = `repeat(${gridDimension}, 1fr)`;
+
+        const slotSize = 400 / gridDimension;
+
+        // Generiraj ciljna polja
+        for (let row = 0; row < gridDimension; row++) {
+            for (let col = 0; col < gridDimension; col++) {
+                const slot = document.createElement('div');
+                slot.className = 'target-slot';
+                slot.dataset.row = row;
+                slot.dataset.col = col;
+
+                // Podrška za Ispuštanje (Drag and Drop / Click)
+                slot.onclick = () => tryPlacePiece(slot);
+                slot.ondragover = e => e.preventDefault();
+                slot.ondrop = e => {
+                    e.preventDefault();
+                    if (selectedPiece) tryPlacePiece(slot);
+                };
+
+                targetBoard.appendChild(slot);
+            }
+        }
+
+        // Generiraj pomiješane komadiće
+        const piecesBank = document.getElementById('pieces-bank');
+        piecesBank.innerHTML = '';
+
+        let piecesData = [];
+        for (let row = 0; row < gridDimension; row++) {
+            for (let col = 0; col < gridDimension; col++) {
+                piecesData.push({ row, col });
+            }
+        }
+
+        // Pomiješaj komadiće
+        piecesData.sort(() => Math.random() - 0.5);
+
+        piecesData.forEach(p => {
+            const piece = document.createElement('div');
+            piece.className = 'puzzle-piece';
+            piece.style.width = `${slotSize}px`;
+            piece.style.height = `${slotSize}px`;
+            piece.style.backgroundImage = `url("${currentImageSrc}")`;
+            piece.style.backgroundSize = `400px 400px`;
+            piece.style.backgroundPosition = `-${p.col * slotSize}px -${p.row * slotSize}px`;
+
+            piece.dataset.correctRow = p.row;
+            piece.dataset.correctCol = p.col;
+            piece.draggable = true;
+
+            // Događaji za odabir i povlačenje
+            piece.onclick = (e) => {
+                e.stopPropagation();
+                selectPiece(piece);
+            };
+
+            piece.ondragstart = () => {
+                selectPiece(piece);
+            };
+
+            piecesBank.appendChild(piece);
+        });
+
+        // Pokreni mjerač vremena
+        timerInterval = setInterval(() => {
+            seconds++;
+            document.getElementById('timer').innerText = seconds;
+        }, 1000);
+    }
+
+    function selectPiece(piece) {
+        if (piece.classList.contains('correct')) return;
+
+        playSfx('select');
+        document.querySelectorAll('.puzzle-piece').forEach(p => p.classList.remove('selected'));
+        selectedPiece = piece;
+        piece.classList.add('selected');
+    }
+
+    function tryPlacePiece(slot) {
+        if (!selectedPiece || slot.children.length > 0) return;
+
+        const targetRow = parseInt(slot.dataset.row);
+        const targetCol = parseInt(slot.dataset.col);
+        const correctRow = parseInt(selectedPiece.dataset.correctRow);
+        const correctCol = parseInt(selectedPiece.dataset.correctCol);
+
+        moves++;
+        document.getElementById('moves').innerText = moves;
+
+        // Provjeri je li točan položaj
+        if (targetRow === correctRow && targetCol === correctCol) {
+            playSfx('place');
+
+            // Smjesti komadić na točno polje
+            selectedPiece.classList.remove('selected');
+            selectedPiece.classList.add('correct');
+            selectedPiece.draggable = false;
+            selectedPiece.onclick = null;
+
+            slot.appendChild(selectedPiece);
+            selectedPiece = null;
+
+            placedPiecesCount++;
+
+            // Provjera pobjede
+            if (placedPiecesCount === totalPieces) {
+                endGame();
+            }
+        } else {
+            // Ako nije točno, samo poništi odabir
+            selectedPiece.classList.remove('selected');
+            selectedPiece = null;
+        }
+    }
+
+    function endGame() {
+        clearInterval(timerInterval);
+        playSfx('win');
+
+        document.getElementById('end-screen').style.display = 'flex';
+        document.getElementById('end-msg').innerText = `Složio si slagalicu od ${totalPieces} komada u ${seconds} sekundi i ${moves} poteza! BRAVO!`;
+    }
+
+    // Pokreni igru na startu
+    initPuzzle();
+</script>
+
+</body>
+</html>
+```
+
+Uživajte s prvašićima u slaganju informatičkih motiva na pametnoj ploči i računalima! Ako budete imali još kakvu ideju ili želju za izmjenom, slobodno javite.
