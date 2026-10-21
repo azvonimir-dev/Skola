@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Informatički Merge (Beskonačna Igra)</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0f172a;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        #game-container {
+            width: 480px;
+            height: 680px;
+            background: #1e293b;
+            border: 6px solid #38bdf8;
+            border-radius: 24px;
+            box-shadow: 0 15px 35px rgba(56, 189, 248, 0.3);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Zaglavlje */
+        #top-bar {
+            height: 75px;
+            background: rgba(15, 23, 42, 0.9);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            border-bottom: 3px solid #38bdf8;
+            z-index: 5;
+        }
+
+        .stat-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #94a3b8;
+            font-weight: bold;
+        }
+
+        .stat-value {
+            font-size: 22px;
+            font-weight: bold;
+            color: #facc15;
+        }
+
+        .next-preview {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #0f172a;
+            padding: 6px 14px;
+            border-radius: 12px;
+            border: 2px solid #38bdf8;
+        }
+
+        #canvas-holder {
+            flex: 1;
+            position: relative;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Preklapajući zasloni */
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            text-align: center;
+            padding: 25px;
+        }
+
+        .overlay h1 {
+            font-size: 36px;
+            color: #38bdf8;
+            margin-bottom: 10px;
+        }
+
+        .overlay p {
+            font-size: 18px;
+            line-height: 1.5;
+            margin-bottom: 25px;
+            color: #cbd5e1;
+        }
+
+        .start-btn {
+            background: #0284c7;
+            color: white;
+            font-size: 22px;
+            padding: 14px 36px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(2, 132, 199, 0.4);
+            transition: transform 0.1s;
+        }
+
+        .start-btn:hover {
+            transform: scale(1.05);
+            background: #0369a1;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <!-- Pokretni Zaslon -->
+    <div id="start-screen" class="overlay">
+        <h1>🎮 Informatički Merge</h1>
+        <p>Pomičite i ispuštajte informatičke dijelove u posudu!<br><br>Kada se <b>dva ista dijela dotaknu</b>, spajaju se u jedan veći! Igrajte i ostvarite najveći rezultat!</p>
+        <button class="start-btn" onclick="startGame()">ZAPOČNI IGRAONICU!</button>
+    </div>
+
+    <!-- Završni Zaslon -->
+    <div id="end-screen" class="overlay" style="display: none;">
+        <h1>💥 POSUDA JE PUNA!</h1>
+        <p id="end-msg">Postigli ste sjajan rezultat!</p>
+        <button class="start-btn" onclick="startGame()">IGRAJ PONOVNO</button>
+    </div>
+
+    <!-- Zaglavlje -->
+    <div id="top-bar">
+        <div class="stat-box">
+            <span class="stat-label">BODOVI</span>
+            <span class="stat-value" id="score">0</span>
+        </div>
+        <div class="next-preview">
+            <span class="stat-label">SLJEDEĆI:</span>
+            <span id="next-icon" style="font-size: 26px;">🖱️</span>
+        </div>
+        <div class="stat-box">
+            <span class="stat-label">REKORD</span>
+            <span class="stat-value" id="high-score">0</span>
+        </div>
+    </div>
+
+    <div id="canvas-holder">
+        <canvas id="mergeCanvas" width="480" height="600"></canvas>
+    </div>
+</div>
+
+<script>
+    // Audio zvučni efekti
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playSfx(type) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        if (type === 'drop') {
+            osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+        } else if (type === 'merge') {
+            osc.frequency.setValueAtTime(450, audioCtx.currentTime);
+            osc.frequency.setValueAtTime(650, audioCtx.currentTime + 0.08);
+            gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+        }
+    }
+
+    // Progresija veličina i vrijednosti
+    const TIERS = [
+        { level: 0, radius: 18, icon: '📍', score: 10 },
+        { level: 1, radius: 26, icon: '🖱️', score: 20 },
+        { level: 2, radius: 34, icon: '⌨️', score: 40 },
+        { level: 3, radius: 42, icon: '🎧', score: 80 },
+        { level: 4, radius: 52, icon: '📱', score: 160 },
+        { level: 5, radius: 62, icon: '🖥️', score: 320 },
+        { level: 6, radius: 74, icon: '💻', score: 640 },
+        { level: 7, radius: 86, icon: '🖨️', score: 1280 },
+        { level: 8, radius: 98, icon: '🤖', score: 2560 },
+        { level: 9, radius: 110, icon: '⚡', score: 5120 }
+    ];
+
+    const canvas = document.getElementById('mergeCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let score = 0;
+    let highScore = 0;
+    let items = [];
+    let currentTier = 0;
+    let nextTier = 0;
+    let currentX = 240;
+    let canDrop = true;
+    let isGameOver = false;
+
+    function startGame() {
+        score = 0;
+        items = [];
+        canDrop = true;
+        isGameOver = false;
+
+        document.getElementById('score').innerText = score;
+        document.getElementById('start-screen').style.display = 'none';
+        document.getElementById('end-screen').style.display = 'none';
+
+        currentTier = Math.floor(Math.random() * 3);
+        nextTier = Math.floor(Math.random() * 3);
+        updateNextPreview();
+
+        requestAnimationFrame(gameLoop);
+    }
+
+    function updateNextPreview() {
+        document.getElementById('next-icon').innerText = TIERS[nextTier].icon;
+    }
+
+    // Praćenje miša / dodira na ekranu
+    canvas.addEventListener('mousemove', e => {
+        const rect = canvas.getBoundingClientRect();
+        currentX = e.clientX - rect.left;
+        clampCurrentX();
+    });
+
+    canvas.addEventListener('touchmove', e => {
+        const rect = canvas.getBoundingClientRect();
+        currentX = e.touches[0].clientX - rect.left;
+        clampCurrentX();
+    });
+
+    canvas.addEventListener('click', dropItem);
+    canvas.addEventListener('touchend', dropItem);
+
+    function clampCurrentX() {
+        const r = TIERS[currentTier].radius;
+        currentX = Math.max(r + 10, Math.min(canvas.width - r - 10, currentX));
+    }
+
+    function dropItem() {
+        if (!canDrop || isGameOver) return;
+
+        canDrop = false;
+        playSfx('drop');
+
+        items.push({
+            x: currentX,
+            y: 50,
+            vx: (Math.random() - 0.5) * 1,
+            vy: 2,
+            tier: currentTier,
+            radius: TIERS[currentTier].radius
+        });
+
+        currentTier = nextTier;
+        nextTier = Math.floor(Math.random() * 3);
+        updateNextPreview();
+
+        setTimeout(() => { canDrop = true; }, 500);
+    }
+
+    function gameLoop() {
+        if (isGameOver) return;
+
+        updatePhysics();
+        render();
+
+        requestAnimationFrame(gameLoop);
+    }
+
+    function updatePhysics() {
+        const gravity = 0.35;
+        const bounce = 0.25;
+        const friction = 0.98;
+
+        // Kretanje i fizika sudara s dnom/zidovima
+        items.forEach(item => {
+            item.vy += gravity;
+            item.x += item.vx;
+            item.y += item.vy;
+
+            item.vx *= friction;
+
+            // Zidovi
+            if (item.x - item.radius < 0) {
+                item.x = item.radius;
+                item.vx *= -bounce;
+            }
+            if (item.x + item.radius > canvas.width) {
+                item.x = canvas.width - item.radius;
+                item.vx *= -bounce;
+            }
+
+            // Dno
+            if (item.y + item.radius > canvas.height) {
+                item.y = canvas.height - item.radius;
+                item.vy *= -bounce;
+            }
+        });
+
+        // Međusobni sudari i spajanje (Merge)
+        for (let i = 0; i < items.length; i++) {
+            for (let j = i + 1; j < items.length; j++) {
+                let a = items[i];
+                let b = items[j];
+
+                let dx = b.x - a.x;
+                let dy = b.y - a.y;
+                let dist = Math.hypot(dx, dy);
+                let minDist = a.radius + b.radius;
+
+                if (dist < minDist) {
+                    // Spajanje ako su iste razine
+                    if (a.tier === b.tier && a.tier < TIERS.length - 1) {
+                        playSfx('merge');
+                        let newTier = a.tier + 1;
+                        score += TIERS[newTier].score;
+                        if (score > highScore) highScore = score;
+
+                        document.getElementById('score').innerText = score;
+                        document.getElementById('high-score').innerText = highScore;
+
+                        items.splice(j, 1);
+                        items.splice(i, 1);
+
+                        items.push({
+                            x: (a.x + b.x) / 2,
+                            y: (a.y + b.y) / 2,
+                            vx: 0,
+                            vy: -2,
+                            tier: newTier,
+                            radius: TIERS[newTier].radius
+                        });
+                        return;
+                    }
+
+                    // Odbijanje ako nisu istog nivoa
+                    let overlap = minDist - dist;
+                    let nx = dx / dist;
+                    let ny = dy / dist;
+
+                    a.x -= nx * overlap * 0.5;
+                    a.y -= ny * overlap * 0.5;
+                    b.x += nx * overlap * 0.5;
+                    b.y += ny * overlap * 0.5;
+                }
+            }
+        }
+
+        // Provjera kraja igre (punjenje iznad vrha)
+        items.forEach(item => {
+            if (item.y - item.radius < 80 && Math.abs(item.vy) < 0.5) {
+                endGame();
+            }
+        });
+    }
+
+    function render() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Crta opasnosti (vrh posude)
+        ctx.strokeStyle = 'rgba(239, 68, 68, 0.5)';
+        ctx.setLineDash([8, 8]);
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(0, 80);
+        ctx.lineTo(canvas.width, 80);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Vodič za ispuštanje
+        if (canDrop) {
+            ctx.strokeStyle = 'rgba(56, 189, 248, 0.3)';
+            ctx.beginPath();
+            ctx.moveTo(currentX, 50);
+            ctx.lineTo(currentX, canvas.height);
+            ctx.stroke();
+
+            // Prikaz trenutnog elementa na vrhu
+            let t = TIERS[currentTier];
+            ctx.font = `${t.radius * 1.2}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(t.icon, currentX, 50);
+        }
+
+        // Crtanje objekata
+        items.forEach(item => {
+            let t = TIERS[item.tier];
+
+            // Krug pozadina
+            ctx.beginPath();
+            ctx.arc(item.x, item.y, item.radius, 0, Math.PI * 2);
+            ctx.fillStyle = '#334155';
+            ctx.fill();
+            ctx.strokeStyle = '#38bdf8';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            // Ikona
+            ctx.font = `${item.radius * 1.1}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(t.icon, item.x, item.y + 2);
+        });
+    }
+
+    function endGame() {
+        isGameOver = true;
+        document.getElementById('end-screen').style.display = 'flex';
+        document.getElementById('end-msg').innerText = `Osvojili ste ${score} bodova!`;
+    }
+</script>
+
+</body>
+</html>
