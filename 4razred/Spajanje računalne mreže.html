@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mini Packet Tracer - Računalne Mreže za 4. razred</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Ikone -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8;
+            user-select: none;
+        }
+        .font-kids {
+            font-family: 'Fredoka', cursive, sans-serif;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #e2e8f0;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+        
+        /* Device Node Styling */
+        .device-node {
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            touch-action: none;
+        }
+        .device-node:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+        .device-node.selected {
+            ring: 4px solid #3b82f6;
+            animation: pulse-ring 1.5s infinite;
+        }
+
+        @keyframes pulse-ring {
+            0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.5); }
+            70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+        }
+
+        /* Envelope Animation */
+        .ping-envelope {
+            position: absolute;
+            z-index: 40;
+            pointer-events: none;
+            transition: all 0.05s linear;
+        }
+
+        /* Tool Grid Pattern */
+        .bg-grid {
+            background-size: 24px 24px;
+            background-image: 
+                radial-gradient(circle, #cbd5e1 1.5px, transparent 1.5px);
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden bg-slate-100 text-slate-800">
+
+    <!-- HEADER / TOP NAVBAR -->
+    <header class="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-md px-4 py-2.5 flex justify-between items-center z-20">
+        <div class="flex items-center gap-3">
+            <div class="bg-white/20 p-2 rounded-xl backdrop-blur-md flex items-center justify-center">
+                <i class="fa-solid fa-network-wired text-2xl text-yellow-300"></i>
+            </div>
+            <div>
+                <h1 class="font-kids text-xl md:text-2xl font-bold tracking-wide flex items-center gap-2">
+                    Mini Packet Tracer <span class="bg-yellow-400 text-slate-900 text-xs px-2 py-0.5 rounded-full uppercase tracking-wider font-extrabold">Za 4. razred</span>
+                </h1>
+                <p class="text-xs text-blue-100 hidden sm:block">Nauči spajati računala u mrežu kroz igru i izazove!</p>
+            </div>
+        </div>
+
+        <!-- Mode Switches & Actions -->
+        <div class="flex items-center gap-2 sm:gap-3">
+            <button id="btn-mode-free" onclick="switchMode('free')" class="px-3 py-1.5 rounded-lg font-kids text-sm font-semibold transition-all shadow flex items-center gap-1.5 bg-yellow-400 text-slate-900 hover:bg-yellow-300 ring-2 ring-yellow-300">
+                <i class="fa-solid fa-gamepad"></i> Slobodna Igra
+            </button>
+            <button id="btn-mode-challenges" onclick="switchMode('challenges')" class="px-3 py-1.5 rounded-lg font-kids text-sm font-semibold transition-all bg-white/10 hover:bg-white/20 text-white flex items-center gap-1.5">
+                <i class="fa-solid fa-trophy text-yellow-300"></i> Misije / Izazovi
+            </button>
+            <button onclick="clearCanvas()" class="px-3 py-1.5 bg-red-500/80 hover:bg-red-600 text-white rounded-lg text-sm font-semibold transition shadow flex items-center gap-1">
+                <i class="fa-solid fa-trash-can"></i> <span class="hidden md:inline">Očisti</span>
+            </button>
+            <button onclick="toggleHelpModal()" class="w-9 h-9 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center text-white text-lg font-bold transition">
+                <i class="fa-solid fa-question"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN WORKSPACE CONTAINER -->
+    <div class="flex-1 flex flex-col md:flex-row relative overflow-hidden">
+
+        <!-- LEFT SIDEBAR: TOOLBOX -->
+        <aside class="w-full md:w-64 bg-white border-r border-slate-200 shadow-sm flex flex-col z-10">
+            <!-- Sidebar Header -->
+            <div class="p-3 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+                <h2 class="font-kids text-base font-bold text-slate-700 flex items-center gap-2">
+                    <i class="fa-solid fa-toolbox text-indigo-500"></i> Alatnica Mreže
+                </h2>
+                <span class="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-semibold">Uređaji</span>
+            </div>
+
+            <!-- Device Selectors -->
+            <div class="p-3 grid grid-cols-3 md:grid-cols-2 gap-2 overflow-y-auto max-h-48 md:max-h-none flex-1">
+                <div onclick="spawnDevice('pc')" class="cursor-pointer bg-slate-50 hover:bg-blue-50 border-2 border-slate-200 hover:border-blue-400 p-2.5 rounded-xl flex flex-col items-center justify-center text-center transition group shadow-sm active:scale-95">
+                    <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center text-xl mb-1 group-hover:bg-blue-600 group-hover:text-white transition">
+                        <i class="fa-solid fa-desktop"></i>
+                    </div>
+                    <span class="font-kids text-xs font-bold text-slate-700">Računalo (PC)</span>
+                </div>
+
+                <div onclick="spawnDevice('laptop')" class="cursor-pointer bg-slate-50 hover:bg-blue-50 border-2 border-slate-200 hover:border-blue-400 p-2.5 rounded-xl flex flex-col items-center justify-center text-center transition group shadow-sm active:scale-95">
+                    <div class="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center text-xl mb-1 group-hover:bg-indigo-600 group-hover:text-white transition">
+                        <i class="fa-solid fa-laptop"></i>
+                    </div>
+                    <span class="font-kids text-xs font-bold text-slate-700">Prijenosnik</span>
+                </div>
+
+                <div onclick="spawnDevice('smartphone')" class="cursor-pointer bg-slate-50 hover:bg-blue-50 border-2 border-slate-200 hover:border-blue-400 p-2.5 rounded-xl flex flex-col items-center justify-center text-center transition group shadow-sm active:scale-95">
+                    <div class="w-10 h-10 bg-purple-100 text-purple-600 rounded-lg flex items-center justify-center text-xl mb-1 group-hover:bg-purple-600 group-hover:text-white transition">
+                        <i class="fa-solid fa-mobile-screen-button"></i>
+                    </div>
+                    <span class="font-kids text-xs font-bold text-slate-700">Pametni Telefon</span>
+                </div>
+
+                <div onclick="spawnDevice('switch')" class="cursor-pointer bg-slate-50 hover:bg-emerald-50 border-2 border-slate-200 hover:border-emerald-400 p-2.5 rounded-xl flex flex-col items-center justify-center text-center transition group shadow-sm active:scale-95">
+                    <div class="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center text-xl mb-1 group-hover:bg-emerald-600 group-hover:text-white transition">
+                        <i class="fa-solid fa-network-wired"></i>
+                    </div>
+                    <span class="font-kids text-xs font-bold text-slate-700">Switch (Razvodnik)</span>
+                </div>
+
+                <div onclick="spawnDevice('router')" class="cursor-pointer bg-slate-50 hover:bg-amber-50 border-2 border-slate-200 hover:border-amber-400 p-2.5 rounded-xl flex flex-col items-center justify-center text-center transition group shadow-sm active:scale-95">
+                    <div class="w-10 h-10 bg-amber-100 text-amber-600 rounded-lg flex items-center justify-center text-xl mb-1 group-hover:bg-amber-600 group-hover:text-white transition">
+                        <i class="fa-solid fa-wifi"></i>
+                    </div>
+                    <span class="font-kids text-xs font-bold text-slate-700">Router (Usmerivač)</span>
+                </div>
+
+                <div onclick="spawnDevice('printer')" class="cursor-pointer bg-slate-50 hover:bg-rose-50 border-2 border-slate-200 hover:border-rose-400 p-2.5 rounded-xl flex flex-col items-center justify-center text-center transition group shadow-sm active:scale-95">
+                    <div class="w-10 h-10 bg-rose-100 text-rose-600 rounded-lg flex items-center justify-center text-xl mb-1 group-hover:bg-rose-600 group-hover:text-white transition">
+                        <i class="fa-solid fa-print"></i>
+                    </div>
+                    <span class="font-kids text-xs font-bold text-slate-700">Mrežni Pisač</span>
+                </div>
+            </div>
+
+            <!-- Action Tools (Cable & Ping) -->
+            <div class="p-3 border-t border-slate-200 bg-slate-50 flex flex-col gap-2">
+                <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Mrežne Akcije</span>
+                
+                <button id="tool-connect" onclick="setTool('connect')" class="w-full py-2.5 px-3 rounded-xl border-2 font-kids text-sm font-semibold flex items-center justify-start gap-3 transition bg-white border-slate-300 hover:border-slate-400 text-slate-700">
+                    <div class="w-7 h-7 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center">
+                        <i class="fa-solid fa-plug"></i>
+                    </div>
+                    <div class="text-left leading-tight">
+                        <div class="font-bold">Spoji Kabelom</div>
+                        <div class="text-[10px] text-slate-500 font-sans">Klikni 1. pa 2. uređaj</div>
+                    </div>
+                </button>
+
+                <button id="tool-ping" onclick="setTool('ping')" class="w-full py-2.5 px-3 rounded-xl border-2 font-kids text-sm font-semibold flex items-center justify-start gap-3 transition bg-white border-slate-300 hover:border-slate-400 text-slate-700">
+                    <div class="w-7 h-7 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center">
+                        <i class="fa-solid fa-envelope"></i>
+                    </div>
+                    <div class="text-left leading-tight">
+                        <div class="font-bold">Pošalji Pismo (Ping)</div>
+                        <div class="text-[10px] text-slate-500 font-sans">Testiraj vezu među uređajima</div>
+                    </div>
+                </button>
+            </div>
+
+            <!-- Info Box / Did you know? -->
+            <div class="p-3 bg-amber-50 border-t border-amber-200 hidden md:block">
+                <div class="flex items-start gap-2">
+                    <i class="fa-solid fa-lightbulb text-amber-500 text-lg mt-0.5"></i>
+                    <div>
+                        <div class="font-kids text-xs font-bold text-amber-800">Znaš li?</div>
+                        <p id="educational-tip" class="text-[11px] text-amber-700 leading-tight mt-0.5">
+                            Switch (razvodnik) spaja više računala u jednu lokalnu mrežu tako da svi mogu razgovarati!
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- CENTER: CANVAS / WORKSPACE -->
+        <main class="flex-1 relative bg-grid overflow-hidden bg-slate-50 flex flex-col">
+
+            <!-- Active Tool / Status Bar Banner -->
+            <div id="status-banner" class="absolute top-3 left-1/2 transform -translate-x-1/2 bg-slate-800/90 backdrop-blur-md text-white px-4 py-1.5 rounded-full shadow-lg z-20 font-kids text-xs sm:text-sm flex items-center gap-2 transition-all">
+                <i class="fa-solid fa-hand-pointer text-yellow-400"></i>
+                <span id="status-banner-text">Odaberi alat ili povuci uređaje na radnu površinu.</span>
+            </div>
+
+            <!-- SVG Overlay for Network Cables -->
+            <svg id="cable-svg" class="absolute inset-0 w-full h-full pointer-events-none z-0">
+                <!-- Cables rendered dynamically -->
+            </svg>
+
+            <!-- Container for Device Nodes -->
+            <div id="canvas-container" class="absolute inset-0 z-10">
+                <!-- Devices rendered dynamically -->
+            </div>
+
+            <!-- Envelope Animation Container -->
+            <div id="envelope-container" class="absolute inset-0 pointer-events-none z-30"></div>
+
+            <!-- CHALLENGE PANEL OVERLAY (Shown in Challenges Mode) -->
+            <div id="challenge-panel" class="hidden absolute bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 bg-white/95 backdrop-blur-md rounded-2xl p-4 shadow-xl border border-indigo-100 z-20 font-kids transition-all">
+                <div class="flex justify-between items-center mb-2">
+                    <div class="flex items-center gap-2">
+                        <span id="challenge-badge" class="bg-indigo-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">Misija 1/4</span>
+                        <h3 id="challenge-title" class="font-bold text-slate-800 text-base">Spoji školska računala!</h3>
+                    </div>
+                    <div class="flex gap-1 text-yellow-400 text-sm" id="challenge-stars">
+                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-regular fa-star"></i>
+                        <i class="fa-regular fa-star"></i>
+                    </div>
+                </div>
+                <p id="challenge-desc" class="text-xs text-slate-600 mb-3 leading-relaxed">
+                    U razred su stigla 3 nova računala i 1 Switch. Postavi ih i spoji sve PC-je na Switch kabelima.
+                </p>
+                <div class="flex items-center justify-between pt-2 border-t border-slate-100">
+                    <button onclick="checkCurrentChallenge()" class="px-4 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold shadow flex items-center gap-1.5 transition">
+                        <i class="fa-solid fa-circle-check"></i> Provjeri rješenje
+                    </button>
+                    <button onclick="nextChallenge()" id="btn-next-challenge" class="hidden px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow flex items-center gap-1 transition">
+                        Sljedeća misija <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL: DEVICE PROPERTIES -->
+    <div id="device-modal" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-5 font-kids border border-slate-100 animate-in fade-in zoom-in duration-150">
+            <div class="flex justify-between items-center mb-4">
+                <div class="flex items-center gap-2">
+                    <div id="modal-device-icon" class="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-desktop"></i>
+                    </div>
+                    <div>
+                        <h3 id="modal-device-type" class="font-bold text-slate-800 text-lg leading-tight">Računalo</h3>
+                        <p class="text-xs text-slate-400 font-sans">Postavke uređaja</p>
+                    </div>
+                </div>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+            </div>
+
+            <div class="space-y-3 font-sans text-xs">
+                <div>
+                    <label class="block font-kids text-slate-700 font-semibold mb-1">Naziv uređaja:</label>
+                    <input type="text" id="modal-input-name" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-sans text-sm">
+                </div>
+                <div id="modal-ip-container">
+                    <label class="block font-kids text-slate-700 font-semibold mb-1">IP Adresa (Mrežni broj):</label>
+                    <input type="text" id="modal-input-ip" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm" placeholder="npr. 192.168.1.10">
+                    <p class="text-[10px] text-slate-400 mt-1">Jedinstvena adresa pomoću koje se uređaji prepoznaju.</p>
+                </div>
+
+                <!-- Educational explanation inside modal -->
+                <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 text-blue-800 font-kids text-xs mt-2">
+                    <span class="font-bold block mb-0.5"><i class="fa-solid fa-circle-info"></i> Što radi ovaj uređaj?</span>
+                    <p id="modal-device-info" class="text-[11px] font-sans font-normal text-blue-900 leading-tight">
+                        Računalo šalje i prima podatke u mreži.
+                    </p>
+                </div>
+            </div>
+
+            <div class="flex justify-between items-center gap-2 mt-5">
+                <button onclick="deleteDeviceFromModal()" class="px-3 py-2 bg-rose-100 hover:bg-rose-200 text-rose-700 rounded-xl font-kids text-xs font-bold transition flex items-center gap-1">
+                    <i class="fa-solid fa-trash"></i> Izbriši
+                </button>
+                <div class="flex gap-2">
+                    <button onclick="closeModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-kids text-xs font-bold transition">Odustani</button>
+                    <button onclick="saveModalSettings()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-kids text-xs font-bold shadow transition">Spremi</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: HELP & INSTRUCTIONS -->
+    <div id="help-modal" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 font-kids border border-slate-100">
+            <div class="flex justify-between items-center mb-3">
+                <h3 class="font-bold text-slate-800 text-xl flex items-center gap-2">
+                    <i class="fa-solid fa-graduation-cap text-indigo-600"></i> Kako igrati Pocket Tracer?
+                </h3>
+                <button onclick="toggleHelpModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+            </div>
+            
+            <div class="space-y-3 font-sans text-xs text-slate-600 leading-relaxed">
+                <div class="flex items-start gap-2.5">
+                    <div class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 font-bold flex items-center justify-center shrink-0">1</div>
+                    <p><strong class="font-kids text-slate-800 text-sm">Dodaj uređaje:</strong> Klikni na uređaj u lijevom izborniku (PC, Laptop, Switch...) kako bi ga stavio na radno platno.</p>
+                </div>
+                <div class="flex items-start gap-2.5">
+                    <div class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 font-bold flex items-center justify-center shrink-0">2</div>
+                    <p><strong class="font-kids text-slate-800 text-sm">Spoji kabelom:</strong> Odaberi alat <span class="bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded font-bold">Spoji Kabelom</span>, zatim klikni na prvi uređaj, pa na drugi uređaj.</p>
+                </div>
+                <div class="flex items-start gap-2.5">
+                    <div class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 font-bold flex items-center justify-center shrink-0">3</div>
+                    <p><strong class="font-kids text-slate-800 text-sm">Pošalji pismo (Ping):</strong> Odaberi <span class="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-bold">Pošalji Pismo</span> te klikni na uređaj koji šalje i uređaj koji treba primiti poruku!</p>
+                </div>
+                <div class="flex items-start gap-2.5">
+                    <div class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 font-bold flex items-center justify-center shrink-0">4</div>
+                    <p><strong class="font-kids text-slate-800 text-sm">Postavke uređaja:</strong> Dvostruki klik na bilo koji uređaj otvara prozor u kojem možeš promijeniti ime ili vidjeti njegov mrežni opis.</p>
+                </div>
+            </div>
+
+            <button onclick="toggleHelpModal()" class="w-full mt-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-kids text-sm font-bold shadow transition">
+                Razumijem, idemo na spajanje! 🚀
+            </button>
+        </div>
+    </div>
+
+    <!-- AUDIO ENGINE (Web Audio API - Synthesized sounds for clicks/success/fail) -->
+    <script>
+        // Web Audio API Context
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playSound(type) {
+            initAudio();
+            if (!audioCtx) return;
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'click') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.exponentialRampToValueAtTime(800, now + 0.05);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.05);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.05);
+            } 
+            else if (type === 'connect') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.setValueAtTime(600, now + 0.08);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.16);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.16);
+            }
+            else if (type === 'ping') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(523.25, now); // C5
+                osc.frequency.setValueAtTime(659.25, now + 0.06); // E5
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.15);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.15);
+            }
+            else if (type === 'success') {
+                const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                notes.forEach((freq, idx) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+                    gain.gain.setValueAtTime(0.2, now + idx * 0.08);
+                    gain.gain.linearRampToValueAtTime(0, now + idx * 0.08 + 0.2);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now + idx * 0.08);
+                    osc.stop(now + idx * 0.08 + 0.2);
+                });
+            }
+            else if (type === 'error') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(180, now);
+                osc.frequency.setValueAtTime(130, now + 0.1);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.25);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.25);
+            }
+        }
+    </script>
+
+    <!-- APPLICATION LOGIC & STATE -->
+    <script>
+        // --- DEVICE METADATA DEFINITIONS ---
+        const DEVICE_TYPES = {
+            pc: {
+                name: 'Računalo',
+                icon: 'fa-desktop',
+                color: 'blue',
+                isHost: true,
+                desc: 'Školsko ili kućno stolno računalo. Služi za rad, učenje i slanje poruka preko mreže.'
+            },
+            laptop: {
+                name: 'Prijenosnik',
+                icon: 'fa-laptop',
+                color: 'indigo',
+                isHost: true,
+                desc: 'Prenosivo računalo. Može se spajati na kabel ili bežičnu mrežu.'
+            },
+            smartphone: {
+                name: 'Pametni Telefon',
+                icon: 'fa-mobile-screen-button',
+                color: 'purple',
+                isHost: true,
+                desc: 'Pametni mobitel s mrežnim čipom za komunikaciju i pristup Internetu.'
+            },
+            switch: {
+                name: 'Switch (Razvodnik)',
+                icon: 'fa-network-wired',
+                color: 'emerald',
+                isHost: false,
+                desc: 'Mrežni razvodnik. Ima puno utora (portova) i spaja više računala u jednu lokalnu mrežu.'
+            },
+            router: {
+                name: 'Router (Usmjernik)',
+                icon: 'fa-wifi',
+                color: 'amber',
+                isHost: false,
+                desc: 'Pametna mrežna kutija koja spaja tvoju kućnu ili školsku mrežu sa cijelim svijetom (Internetom).'
+            },
+            printer: {
+                name: 'Mrežni Pisač',
+                icon: 'fa-print',
+                color: 'rose',
+                isHost: true,
+                desc: 'Pisač spojen na mrežu tako da svi u razredu mogu ispisivati dokumente s bilo kojeg računala.'
+            }
+        };
+
+        // Educational Tips for random display
+        const TIPS = [
+            "Switch spaja više računala u jednu lokalnu mrežu (LAN).",
+            "Mrežni kabel (UTP) prenosi podatke pomoću električnih signala!",
+            "Router preusmjerava poruke između različitih mreža i vodi nas na Internet.",
+            "Svaki uređaj u mreži ima svoju jedinstvenu IP adresu (poput kućnog broja).",
+            "Naredba 'Ping' služi za provjeru putuju li poruke uspješno između dva uređaja."
+        ];
+
+        // --- GAME STATE ---
+        let devices = [];
+        let cables = [];
+        let currentMode = 'free'; // 'free' or 'challenges'
+        let activeTool = 'select'; // 'select', 'connect', 'ping'
+        let selectedSourceDeviceId = null;
+        let editingDeviceId = null;
+        let deviceCounter = 1;
+        let currentChallengeIdx = 0;
+
+        // Challenge Definitions for 4th Graders
+        const CHALLENGES = [
+            {
+                title: "Spoji školska računala!",
+                desc: "U učionicu su stigla 3 PC-a i 1 Switch (razvodnik). Postavi 3 Računala i 1 Switch na platno te spoji svaki PC kabelom na Switch!",
+                badge: "Misija 1/4",
+                check: () => {
+                    const pcs = devices.filter(d => d.type === 'pc');
+                    const switches = devices.filter(d => d.type === 'switch');
+                    if (pcs.length < 3 || switches.length < 1) return false;
+
+                    const sw = switches[0];
+                    let connectedPcs = 0;
+                    pcs.forEach(pc => {
+                        if (areDevicesConnected(pc.id, sw.id)) connectedPcs++;
+                    });
+                    return connectedPcs >= 3;
+                }
+            },
+            {
+                title: "Internetska veza",
+                desc: "Postavi 2 Računala spojena na Switch, a Switch zatim spoji na Router (Usmerivač) koji donosi Internet!",
+                badge: "Misija 2/4",
+                check: () => {
+                    const pcs = devices.filter(d => d.type === 'pc' || d.type === 'laptop');
+                    const switches = devices.filter(d => d.type === 'switch');
+                    const routers = devices.filter(d => d.type === 'router');
+
+                    if (pcs.length < 2 || switches.length < 1 || routers.length < 1) return false;
+
+                    const sw = switches[0];
+                    const r = routers[0];
+
+                    const pcConn = pcs.filter(pc => areDevicesConnected(pc.id, sw.id)).length;
+                    const swRouterConn = areDevicesConnected(sw.id, r.id);
+
+                    return pcConn >= 2 && swRouterConn;
+                }
+            },
+            {
+                title: "Školski mrežni pisač",
+                desc: "Učiteljica i učenik žele ispisivati na isti pisač! Postavi 2 Računala (Učitelj i Učenik) i 1 Pisač te ih sve spoji na 1 Switch.",
+                badge: "Misija 3/4",
+                check: () => {
+                    const pcs = devices.filter(d => d.type === 'pc' || d.type === 'laptop');
+                    const printers = devices.filter(d => d.type === 'printer');
+                    const switches = devices.filter(d => d.type === 'switch');
+
+                    if (pcs.length < 2 || printers.length < 1 || switches.length < 1) return false;
+
+                    const sw = switches[0];
+                    const pr = printers[0];
+
+                    const pcsConnected = pcs.filter(pc => areDevicesConnected(pc.id, sw.id)).length >= 2;
+                    const printerConnected = areDevicesConnected(pr.id, sw.id);
+
+                    return pcsConnected && printerConnected;
+                }
+            },
+            {
+                title: "Testiraj poruku (Ping)",
+                desc: "Spoji 2 Računala kabelom (izravno ili preko Switcha) i pošalji pismo (Ping) s prvog na drugo računalo!",
+                badge: "Misija 4/4",
+                checkTriggeredByPing: true,
+                check: () => true // Validated upon successful ping animation
+            }
+        ];
+
+        // --- DOM ELEMENTS ---
+        const canvasContainer = document.getElementById('canvas-container');
+        const cableSvg = document.getElementById('cable-svg');
+        const statusBannerText = document.getElementById('status-banner-text');
+
+        // --- INITIALIZATION ---
+        window.addEventListener('DOMContentLoaded', () => {
+            render();
+            rotateEducationalTip();
+            window.addEventListener('resize', renderCables);
+        });
+
+        // Rotate tip periodically
+        function rotateEducationalTip() {
+            const tipEl = document.getElementById('educational-tip');
+            let idx = 0;
+            setInterval(() => {
+                idx = (idx + 1) % TIPS.length;
+                if (tipEl) tipEl.innerText = TIPS[idx];
+            }, 10000);
+        }
+
+        // --- TOOL SELECTION ---
+        function setTool(tool) {
+            playSound('click');
+            activeTool = (activeTool === tool) ? 'select' : tool;
+            selectedSourceDeviceId = null;
+            updateToolUI();
+        }
+
+        function updateToolUI() {
+            const btnConnect = document.getElementById('tool-connect');
+            const btnPing = document.getElementById('tool-ping');
+
+            btnConnect.className = `w-full py-2.5 px-3 rounded-xl border-2 font-kids text-sm font-semibold flex items-center justify-start gap-3 transition ${
+                activeTool === 'connect' 
+                ? 'bg-orange-50 border-orange-500 text-orange-800 ring-2 ring-orange-200' 
+                : 'bg-white border-slate-300 hover:border-slate-400 text-slate-700'
+            }`;
+
+            btnPing.className = `w-full py-2.5 px-3 rounded-xl border-2 font-kids text-sm font-semibold flex items-center justify-start gap-3 transition ${
+                activeTool === 'ping' 
+                ? 'bg-blue-50 border-blue-500 text-blue-800 ring-2 ring-blue-200' 
+                : 'bg-white border-slate-300 hover:border-slate-400 text-slate-700'
+            }`;
+
+            if (activeTool === 'connect') {
+                statusBannerText.innerText = "Sada klikni na PRVI pa na DRUGI uređaj za spajanje kabelom!";
+            } else if (activeTool === 'ping') {
+                statusBannerText.innerText = "Klikni na IZVORIŠNI uređaj, pa na ODREDIŠNI za slanje poruke!";
+            } else {
+                statusBannerText.innerText = "Premještaj uređaje mišem/prstom ili odaberi mrežni alat!";
+            }
+
+            renderDevices();
+        }
+
+        // --- SPAWN DEVICE ---
+        function spawnDevice(type) {
+            playSound('click');
+            const containerRect = canvasContainer.getBoundingClientRect();
+            
+            // Grid-ish offset spawn position
+            const count = devices.length;
+            const x = Math.min(containerRect.width - 120, Math.max(40, 80 + (count % 5) * 110));
+            const y = Math.min(containerRect.height - 120, Math.max(40, 80 + Math.floor(count / 5) * 110));
+
+            const newDevice = {
+                id: 'dev_' + Date.now() + '_' + Math.floor(Math.random()*1000),
+                type: type,
+                name: `${DEVICE_TYPES[type].name} ${deviceCounter++}`,
+                ip: DEVICE_TYPES[type].isHost ? `192.168.1.${10 + deviceCounter}` : '',
+                x: x,
+                y: y
+            };
+
+            devices.push(newDevice);
+            render();
+        }
+
+        // --- DRAG & DROP SYSTEM ---
+        let draggedDevice = null;
+        let dragOffsetX = 0;
+        let dragOffsetY = 0;
+
+        function onPointerDown(e, devId) {
+            if (activeTool !== 'select') return;
+
+            const dev = devices.find(d => d.id === devId);
+            if (!dev) return;
+
+            draggedDevice = dev;
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+            dragOffsetX = clientX - dev.x;
+            dragOffsetY = clientY - dev.y;
+
+            window.addEventListener('pointermove', onPointerMove);
+            window.addEventListener('pointerup', onPointerUp);
+            window.addEventListener('touchmove', onPointerMove, { passive: false });
+            window.addEventListener('touchend', onPointerUp);
+        }
+
+        function onPointerMove(e) {
+            if (!draggedDevice) return;
+            if (e.cancelable) e.preventDefault();
+
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+            const containerRect = canvasContainer.getBoundingClientRect();
+            
+            let newX = clientX - dragOffsetX;
+            let newY = clientY - dragOffsetY;
+
+            // Boundaries
+            newX = Math.max(10, Math.min(containerRect.width - 90, newX));
+            newY = Math.max(10, Math.min(containerRect.height - 90, newY));
+
+            draggedDevice.x = newX;
+            draggedDevice.y = newY;
+
+            // Fast DOM Repositioning
+            const el = document.getElementById(draggedDevice.id);
+            if (el) {
+                el.style.left = newX + 'px';
+                el.style.top = newY + 'px';
+            }
+
+            renderCables();
+        }
+
+        function onPointerUp() {
+            draggedDevice = null;
+            window.removeEventListener('pointermove', onPointerMove);
+            window.removeEventListener('pointerup', onPointerUp);
+            window.removeEventListener('touchmove', onPointerMove);
+            window.removeEventListener('touchend', onPointerUp);
+        }
+
+        // --- INTERACTION LOGIC (CONNECT & PING) ---
+        function handleDeviceClick(devId, e) {
+            e.stopPropagation();
+
+            if (activeTool === 'connect') {
+                if (!selectedSourceDeviceId) {
+                    selectedSourceDeviceId = devId;
+                    playSound('click');
+                    statusBannerText.innerText = "Sada klikni na DRUGI uređaj za spajanje kabelom!";
+                    renderDevices();
+                } else if (selectedSourceDeviceId === devId) {
+                    selectedSourceDeviceId = null;
+                    statusBannerText.innerText = "Odspojeno. Odaberi prvi uređaj ponovno.";
+                    renderDevices();
+                } else {
+                    toggleCable(selectedSourceDeviceId, devId);
+                    selectedSourceDeviceId = null;
+                    updateToolUI();
+                }
+            } 
+            else if (activeTool === 'ping') {
+                if (!selectedSourceDeviceId) {
+                    selectedSourceDeviceId = devId;
+                    playSound('click');
+                    statusBannerText.innerText = "Sada klikni na ODREDIŠNI uređaj kamo šalješ pismo!";
+                    renderDevices();
+                } else if (selectedSourceDeviceId === devId) {
+                    selectedSourceDeviceId = null;
+                    renderDevices();
+                } else {
+                    simulatePing(selectedSourceDeviceId, devId);
+                    selectedSourceDeviceId = null;
+                    setTool('select');
+                }
+            }
+        }
+
+        // --- CABLE MANAGEMENT ---
+        function toggleCable(dev1Id, dev2Id) {
+            const existingIdx = cables.findIndex(c => 
+                (c.from === dev1Id && c.to === dev2Id) || (c.from === dev2Id && c.to === dev1Id)
+            );
+
+            if (existingIdx >= 0) {
+                cables.splice(existingIdx, 1);
+                playSound('click');
+                statusBannerText.innerText = "Kabel je uklonjen.";
+            } else {
+                cables.push({ id: 'cable_' + Date.now(), from: dev1Id, to: dev2Id });
+                playSound('connect');
+                statusBannerText.innerText = "Uređaji su uspješno spojeni mrežnim kabelom! 🔌";
+            }
+
+            renderCables();
+        }
+
+        function areDevicesConnected(id1, id2) {
+            return cables.some(c => (c.from === id1 && c.to === id2) || (c.from === id2 && c.to === id1));
+        }
+
+        // Breadth-First-Search pathfinder for message routing
+        function findNetworkPath(startId, targetId) {
+            const queue = [[startId]];
+            const visited = new Set([startId]);
+
+            while (queue.length > 0) {
+                const path = queue.shift();
+                const node = path[path.length - 1];
+
+                if (node === targetId) return path;
+
+                // Find neighbors
+                const connectedCables = cables.filter(c => c.from === node || c.to === node);
+                for (let c of connectedCables) {
+                    const neighbor = (c.from === node) ? c.to : c.from;
+                    if (!visited.has(neighbor)) {
+                        visited.add(neighbor);
+                        queue.push([...path, neighbor]);
+                    }
+                }
+            }
+            return null; // No path found
+        }
+
+        // --- PING SIMULATION ANIMATION ---
+        function simulatePing(fromId, toId) {
+            const path = findNetworkPath(fromId, toId);
+
+            if (!path) {
+                playSound('error');
+                statusBannerText.innerHTML = "<span class='text-red-400 font-bold'>Greška! ❌ Uređaji nisu povezani kabelima!</span>";
+                return;
+            }
+
+            playSound('ping');
+            statusBannerText.innerHTML = "<span class='text-yellow-300 font-bold'>Pismo putuje po mreži... ✉️</span>";
+
+            // Create Envelope Element
+            const envContainer = document.getElementById('envelope-container');
+            const env = document.createElement('div');
+            env.className = "ping-envelope bg-yellow-400 text-slate-900 border-2 border-slate-800 rounded-lg px-2 py-1 shadow-xl font-bold text-xs flex items-center justify-center gap-1";
+            env.innerHTML = `<i class="fa-solid fa-envelope text-red-600"></i> Poruka`;
+            envContainer.appendChild(env);
+
+            let step = 0;
+            const speed = 40; // lower = faster
+
+            function animateSegment() {
+                if (step >= path.length - 1) {
+                    // Reached destination!
+                    env.remove();
+                    playSound('success');
+                    statusBannerText.innerHTML = "<span class='text-emerald-400 font-bold'>Poruka je uspješno stigla! ✉️✅</span>";
+
+                    // Check if current challenge requires successful ping
+                    if (currentMode === 'challenges' && CHALLENGES[currentChallengeIdx].checkTriggeredByPing) {
+                        completeChallenge();
+                    }
+                    return;
+                }
+
+                const currentDev = devices.find(d => d.id === path[step]);
+                const nextDev = devices.find(d => d.id === path[step + 1]);
+
+                if (!currentDev || !nextDev) {
+                    env.remove();
+                    return;
+                }
+
+                let progress = 0;
+                const interval = setInterval(() => {
+                    progress += 0.05;
+                    if (progress >= 1) {
+                        clearInterval(interval);
+                        step++;
+                        animateSegment();
+                    } else {
+                        // Lerp position
+                        const curX = currentDev.x + 40;
+                        const curY = currentDev.y + 40;
+                        const nxtX = nextDev.x + 40;
+                        const nxtY = nextDev.y + 40;
+
+                        const posX = curX + (nxtX - curX) * progress - 30;
+                        const posY = curY + (nxtY - curY) * progress - 15;
+
+                        env.style.left = posX + 'px';
+                        env.style.top = posY + 'px';
+                    }
+                }, speed);
+            }
+
+            animateSegment();
+        }
+
+        // --- RENDERING FUNCTIONS ---
+        function render() {
+            renderDevices();
+            renderCables();
+        }
+
+        function renderDevices() {
+            canvasContainer.innerHTML = '';
+
+            devices.forEach(dev => {
+                const typeInfo = DEVICE_TYPES[dev.type] || DEVICE_TYPES.pc;
+                const isSelected = (selectedSourceDeviceId === dev.id);
+
+                const devDiv = document.createElement('div');
+                devDiv.id = dev.id;
+                devDiv.style.left = dev.x + 'px';
+                devDiv.style.top = dev.y + 'px';
+                devDiv.className = `device-node absolute cursor-pointer bg-white border-2 rounded-2xl p-2.5 shadow-md flex flex-col items-center justify-center w-24 h-24 select-none ${
+                    isSelected ? 'border-blue-500 ring-4 ring-blue-300 scale-105 z-20' : 'border-slate-200 hover:border-slate-300 z-10'
+                }`;
+
+                // OnClick / Touch Events
+                devDiv.onpointerdown = (e) => onPointerDown(e, dev.id);
+                devDiv.onclick = (e) => handleDeviceClick(dev.id, e);
+                devDiv.ondblclick = (e) => {
+                    e.stopPropagation();
+                    openDeviceModal(dev.id);
+                };
+
+                // Link indicator dots (Count connected cables)
+                const connectedCableCount = cables.filter(c => c.from === dev.id || c.to === dev.id).length;
+                const linkDotColor = connectedCableCount > 0 ? 'bg-emerald-500' : 'bg-rose-400';
+
+                devDiv.innerHTML = `
+                    <div class="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full ${linkDotColor} border border-white shadow-sm"></div>
+                    <div class="w-10 h-10 rounded-xl bg-${typeInfo.color}-100 text-${typeInfo.color}-600 flex items-center justify-center text-xl mb-1 pointer-events-none">
+                        <i class="fa-solid ${typeInfo.icon}"></i>
+                    </div>
+                    <span class="font-kids text-[11px] font-bold text-slate-800 text-center truncate w-full pointer-events-none">${dev.name}</span>
+                    ${dev.ip ? `<span class="text-[9px] font-mono text-slate-400 truncate w-full text-center pointer-events-none">${dev.ip}</span>` : ''}
+                `;
+
+                canvasContainer.appendChild(devDiv);
+            });
+        }
+
+        function renderCables() {
+            cableSvg.innerHTML = '';
+
+            cables.forEach(cable => {
+                const dev1 = devices.find(d => d.id === cable.from);
+                const dev2 = devices.find(d => d.id === cable.to);
+
+                if (!dev1 || !dev2) return;
+
+                // Center coordinates of device boxes (24px width/height = 96px => center is offset by +48)
+                const x1 = dev1.x + 48;
+                const y1 = dev1.y + 48;
+                const x2 = dev2.x + 48;
+                const y2 = dev2.y + 48;
+
+                // Cable SVG Path
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', x1);
+                line.setAttribute('y1', y1);
+                line.setAttribute('x2', x2);
+                line.setAttribute('y2', y2);
+                line.setAttribute('stroke', '#475569');
+                line.setAttribute('stroke-width', '4');
+                line.setAttribute('stroke-dasharray', '8 4');
+                line.setAttribute('stroke-linecap', 'round');
+
+                // Green status indicators near line ends
+                const dot1 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                dot1.setAttribute('cx', x1 + (x2 - x1) * 0.15);
+                dot1.setAttribute('cy', y1 + (y2 - y1) * 0.15);
+                dot1.setAttribute('r', '5');
+                dot1.setAttribute('fill', '#22c55e');
+
+                const dot2 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                dot2.setAttribute('cx', x2 - (x2 - x1) * 0.15);
+                dot2.setAttribute('cy', y2 - (y2 - y1) * 0.15);
+                dot2.setAttribute('r', '5');
+                dot2.setAttribute('fill', '#22c55e');
+
+                cableSvg.appendChild(line);
+                cableSvg.appendChild(dot1);
+                cableSvg.appendChild(dot2);
+            });
+        }
+
+        // --- CLEAR CANVAS ---
+        function clearCanvas() {
+            playSound('click');
+            devices = [];
+            cables = [];
+            selectedSourceDeviceId = null;
+            render();
+            statusBannerText.innerText = "Radna površina je očišćena.";
+        }
+
+        // --- MODAL SETTINGS FOR DEVICE ---
+        function openDeviceModal(devId) {
+            playSound('click');
+            editingDeviceId = devId;
+            const dev = devices.find(d => d.id === devId);
+            if (!dev) return;
+
+            const typeInfo = DEVICE_TYPES[dev.type] || DEVICE_TYPES.pc;
+
+            document.getElementById('modal-device-type').innerText = typeInfo.name;
+            document.getElementById('modal-input-name').value = dev.name;
+            document.getElementById('modal-input-ip').value = dev.ip || '';
+            document.getElementById('modal-device-info').innerText = typeInfo.desc;
+            
+            const modalIcon = document.getElementById('modal-device-icon');
+            modalIcon.className = `w-10 h-10 rounded-xl bg-${typeInfo.color}-100 text-${typeInfo.color}-600 flex items-center justify-center text-xl`;
+            modalIcon.innerHTML = `<i class="fa-solid ${typeInfo.icon}"></i>`;
+
+            const ipContainer = document.getElementById('modal-ip-container');
+            if (!typeInfo.isHost) {
+                ipContainer.classList.add('hidden');
+            } else {
+                ipContainer.classList.remove('hidden');
+            }
+
+            document.getElementById('device-modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            playSound('click');
+            editingDeviceId = null;
+            document.getElementById('device-modal').classList.add('hidden');
+        }
+
+        function saveModalSettings() {
+            if (!editingDeviceId) return;
+            const dev = devices.find(d => d.id === editingDeviceId);
+            if (dev) {
+                dev.name = document.getElementById('modal-input-name').value || dev.name;
+                dev.ip = document.getElementById('modal-input-ip').value || '';
+                playSound('click');
+                render();
+            }
+            closeModal();
+        }
+
+        function deleteDeviceFromModal() {
+            if (!editingDeviceId) return;
+            devices = devices.filter(d => d.id !== editingDeviceId);
+            cables = cables.filter(c => c.from !== editingDeviceId && c.to !== editingDeviceId);
+            playSound('click');
+            render();
+            closeModal();
+        }
+
+        // --- HELP MODAL TOGGLE ---
+        function toggleHelpModal() {
+            playSound('click');
+            const helpEl = document.getElementById('help-modal');
+            helpEl.classList.toggle('hidden');
+        }
+
+        // --- MODE & CHALLENGE SYSTEM ---
+        function switchMode(mode) {
+            playSound('click');
+            currentMode = mode;
+            const btnFree = document.getElementById('btn-mode-free');
+            const btnChallenges = document.getElementById('btn-mode-challenges');
+            const challengePanel = document.getElementById('challenge-panel');
+
+            if (mode === 'free') {
+                btnFree.className = "px-3 py-1.5 rounded-lg font-kids text-sm font-semibold transition-all shadow flex items-center gap-1.5 bg-yellow-400 text-slate-900 hover:bg-yellow-300 ring-2 ring-yellow-300";
+                btnChallenges.className = "px-3 py-1.5 rounded-lg font-kids text-sm font-semibold transition-all bg-white/10 hover:bg-white/20 text-white flex items-center gap-1.5";
+                challengePanel.classList.add('hidden');
+                statusBannerText.innerText = "Slobodan rad! Izradi svoju mrežu iz snova.";
+            } else {
+                btnChallenges.className = "px-3 py-1.5 rounded-lg font-kids text-sm font-semibold transition-all shadow flex items-center gap-1.5 bg-yellow-400 text-slate-900 hover:bg-yellow-300 ring-2 ring-yellow-300";
+                btnFree.className = "px-3 py-1.5 rounded-lg font-kids text-sm font-semibold transition-all bg-white/10 hover:bg-white/20 text-white flex items-center gap-1.5";
+                challengePanel.classList.remove('hidden');
+                loadChallenge(currentChallengeIdx);
+            }
+        }
+
+        function loadChallenge(idx) {
+            currentChallengeIdx = idx;
+            const ch = CHALLENGES[idx];
+            document.getElementById('challenge-badge').innerText = ch.badge;
+            document.getElementById('challenge-title').innerText = ch.title;
+            document.getElementById('challenge-desc').innerText = ch.desc;
+            document.getElementById('btn-next-challenge').classList.add('hidden');
+
+            statusBannerText.innerText = `Misija ${idx + 1}: ${ch.title}`;
+        }
+
+        function checkCurrentChallenge() {
+            const ch = CHALLENGES[currentChallengeIdx];
+            if (ch.checkTriggeredByPing) {
+                statusBannerText.innerHTML = "<span class='text-yellow-300 font-bold'>Odaberi 'Pošalji Pismo (Ping)' i klikni na 2 spojena uređaja!</span>";
+                return;
+            }
+
+            if (ch.check()) {
+                completeChallenge();
+            } else {
+                playSound('error');
+                statusBannerText.innerHTML = "<span class='text-red-400 font-bold'>Još nisi točno spojio sve uređaje. Pokušaj ponovno! 💡</span>";
+            }
+        }
+
+        function completeChallenge() {
+            playSound('success');
+            statusBannerText.innerHTML = "<span class='text-emerald-400 font-bold'>BRAVO! 🎉 Misija je uspješno riješena!</span>";
+            
+            // Render stars
+            const starsContainer = document.getElementById('challenge-stars');
+            starsContainer.innerHTML = `
+                <i class="fa-solid fa-star text-yellow-400 animate-bounce"></i>
+                <i class="fa-solid fa-star text-yellow-400 animate-bounce"></i>
+                <i class="fa-solid fa-star text-yellow-400 animate-bounce"></i>
+            `;
+
+            if (currentChallengeIdx < CHALLENGES.length - 1) {
+                document.getElementById('btn-next-challenge').classList.remove('hidden');
+            }
+        }
+
+        function nextChallenge() {
+            if (currentChallengeIdx < CHALLENGES.length - 1) {
+                clearCanvas();
+                loadChallenge(currentChallengeIdx + 1);
+            }
+        }
+    </script>
+</body>
+</html>
