@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sigurnost u digitalnom svijetu - Kviz za 3. razred</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Inter & Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Fredoka', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            blue: '#4DB6AC',
+                            yellow: '#FFD54F',
+                            orange: '#FF8A65',
+                            purple: '#BA68C8',
+                            green: '#81C784',
+                            bg: '#F0F9FF',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background-color: #e0f2fe;
+            background-image: radial-gradient(#bae6fd 2px, transparent 2px);
+            background-size: 24px 24px;
+        }
+        .btn-bounce {
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        .btn-bounce:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .btn-bounce:active {
+            transform: translateY(1px);
+        }
+        .progress-bar {
+            transition: width 0.3s ease-in-out;
+        }
+        .pulse-subtle {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.85; }
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-800 flex flex-col justify-between p-3 sm:p-6">
+
+    <!-- Zaglavlje -->
+    <header class="max-w-4xl w-full mx-auto bg-white rounded-3xl shadow-lg p-4 sm:p-6 mb-4 flex flex-col sm:flex-row items-center justify-between gap-4 border-4 border-sky-300">
+        <div class="flex items-center gap-3">
+            <div class="bg-amber-400 text-white p-3 rounded-2xl shadow-md text-3xl">
+                💻
+            </div>
+            <div>
+                <h1 class="text-xl sm:text-2xl font-bold text-sky-700 leading-tight">Informatika 3. razred</h1>
+                <p class="text-sm font-semibold text-slate-500">2.4. Opasnosti i neugodnosti u digitalnom svijetu</p>
+            </div>
+        </div>
+        <div id="score-counter" class="bg-emerald-100 text-emerald-800 px-4 py-2 rounded-2xl font-bold text-lg border-2 border-emerald-400 hidden">
+            Bodovi: <span id="current-score">0</span> / 35
+        </div>
+    </header>
+
+    <!-- Glavni Kontejner -->
+    <main class="max-w-4xl w-full mx-auto bg-white rounded-3xl shadow-xl p-5 sm:p-8 border-4 border-sky-200 flex-grow flex flex-col justify-center min-h-[500px] relative overflow-hidden">
+        
+        <!-- POČETNI EKRAN -->
+        <div id="start-screen" class="text-center py-6 space-y-6">
+            <div class="inline-block bg-sky-100 text-sky-800 px-6 py-2 rounded-full font-bold text-sm sm:text-base border-2 border-sky-300">
+                Veliki provjeravajući kviz! 🚀
+            </div>
+            <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-800 leading-snug">
+                Koliko dobro poznaješ pravila u digitalnom svijetu?
+            </h2>
+            <div class="max-w-xl mx-auto text-slate-600 text-base sm:text-lg leading-relaxed bg-amber-50 p-5 rounded-2xl border-2 border-amber-200">
+                <p class="mb-2">📋 Ovaj kviz ima točno <strong>35 pitanja</strong> o dobrim i lošim stranama interneta, elektroničkom nasilju i kako se zaštititi.</p>
+                <p class="text-sm text-slate-500">Pažljivo čitaj svako pitanje i odaberi točan odgovor!</p>
+            </div>
+            <div class="pt-4">
+                <button onclick="startQuiz()" class="btn-bounce bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xl px-10 py-4 rounded-2xl shadow-lg border-b-4 border-emerald-700 flex items-center gap-3 mx-auto">
+                    <span>Započni kviz</span>
+                    <span class="text-2xl">➔</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- EKRAN S PITANJIMA -->
+        <div id="quiz-screen" class="hidden flex flex-col justify-between h-full">
+            <!-- Traka napretka -->
+            <div class="mb-6">
+                <div class="flex justify-between items-center mb-2">
+                    <span id="question-number" class="font-bold text-sky-700 text-base sm:text-lg">Pitanje 1 od 35</span>
+                    <span id="category-badge" class="bg-purple-100 text-purple-700 text-xs sm:text-sm font-semibold px-3 py-1 rounded-full border border-purple-300">
+                        Opće znanje
+                    </span>
+                </div>
+                <div class="w-full bg-slate-200 rounded-full h-4 p-1 border border-slate-300">
+                    <div id="progress-bar" class="bg-amber-400 h-full rounded-full progress-bar" style="width: 3%"></div>
+                </div>
+            </div>
+
+            <!-- Tekst pitanja -->
+            <div class="mb-6 min-h-[90px] flex items-center bg-slate-50 p-4 sm:p-5 rounded-2xl border-2 border-slate-200">
+                <h3 id="question-text" class="text-lg sm:text-xl font-bold text-slate-800 leading-snug">
+                    Učitavanje pitanja...
+                </h3>
+            </div>
+
+            <!-- Opcije (Odgovori) -->
+            <div id="options-container" class="grid grid-cols-1 gap-3 sm:gap-4 mb-6">
+                <!-- Dinamički se generira u JS -->
+            </div>
+
+            <!-- Povratna informacija i Gumb "Dalje" -->
+            <div id="feedback-container" class="hidden p-4 rounded-2xl mb-4 border-2 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div id="feedback-text" class="font-bold text-base sm:text-lg flex items-center gap-2">
+                    <!-- Dinamički feedback -->
+                </div>
+                <button id="next-btn" onclick="nextQuestion()" class="btn-bounce bg-sky-500 hover:bg-sky-600 text-white font-bold text-base px-6 py-3 rounded-xl shadow border-b-4 border-sky-700 whitespace-nowrap">
+                    Sljedeće pitanje ➔
+                </button>
+            </div>
+        </div>
+
+        <!-- EKRAN REZULTATA -->
+        <div id="result-screen" class="hidden text-center py-6 space-y-6">
+            <div id="result-badge" class="text-6xl sm:text-7xl mb-2 animate-bounce">
+                🏆
+            </div>
+            <h2 id="result-title" class="text-3xl sm:text-4xl font-extrabold text-slate-800">
+                Bravo! Završio/la si kviz!
+            </h2>
+            
+            <div class="bg-sky-50 p-6 rounded-3xl border-3 border-sky-200 max-w-md mx-auto space-y-3">
+                <p class="text-slate-600 text-lg">Tvoj ostvareni rezultat je:</p>
+                <div class="text-4xl sm:text-5xl font-extrabold text-sky-600">
+                    <span id="final-score">0</span> <span class="text-2xl text-slate-500">/ 35</span>
+                </div>
+                <p id="percentage-text" class="text-sm font-bold text-slate-500">(0% točnosti)</p>
+            </div>
+
+            <div id="feedback-message" class="bg-amber-50 text-amber-900 p-5 rounded-2xl max-w-md mx-auto text-base font-semibold border-2 border-amber-300">
+                Poruka o postignuću...
+            </div>
+
+            <div class="pt-4 flex flex-col sm:flex-row gap-4 justify-center">
+                <button onclick="restartQuiz()" class="btn-bounce bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-lg px-8 py-3 rounded-2xl shadow-lg border-b-4 border-emerald-700">
+                    Ponovi kviz 🔄
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Podnožje -->
+    <footer class="max-w-4xl w-full mx-auto text-center mt-4 text-xs sm:text-sm text-slate-500 font-semibold">
+        Kviz iz Informatike za 3. razred osnovne škole • Nastavna jedinica: 2.4. Opasnosti i neugodnosti u digitalnom svijetu
+    </footer>
+
+    <!-- JavaScript Logika Kviz-a -->
+    <script>
+        // Baza od točno 35 pitanja temeljenih isključivo na udžbeničkom sadržaju sa slika
+        const questions = [
+            // Dobre strane digitalnog svijeta (1-7)
+            {
+                category: "Dobre strane",
+                question: "Što od navedenog spada u DOBRE strane digitalnog svijeta?",
+                options: [
+                    "Brza komunikacija s velikim brojem ljudi u kratkom vremenu",
+                    "Prijetnje i uvredljive poruke od nepoznatih ljudi",
+                    "Gledanje nasilnog i ružnog sadržaja na internetu",
+                    "Dopuštanje aplikacijama da prate sve tvoje lozinke"
+                ],
+                correct: 0
+            },
+            {
+                category: "Dobre strane",
+                question: "Kako digitalni svijet olakšava učenje učenicima?",
+                options: [
+                    "Uz zabavne i zanimljive sadržaje",
+                    "Tako da netko drugi piše zadaću umjesto njih",
+                    "Tako da ne moramo više nikada čitati knjige",
+                    "Internet ne pomaže pri učenju"
+                ],
+                correct: 0
+            },
+            {
+                category: "Dobre strane",
+                question: "Koje aktivnosti za zabavu i opuštanje omogućuje digitalni svijet?",
+                options: [
+                    "Samo i isključivo pisanje e-mail poruka",
+                    "Igranje igara, slušanje glazbe i gledanje videozapisa",
+                    "Slanje ružnih poruka prijateljima iz razreda",
+                    "Dijeljenje lozinki s nepoznatim osobama"
+                ],
+                correct: 1
+            },
+            {
+                category: "Dobre strane",
+                question: "Točno ili netočno: Jedna od dobrih strana digitalnog svijeta je lako dolaženje do informacija.",
+                options: ["Točno", "Netočno"],
+                correct: 0
+            },
+            {
+                category: "Dobre strane",
+                question: "Digitalni svijet nam omogućuje brzu komunikaciju s puno ljudi u kratkom vremenu.",
+                options: ["Točno", "Netočno"],
+                correct: 0
+            },
+            {
+                category: "Dobre strane",
+                question: "Što od navedenog NIJE dobra strana digitalnog svijeta?",
+                options: [
+                    "Lako dolaženje do informacija",
+                    "Slušanje omiljene glazbe i gledanje videa",
+                    "Pojavljivanje neistinitih informacija i primanje neugodnih poruka",
+                    "Učenje uz zabavne sadržaje"
+                ],
+                correct: 2
+            },
+            {
+                category: "Dobre strane",
+                question: "Zašto učenici vole koristiti edukativne aplikacije u digitalnom svijetu?",
+                options: [
+                    "Jer čine učenje zabavnim i zanimljivim",
+                    "Jer tako mogu skrivati svoje ocjene",
+                    "Jer mogu nagovoriti prijatelje na ružno ponašanje",
+                    "Jer aplikacije same rješavaju sve testove"
+                ],
+                correct: 0
+            },
+
+            // Loše strane i neugodnosti (8-16)
+            {
+                category: "Loše strane",
+                question: "Jesu li svi ljudi u digitalnom svijetu dobronamjerni?",
+                options: [
+                    "Da, svi ljudi na internetu su jako dobri i dobronamjerni",
+                    "Ne, nisu svi ljudi u digitalnom svijetu dobronamjerni",
+                    "Samo odrasli su dobronamjerni, a djeca nisu",
+                    "Svi na internetu su nam stvarni prijatelji"
+                ],
+                correct: 1
+            },
+            {
+                category: "Loše strane",
+                question: "Što mnogi programi i aplikacije često traže prilikom instalacije?",
+                options: [
+                    "Uvid u tvoje fotografije i kontakte te razne dozvole",
+                    "Tvoju ocjenu iz matematike",
+                    "Dozvolu da ti kupe novi računalo",
+                    "Ne traže nikakve dozvole"
+                ],
+                correct: 0
+            },
+            {
+                category: "Loše strane",
+                question: "Zašto trebam paziti ako aplikacijama dopuštam da pamte moje lozinke?",
+                options: [
+                    "Jer netko drugi može lako zloupotrijebiti moje podatke i korisničko ime",
+                    "Jer će mi računalo odmah prestati raditi",
+                    "Jer lozinke trajno nestaju ako ih spremiš",
+                    "Nije potrebno paziti na lozinke"
+                ],
+                correct: 0
+            },
+            {
+                category: "Loše strane",
+                question: "Što često objavljuju pojedini YouTuber-i na svojim kanalima?",
+                options: [
+                    "Uvijek samo edukativne i lijepe sadržaje",
+                    "Često objavljuju i nasilan te ružan sadržaj",
+                    "Samo zadatke iz informatike za 3. razred",
+                    "Ništa, YouTuberi ne objavljuju videe"
+                ],
+                correct: 1
+            },
+            {
+                category: "Loše strane",
+                question: "Što se događa sa sadržajem (fotografijama, porukama) koji objaviš na internetu?",
+                options: [
+                    "Briše se sam od sebe nakon 10 minuta",
+                    "Sve što radiš na internetu ostaje trajno sačuvano",
+                    "Vidi ga samo tvoja učiteljica",
+                    "Sadržaj odmah nestaje zauvijek"
+                ],
+                correct: 1
+            },
+            {
+                category: "Loše strane",
+                question: "Može li netko drugi prisvojiti i predstaviti kao svoj sadržaj koji objaviš na internetu?",
+                options: [
+                    "Da, netko drugi može prisvojiti tvoj objavljeni sadržaj",
+                    "Ne, to je nemoguće na internetu",
+                    "Samo ako mu ti pošalješ pismo",
+                    "To se događa samo odraslima"
+                ],
+                correct: 0
+            },
+            {
+                category: "Loše strane",
+                question: "Zašto ljudi češće neprimjereno govore i ponašaju se na internetu?",
+                options: [
+                    "Zato što misle da su anonimni (skriveni)",
+                    "Zato što im je to u školi domaća zadaća",
+                    "Zato što su tada jako sretni",
+                    "Jer ih računalo na to prisiljava"
+                ],
+                correct: 0
+            },
+            {
+                category: "Loše strane",
+                question: "Jesi li na internetu uvijek 100% siguran/sigurna s kim se stvarno dopisuješ?",
+                options: [
+                    "Da, uvijek točno znam tko je s druge strane ekrana",
+                    "Nikad nisi siguran/sigurna s kim se stvarno dopisuješ",
+                    "Siguran sam ako ta osoba ima lijepu sliku profila",
+                    "Da, jer nepoznate osobe ne mogu slati poruke"
+                ],
+                correct: 1
+            },
+            {
+                category: "Loše strane",
+                question: "Koje se informacije na internetu mogu pojaviti i zavarati nas?",
+                options: [
+                    "Negativne, neistinite informacije i neprimjeren sadržaj",
+                    "Samo točne informacije iz udžbenika",
+                    "Uvijek samo točne vremenske prognoze",
+                    "Niti jedne informacije nisu neistinite"
+                ],
+                correct: 0
+            },
+
+            // Slučaj s Lanom i nepoznatim osobama (17-21)
+            {
+                category: "Priča iz knjige",
+                question: "Zašto je Lana iz priče u udžbeniku bila tužna u učionici?",
+                options: [
+                    "Jer je dobila poruku od prijateljice u kojoj piše da nije pozvana na rođendan",
+                    "Jer je izgubila torbu za informatiku",
+                    "Jer nije znala riješiti zadatak iz matematike",
+                    "Jer joj se pokvario mobitel"
+                ],
+                correct: 0
+            },
+            {
+                category: "Priča iz knjige",
+                question: "Je li lijepo i primjereno slati poruke kojima nekoga namjerno isključujemo i rastužujemo?",
+                options: [
+                    "Ne, to nije lijepo i može povrijediti osobu",
+                    "Da, to je super šala",
+                    "Da, to treba raditi svaki dan",
+                    "Ne smeta ako se to šalje nedjeljom"
+                ],
+                correct: 0
+            },
+            {
+                category: "Priča iz knjige",
+                question: "U stripu iz udžbenika, kamo je Lana krenula kada je srela Luku s loptom?",
+                options: [
+                    "Naći se s novom 'prijateljicom' koju je upoznala na internetu",
+                    "U knjižnicu posuditi novu knjigu",
+                    "Kući učiti informatiku",
+                    "U trgovinu kupiti slatkiše"
+                ],
+                correct: 0
+            },
+            {
+                category: "Priča iz knjige",
+                question: "Smije li se dijete ići samo naći s osobom koju je upoznalo isključivo putem interneta?",
+                options: [
+                    "Ne! Nikada se ne smije ići na susret s nepoznatom osobom s interneta bez odrasle osobe",
+                    "Da, ako je ta osoba rekla da ima iste godine kao i ti",
+                    "Da, ako je susret dogovoren ispred knjižnice",
+                    "Da, ako ti obeća dar"
+                ],
+                correct: 0
+            },
+            {
+                category: "Priča iz knjige",
+                question: "Zašto je Luka u stripu bio iznenađen i zabrinut kad mu je Lana rekla kamo ide?",
+                options: [
+                    "Shvatio je da Lana ide na susret s nepoznatom osobom što je jako opasno",
+                    "Bio je ljut jer nije donijela loptu za igru",
+                    "Iznenadio se jer nije znala gdje je knjižnica",
+                    "Začuđeno je gledao njezinu novu majicu"
+                ],
+                correct: 0
+            },
+
+            // Elektroničko nasilje - Cyberbullying (22-27)
+            {
+                category: "Elektroničko nasilje",
+                question: "Što je to elektroničko nasilje ili cyberbullying?",
+                options: [
+                    "Zajednički naziv za zlostavljanje putem digitalnih medija (interneta, SMS-a, e-pošte, videopoziva)",
+                    "Popravljanje pokvarenog računala u servisu",
+                    "Igranje sportske igre na igralištu",
+                    "Slanje rođendanske čestitke prijatelju"
+                ],
+                correct: 0
+            },
+            {
+                category: "Elektroničko nasilje",
+                question: "Koji je glavni cilj elektroničkog nasilnika?",
+                options: [
+                    "Nekoga poniziti, zadirkivati ili mu prijetiti",
+                    "Pomoći prijatelju oko domaće zadaće",
+                    "Naučiti nekoga kako se igra nova igra",
+                    "Pokloniti nekome novo računalo"
+                ],
+                correct: 0
+            },
+            {
+                category: "Elektroničko nasilje",
+                question: "Što od navedenog spada u tri glavne negativne strane digitalnog svijeta prikazane u udžbeniku?",
+                options: [
+                    "Nasilje, prijevare i prijetnje",
+                    "Igre, učenje i zabava",
+                    "Ocjene, učitelji i škola",
+                    "Crtanje, pjevanje i plesa"
+                ],
+                correct: 0
+            },
+            {
+                category: "Elektroničko nasilje",
+                question: "Putem kojih medija se MOŽE dogoditi elektroničko nasilje?",
+                options: [
+                    "Putem interneta, SMS poruka, e-pošte i videopoziva",
+                    "Samo putem starih novina",
+                    "Samo dok čitaš papirnatu knjigu",
+                    "Elektroničko nasilje ne postoji u digitalnom svijetu"
+                ],
+                correct: 0
+            },
+            {
+                category: "Elektroničko nasilje",
+                question: "Točno ili netočno: Slanje neugodnih poruka i sadržaja koji te mogu povrijediti oblik je elektroničkog nasilja.",
+                options: ["Točno", "Netočno"],
+                correct: 0
+            },
+            {
+                category: "Elektroničko nasilje",
+                question: "Ako je netko prema tebi nasilan na internetu, je li to tvoja krivnja?",
+                options: [
+                    "Nije tvoja krivnja! Nasilnik će snositi posljedice svog ružnog ponašanja",
+                    "Da, ti si kriv/kriva jer koristiš računalo",
+                    "Krivi su svi tvoji prijatelji iz razreda",
+                    "Uvijek je kriv onaj tko primi poruku"
+                ],
+                correct: 0
+            },
+
+            // Što učiniti i prevencija (28-35)
+            {
+                category: "Što učiniti?",
+                question: "Što trebaš učiniti ako ti se dogodi elektroničko nasilje ili ako znaš da se nekome događa?",
+                options: [
+                    "Nemoj šutjeti o tome, reci povjerljivoj odrasloj osobi (roditeljima, učiteljima)",
+                    "Utiši mobitel i nemoj nikome nikada reći",
+                    "Počni i ti slati ružne poruke drugima",
+                    "Izbriši sve aplikacije i sakrij se"
+                ],
+                correct: 0
+            },
+            {
+                category: "Što učiniti?",
+                question: "Kako se trebaš ponijeti ako vidiš da se drugi na internetu nekome rugaju?",
+                options: [
+                    "Nemoj se pridružiti ruganju i omalovažavanju nekoga",
+                    "Pridruži se i piši još ružnije komentare",
+                    "Pošalji taj sadržaj svim ostalim učenicima",
+                    "Smij se i nagradi nasilnika"
+                ],
+                correct: 0
+            },
+            {
+                category: "Što učiniti?",
+                question: "Što trebaš napraviti kada tvoj prijatelj ili prijateljica doživi elektroničko nasilje?",
+                options: [
+                    "Dati podršku prijatelju / prijateljici",
+                    "Prestati se družiti s njima",
+                    "Rugati im se zajedno s drugima",
+                    "Praviti se da se ništa nije dogodilo"
+                ],
+                correct: 0
+            },
+            {
+                category: "Što učiniti?",
+                question: "Kako treba reagirati na uvredljive poruke u digitalnom svijetu?",
+                options: [
+                    "Ne odgovaraj na uvredljive poruke, pokaži ih odrasloj osobi i sačuvaj ih kao dokaz",
+                    "Odmah uzvrati još ružnijom uvredom",
+                    "Uredi poruku i objavi je na forumu",
+                    "Prepiši poruku u bilježnicu pa je obriši"
+                ],
+                correct: 0
+            },
+            {
+                category: "Što učiniti?",
+                question: "Koji je telefonski broj Hrabrog telefona za pomoć i podršku djeci?",
+                options: [
+                    "116 111",
+                    "112",
+                    "94",
+                    "193"
+                ],
+                correct: 0
+            },
+            {
+                category: "Što učiniti?",
+                question: "Koja se mrežna stranica spominje u udžbeniku za prijavu nasilja na internetu?",
+                options: [
+                    "Red button (redbutton.mup.hr)",
+                    "Blue button",
+                    "Google.hr",
+                    "YouTube.com"
+                ],
+                correct: 0
+            },
+            {
+                category: "Što učiniti?",
+                question: "Na koji broj policije također možeš prijaviti opasnosti ili nasilje?",
+                options: [
+                    "192",
+                    "1988",
+                    "100",
+                    "0800 000"
+                ],
+                correct: 0
+            },
+            {
+                category: "Što učiniti?",
+                question: "Tko su 'povjerljive odrasle osobe' kojima se uvijek možeš obratiti za pomoć?",
+                options: [
+                    "Tvoji roditelji, učitelji, školska psihologinja ili pedagoginja",
+                    "Nepoznate osobe iz mrežnih igrica",
+                    "Bilo tko tko ima profil na društvenim mrežama",
+                    "Osobe koje traže tvoju lozinku"
+                ],
+                correct: 0
+            }
+        ];
+
+        // Stanje aplikacije
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let answered = false;
+
+        // Elementi sučelja
+        const startScreen = document.getElementById('start-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const resultScreen = document.getElementById('result-screen');
+        const scoreCounter = document.getElementById('score-counter');
+        const currentScoreEl = document.getElementById('current-score');
+
+        const questionNumberEl = document.getElementById('question-number');
+        const categoryBadgeEl = document.getElementById('category-badge');
+        const progressBar = document.getElementById('progress-bar');
+        const questionTextEl = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const feedbackContainer = document.getElementById('feedback-container');
+        const feedbackText = document.getElementById('feedback-text');
+        const nextBtn = document.getElementById('next-btn');
+
+        // Pokretanje kviza
+        function startQuiz() {
+            startScreen.classList.add('hidden');
+            quizScreen.classList.remove('hidden');
+            scoreCounter.classList.remove('hidden');
+            
+            currentQuestionIndex = 0;
+            score = 0;
+            currentScoreEl.textContent = score;
+
+            loadQuestion();
+        }
+
+        // Učitavanje trenutnog pitanja
+        function loadQuestion() {
+            answered = false;
+            feedbackContainer.classList.add('hidden');
+            
+            const q = questions[currentQuestionIndex];
+
+            // Ažuriraj zaglavlje i napredak
+            questionNumberEl.textContent = `Pitanje ${currentQuestionIndex + 1} od ${questions.length}`;
+            categoryBadgeEl.textContent = q.category;
+            
+            const progressPercent = ((currentQuestionIndex + 1) / questions.length) * 100;
+            progressBar.style.width = `${progressPercent}%`;
+
+            // Ažuriraj tekst pitanja
+            questionTextEl.textContent = q.question;
+
+            // Očisti i generiraj opcije
+            optionsContainer.innerHTML = '';
+
+            // Pomiješaj opcije kako ne bi uvik prvi bio točan (zadržavajući indekse)
+            let optionsWithIndex = q.options.map((opt, idx) => ({ text: opt, originalIndex: idx }));
+            // Šaflovanje odgovora za zanimljivost
+            optionsWithIndex.sort(() => Math.random() - 0.5);
+
+            optionsWithIndex.forEach((item) => {
+                const btn = document.createElement('button');
+                btn.className = `btn-bounce w-full text-left p-4 rounded-2xl border-2 border-slate-200 bg-white hover:bg-sky-50 hover:border-sky-300 font-medium text-base sm:text-lg text-slate-700 transition flex items-center justify-between group`;
+                btn.innerHTML = `
+                    <span>${item.text}</span>
+                    <span class="w-6 h-6 rounded-full border-2 border-slate-300 group-hover:border-sky-400 flex items-center justify-center text-xs font-bold text-transparent group-hover:text-sky-400">✓</span>
+                `;
+                btn.onclick = () => selectAnswer(item.originalIndex, btn);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        // Odabir odgovora
+        function selectAnswer(selectedIndex, selectedBtn) {
+            if (answered) return;
+            answered = true;
+
+            const q = questions[currentQuestionIndex];
+            const isCorrect = selectedIndex === q.correct;
+
+            // Onemogući sve gumbe i označi točan/netočan
+            const buttons = optionsContainer.querySelectorAll('button');
+            buttons.forEach(btn => {
+                btn.disabled = true;
+                btn.classList.remove('btn-bounce', 'hover:bg-sky-50', 'hover:border-sky-300');
+            });
+
+            if (isCorrect) {
+                score++;
+                currentScoreEl.textContent = score;
+                selectedBtn.classList.remove('bg-white', 'border-slate-200');
+                selectedBtn.classList.add('bg-emerald-100', 'border-emerald-500', 'text-emerald-900', 'font-bold');
+                
+                feedbackContainer.className = "p-4 rounded-2xl mb-4 border-2 bg-emerald-50 border-emerald-300 text-emerald-800 flex flex-col sm:flex-row items-center justify-between gap-4";
+                feedbackText.innerHTML = `<span>🎉 Točno! Odlično poznaješ ovo pravilo!</span>`;
+            } else {
+                selectedBtn.classList.remove('bg-white', 'border-slate-200');
+                selectedBtn.classList.add('bg-rose-100', 'border-rose-400', 'text-rose-900');
+                
+                feedbackContainer.className = "p-4 rounded-2xl mb-4 border-2 bg-rose-50 border-rose-300 text-rose-800 flex flex-col sm:flex-row items-center justify-between gap-4";
+                feedbackText.innerHTML = `<span>❌ Netočno. Zapamti ovo važno pravilo za sigurnost!</span>`;
+            }
+
+            // Prikaži povratnu informaciju i gumb za dalje
+            feedbackContainer.classList.remove('hidden');
+
+            if (currentQuestionIndex === questions.length - 1) {
+                nextBtn.textContent = "Pogledaj rezultat 🏁";
+            } else {
+                nextBtn.textContent = "Sljedeće pitanje ➔";
+            }
+        }
+
+        // Sljedeće pitanje ili završetak
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < questions.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        // Prikaz završnog rezultata
+        function showResults() {
+            quizScreen.classList.add('hidden');
+            resultScreen.classList.remove('hidden');
+
+            const finalScoreEl = document.getElementById('final-score');
+            const percentageText = document.getElementById('percentage-text');
+            const resultBadge = document.getElementById('result-badge');
+            const resultTitle = document.getElementById('result-title');
+            const feedbackMessage = document.getElementById('feedback-message');
+
+            finalScoreEl.textContent = score;
+            const percentage = Math.round((score / questions.length) * 100);
+            percentageText.textContent = `(${percentage}% točnosti)`;
+
+            if (percentage === 100) {
+                resultBadge.textContent = '🏆🥇';
+                resultTitle.textContent = 'Savršeno! Ti si Pravi Digitalni Stručnjak!';
+                feedbackMessage.textContent = 'Čestitamo! Odgovorio/la si točno na svih 35 pitanja. Znaš sve o dobrim i lošim stranama interneta i kako se sigurno ponašati!';
+            } else if (percentage >= 80) {
+                resultBadge.textContent = '🌟🥈';
+                resultTitle.textContent = 'Izvrstan rezultat!';
+                feedbackMessage.textContent = 'Bravo! Imaš odlično znanje o sigurnosti u digitalnom svijetu. Samo tako nastavi!';
+            } else if (percentage >= 50) {
+                resultBadge.textContent = '👍🥉';
+                resultTitle.textContent = 'Dobar posao!';
+                feedbackMessage.textContent = 'Dobro vladaš osnovnim pravilima, ali ponovi još malo dijelove o elektroničkom nasilju i zaštiti podataka.';
+            } else {
+                resultBadge.textContent = '📚💡';
+                resultTitle.textContent = 'Potrebno je još malo vježbe!';
+                feedbackMessage.textContent = 'Prelistaj još jednom udžbenik i nauči kako se zaštititi na internetu, pa pokušaj ponovno!';
+            }
+        }
+
+        // Ponovno pokretanje kviza
+        function restartQuiz() {
+            resultScreen.classList.add('hidden');
+            startQuiz();
+        }
+    </script>
+</body>
+</html>
