@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Informatika za 2. Razred - Mrežni Preglednici i Web Stranice</title>
+  <!-- Google Font Nunito s hrvatskim dijakritičkim znakovima -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Canvas Confetti knjižnica za slavlje na kraju -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Nunito', 'sans-serif'],
+          },
+          colors: {
+            skolaYellow: '#FFD166',
+            skolaGreen: '#06D6A0',
+            skolaBlue: '#118AB2',
+            skolaRed: '#EF476F',
+            skolaPurple: '#073B4C',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Nunito', sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .btn-bounce {
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+    }
+    .btn-bounce:active {
+      transform: scale(0.96);
+    }
+    .glow-success {
+      box-shadow: 0 0 20px #06D6A0;
+    }
+    .glow-error {
+      box-shadow: 0 0 20px #EF476F;
+    }
+    /* SVG Bojanka stilovi */
+    .paint-part {
+      cursor: pointer;
+      transition: fill 0.2s ease, stroke 0.2s ease;
+    }
+    .paint-part:hover {
+      filter: brightness(0.9);
+      stroke: #333;
+      stroke-width: 3px;
+    }
+    .color-swatch {
+      transition: transform 0.2s ease;
+    }
+    .color-swatch.selected {
+      transform: scale(1.25);
+      border-width: 4px;
+      border-color: #000;
+    }
+  </style>
+</head>
+<body class="bg-amber-50 min-h-screen text-slate-800 flex flex-col justify-between p-2 sm:p-4 md:p-6">
+
+  <!-- GLAVNI SPREMNIK -->
+  <div class="max-w-4xl mx-auto w-full bg-white rounded-3xl shadow-xl border-4 border-yellow-300 overflow-hidden my-auto my-2 flex flex-col">
+    
+    <!-- ZAGLAVLJE KVIZA -->
+    <header class="bg-gradient-to-r from-yellow-300 via-amber-300 to-orange-300 p-4 sm:p-6 text-center relative border-b-4 border-yellow-400">
+      <div class="flex justify-between items-center max-w-3xl mx-auto">
+        <div class="flex items-center gap-2">
+          <span class="text-3xl sm:text-4xl">💻</span>
+          <span class="font-extrabold text-lg sm:text-xl text-amber-900 tracking-wide uppercase hidden sm:inline">Informatika 2. razred</span>
+        </div>
+        <h1 class="text-xl sm:text-2xl md:text-3xl font-black text-amber-950 tracking-tight">
+          Mrežni preglednici & Web
+        </h1>
+        <div id="sound-toggle" onclick="toggleAudio()" class="cursor-pointer bg-white/80 p-2 sm:p-3 rounded-full text-xl shadow-md hover:bg-white transition-all" title="Zvuk">
+          🔊
+        </div>
+      </div>
+
+      <!-- Traka napretka (Progress Bar) -->
+      <div id="progress-container" class="mt-4 max-w-xl mx-auto hidden">
+        <div class="flex justify-between text-xs sm:text-sm font-bold text-amber-900 mb-1">
+          <span id="progress-text">Pitanje 1 od 20</span>
+          <span id="score-text">Bodovi: 0 ⭐</span>
+        </div>
+        <div class="w-full bg-amber-200/80 rounded-full h-4 p-0.5 border-2 border-amber-400">
+          <div id="progress-bar" class="bg-gradient-to-r from-teal-400 to-emerald-500 h-full rounded-full transition-all duration-300" style="width: 5%"></div>
+        </div>
+      </div>
+    </header>
+
+    <!-- POČETNI EKRAN -->
+    <main id="start-screen" class="p-6 sm:p-10 text-center flex-1 flex flex-col items-center justify-center">
+      <div class="text-6xl sm:text-7xl mb-4 animate-bounce">🌐</div>
+      <h2 class="text-2xl sm:text-4xl font-black text-slate-800 mb-3">
+        Dobrodošli u kviz iz Informatike!
+      </h2>
+      <p class="text-base sm:text-xl text-slate-600 max-w-lg mb-8 font-semibold">
+        Naučimo sve o mrežnim preglednicima, web-stranicama, internet adresama i gumbima! Čeka te 20 zabavnih pitanja, igrica spajanja i bojanja! 🎨✨
+      </p>
+
+      <div class="bg-amber-100 border-2 border-amber-300 rounded-2xl p-4 mb-8 max-w-md w-full text-left font-bold text-slate-700 text-sm sm:text-base">
+        <p class="text-center text-amber-900 mb-2">💡 Što te sve čeka u kvizu?</p>
+        <ul class="space-y-1.5">
+          <li class="flex items-center gap-2">✅ Pitanja s ponuđenim odgovorima</li>
+          <li class="flex items-center gap-2">🧩 Igra spajanja sličica i naziva preglednika</li>
+          <li class="flex items-center gap-2">🎨 Igra bojanja Google Chrome ikone</li>
+          <li class="flex items-center gap-2">⭐ Zvjezdice i bodovi za točne odgovore</li>
+        </ul>
+      </div>
+
+      <button onclick="startQuiz()" class="btn-bounce bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xl sm:text-2xl px-10 py-5 rounded-2xl shadow-lg hover:shadow-xl border-b-4 border-emerald-700 transform hover:-translate-y-1 transition-all">
+        ZAPOČNI KVIZ 🚀
+      </button>
+    </main>
+
+    <!-- EKRAN S PITANJIMA -->
+    <main id="quiz-screen" class="p-4 sm:p-8 flex-1 flex flex-col justify-between hidden">
+      <!-- Pitanje & Slika/Zadatak -->
+      <div class="max-w-3xl mx-auto w-full">
+        <!-- Naslov Pitanja -->
+        <div class="bg-sky-50 border-2 border-sky-200 rounded-2xl p-4 sm:p-6 mb-4 text-center shadow-sm">
+          <span id="question-category" class="inline-block bg-sky-200 text-sky-800 text-xs sm:text-sm font-bold px-3 py-1 rounded-full mb-2">Znanje</span>
+          <h2 id="question-text" class="text-lg sm:text-2xl font-bold text-slate-800">
+            Tekst pitanja...
+          </h2>
+        </div>
+
+        <!-- Vizualni sadržaj ili Interaktivni Dio -->
+        <div id="media-container" class="mb-6 flex justify-center items-center min-h-[140px]">
+          <!-- Ovdje se dinamički umeću npr. SVG-ovi, slike ili interaktivni elementi -->
+        </div>
+
+        <!-- Opcije Odgovora / Sadržaj Zadatka -->
+        <div id="options-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 max-w-2xl mx-auto">
+          <!-- Gumbi za odgovore generiraju se JS-om -->
+        </div>
+      </div>
+
+      <!-- Povratna Poruka nakon odgovora -->
+      <div id="feedback-message" class="text-center font-extrabold text-lg sm:text-xl h-10 mt-4 flex items-center justify-center">
+        <!-- Npr. "Bravo! Točno! 🎉" -->
+      </div>
+    </main>
+
+    <!-- EKRAN REZULTATA -->
+    <main id="result-screen" class="p-6 sm:p-10 text-center flex-1 flex flex-col items-center justify-center hidden">
+      <div id="result-badge" class="text-7xl sm:text-8xl mb-4">🏆</div>
+      <h2 id="result-title" class="text-2xl sm:text-4xl font-black text-slate-800 mb-2">
+        Čestitamo! Završio si kviz!
+      </h2>
+      <p id="result-subtitle" class="text-base sm:text-xl text-slate-600 font-bold mb-6">
+        Pravi si Mali Informatičar! ⭐
+      </p>
+
+      <!-- Rezultat Prikaz -->
+      <div class="bg-gradient-to-br from-amber-100 to-yellow-100 border-4 border-amber-300 rounded-3xl p-6 mb-8 max-w-sm w-full shadow-inner">
+        <p class="text-slate-600 font-bold text-sm uppercase tracking-wider mb-1">Tvoj rezultat</p>
+        <div id="final-score" class="text-4xl sm:text-5xl font-black text-amber-600 mb-2">
+          18 / 20
+        </div>
+        <p id="final-percentage" class="text-lg font-bold text-emerald-600">
+          Točnost: 90%
+        </p>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-4">
+        <button onclick="restartQuiz()" class="btn-bounce bg-sky-500 hover:bg-sky-600 text-white font-black text-lg sm:text-xl px-8 py-4 rounded-2xl shadow-lg border-b-4 border-sky-700">
+          Igraj Ponovno 🔄
+        </button>
+      </div>
+    </main>
+
+    <!-- PODNOŽJE -->
+    <footer class="bg-slate-100 p-3 text-center border-t border-slate-200 text-xs sm:text-sm font-semibold text-slate-500">
+      Ovo je prilagođeno gradivu 2. razreda osnovne škole | Mrežni preglednici, Web adrese i Poveznice 💻
+    </footer>
+  </div>
+
+  <!-- JAVASCRIPT LOGIKA -->
+  <script>
+    /* ========================================================
+       ZVUČNI EFEKTI (Web Audio API - Ne zahtijeva datoteke)
+       ======================================================== */
+    let audioEnabled = true;
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new AudioContext();
+      }
+    }
+
+    function toggleAudio() {
+      audioEnabled = !audioEnabled;
+      const toggleBtn = document.getElementById('sound-toggle');
+      toggleBtn.innerText = audioEnabled ? '🔊' : '🔇';
+    }
+
+    function playSound(type) {
+      if (!audioEnabled) return;
+      initAudio();
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      if (type === 'correct') {
+        // Veseli uzlazni ton
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(440, now); // A4
+        osc.frequency.exponentialRampToValueAtTime(880, now + 0.2); // A5
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+        osc.start(now);
+        osc.stop(now + 0.3);
+      } else if (type === 'wrong') {
+        // Blagi niski ton
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(220, now);
+        osc.frequency.exponentialRampToValueAtTime(130, now + 0.25);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+        osc.start(now);
+        osc.stop(now + 0.25);
+      } else if (type === 'click') {
+        // Kratki klik
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(600, now);
+        gain.gain.setValueAtTime(0.1, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+        osc.start(now);
+        osc.stop(now + 0.05);
+      } else if (type === 'fanfare') {
+        // Slavljenička melodija na kraju
+        const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+        notes.forEach((freq, idx) => {
+          const noteOsc = audioCtx.createOscillator();
+          const noteGain = audioCtx.createGain();
+          noteOsc.connect(noteGain);
+          noteGain.connect(audioCtx.destination);
+          
+          noteOsc.type = 'triangle';
+          noteOsc.frequency.setValueAtTime(freq, now + idx * 0.12);
+          noteGain.gain.setValueAtTime(0.2, now + idx * 0.12);
+          noteGain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.12 + 0.3);
+          
+          noteOsc.start(now + idx * 0.12);
+          noteOsc.stop(now + idx * 0.12 + 0.3);
+        });
+      }
+    }
+
+    /* ========================================================
+       SVG VIKTONSKE IKONE (Izrađene SVG-om bez vanjskih slika)
+       ======================================================== */
+    const SVG_ICONS = {
+      chrome: `
+        <svg class="w-16 h-16 sm:w-20 sm:h-20" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="45" fill="#4285F4"/>
+          <path d="M50 5 A45 45 0 0 1 88.97 27.5 L50 50 Z" fill="#EA4335"/>
+          <path d="M88.97 27.5 A45 45 0 0 1 50 95 L50 50 Z" fill="#FBBC05"/>
+          <path d="M50 95 A45 45 0 0 1 11.03 27.5 L50 50 Z" fill="#34A853"/>
+          <circle cx="50" cy="50" r="22" fill="#FFFFFF"/>
+          <circle cx="50" cy="50" r="18" fill="#1A73E8"/>
+        </svg>`,
+      firefox: `
+        <svg class="w-16 h-16 sm:w-20 sm:h-20" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="45" fill="#FF7139"/>
+          <path d="M 20,50 Q 50,10 80,30 Q 90,60 70,80 Q 30,95 20,50 Z" fill="#FF9400"/>
+          <circle cx="50" cy="50" r="25" fill="#20123A"/>
+          <circle cx="50" cy="50" r="20" fill="#0060DF"/>
+        </svg>`,
+      edge: `
+        <svg class="w-16 h-16 sm:w-20 sm:h-20" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="45" fill="#0078D4"/>
+          <path d="M20,60 C20,20 80,20 80,50 C80,75 40,85 25,70 C15,60 30,40 60,40" stroke="#00C800" stroke-width="12" fill="none" stroke-linecap="round"/>
+        </svg>`,
+      safari: `
+        <svg class="w-16 h-16 sm:w-20 sm:h-20" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="45" fill="#006CFF"/>
+          <circle cx="50" cy="50" r="38" fill="none" stroke="#FFFFFF" stroke-width="3"/>
+          <polygon points="50,15 60,50 50,85 40,50" fill="#FF3B30"/>
+          <polygon points="50,15 50,85 40,50" fill="#FFFFFF"/>
+        </svg>`,
+      opera: `
+        <svg class="w-16 h-16 sm:w-20 sm:h-20" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="45" fill="#FF1B2D"/>
+          <ellipse cx="50" cy="50" rx="20" ry="32" fill="#FFFFFF"/>
+        </svg>`,
+      cursorHand: `
+        <svg class="w-16 h-16 text-amber-500 animate-pulse" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M9 11.24V7.5C9 6.12 10.12 5 11.5 5S14 6.12 14 7.5v3.74c1.21-.81 2-2.18 2-3.74 0-2.48-2.02-4.5-4.5-4.5S7 5.02 7 7.5c0 1.56.79 2.93 2 3.74zM18.5 10h-1.25v1.25c0 3.17-2.58 5.75-5.75 5.75S5.75 14.42 5.75 11.25V10H4.5C3.67 10 3 10.67 3 11.5c0 4.08 3.05 7.44 7 7.93V22h4v-2.57c3.95-.49 7-3.85 7-7.93 0-.83-.67-1.5-1.5-1.5z"/>
+        </svg>`,
+      browserWindow: `
+        <div class="w-full max-w-md bg-slate-800 rounded-lg overflow-hidden border-2 border-slate-600 shadow-md text-left">
+          <div class="bg-slate-700 px-3 py-2 flex items-center justify-between">
+            <div class="flex items-center gap-1.5">
+              <span class="w-3 h-3 bg-red-500 rounded-full inline-block"></span>
+              <span class="w-3 h-3 bg-yellow-500 rounded-full inline-block"></span>
+              <span class="w-3 h-3 bg-green-500 rounded-full inline-block"></span>
+            </div>
+            <div class="bg-slate-900 text-slate-300 text-xs px-3 py-1 rounded-md flex-1 mx-3 truncate font-mono">
+              https://lektire.skole.hr/
+            </div>
+            <span class="text-white text-xs font-bold px-1 bg-red-600 rounded cursor-pointer">X</span>
+          </div>
+        </div>`
+    };
+
+    /* ========================================================
+       BAZA 20 PITANJA S RAZLIČITIM TIPOVIMA ZADATAKA
+       ======================================================== */
+    const questions = [
+      // 1. Osnovni pojam mrežnog preglednika
+      {
+        type: 'choice',
+        category: 'Osnove',
+        question: 'Čemu nam služi mrežni preglednik?',
+        options: [
+          { text: 'Za pregledavanje i otvaranje web-stranica na internetu 🌐', correct: true },
+          { text: 'Za crtanje slika na papiru 🎨', correct: false },
+          { text: 'Za gašenje računala 🔌', correct: false }
+        ]
+      },
+      // 2. Prepoznavanje ikona preglednika
+      {
+        type: 'choice',
+        category: 'Preglednici',
+        question: 'Koji je ovo poznati mrežni preglednik?',
+        media: SVG_ICONS.chrome,
+        options: [
+          { text: 'Google Chrome', correct: true },
+          { text: 'Mozilla Firefox', correct: false },
+          { text: 'Microsoft Edge', correct: false }
+        ]
+      },
+      // 3. Pokretanje preglednika
+      {
+        type: 'choice',
+        category: 'Pokretanje',
+        question: 'Kako pokrećemo mrežni preglednik na računalu pomoću miša?',
+        options: [
+          { text: 'Dvostrukim brzim klikom na njegovu ikonu 🖱️🖱️', correct: true },
+          { text: 'Samo jednim dodirivanjem tipkovnice ⌨️', correct: false },
+          { text: 'Preglednik se sam pokrene čim upalimo svjetlo 💡', correct: false }
+        ]
+      },
+      // 4. Pokretanje na tabletu / mobitelu
+      {
+        type: 'choice',
+        category: 'Pokretanje',
+        question: 'Kako otvaramo mrežni preglednik na tabletu ili pametnom telefonu?',
+        options: [
+          { text: 'Pritiskom prsta na njegovu ikonu na zaslonu 📱', correct: true },
+          { text: 'Mahanjem ruci iznad zaslona 🖐️', correct: false },
+          { text: 'Govorenjem "Otvori se!" 🗣️', correct: false }
+        ]
+      },
+      // 5. Prepoznavanje Firefoxa
+      {
+        type: 'choice',
+        category: 'Preglednici',
+        question: 'Prepoznaješ li ovaj mrežni preglednik s vatrenom lisicom?',
+        media: SVG_ICONS.firefox,
+        options: [
+          { text: 'Mozilla Firefox 🦊', correct: true },
+          { text: 'Apple Safari 🧭', correct: false },
+          { text: 'Google Chrome 🟡', correct: false }
+        ]
+      },
+      // 6. Web adresa (URL)
+      {
+        type: 'choice',
+        category: 'Web adresa',
+        question: 'Što je "https://zoo.hr"?',
+        options: [
+          { text: 'Mrežna adresa Zoološkog vrta u Zagrebu 🦁', correct: true },
+          { text: 'Ime računalne igrice 🎮', correct: false },
+          { text: 'Broj telefona učiteljice 📞', correct: false }
+        ]
+      },
+      // 7. Kako tražimo web stranicu
+      {
+        type: 'choice',
+        category: 'Pretraživanje',
+        question: 'Nakon što u adresnu traku upišemo mrežnu adresu, koju tipku pritisnemo na tipkovnici?',
+        options: [
+          { text: 'Tipku Enter ↵', correct: true },
+          { text: 'Tipku Space (razmaknica)', correct: false },
+          { text: 'Tipku Caps Lock', correct: false }
+        ]
+      },
+      // 8. INTERAKTIVNA IGRA - Spajanje preglednika
+      {
+        type: 'matching',
+        category: 'Spajanje parova',
+        question: 'Spoji naziv mrežnog preglednika s njegovom odgovarajućom ikonom!',
+        pairs: [
+          { name: 'Google Chrome', icon: SVG_ICONS.chrome, id: 'chrome' },
+          { name: 'Mozilla Firefox', icon: SVG_ICONS.firefox, id: 'firefox' },
+          { name: 'Microsoft Edge', icon: SVG_ICONS.edge, id: 'edge' },
+          { name: 'Apple Safari', icon: SVG_ICONS.safari, id: 'safari' }
+        ]
+      },
+      // 9. Poveznica / Link
+      {
+        type: 'choice',
+        category: 'Poveznice',
+        question: 'Što je POVEZNICA (ili link) na mrežnoj stranici?',
+        options: [
+          { text: 'Dio stranice na koji kliknemo i on nas odvede na novu stranicu 🔗', correct: true },
+          { text: 'Kabel koji spaja računalo u struju 🔌', correct: false },
+          { text: 'Tipka za brisanje slova ⌫', correct: false }
+        ]
+      },
+      // 10. Pokazivač miša iznad poveznice
+      {
+        type: 'choice',
+        category: 'Poveznice',
+        question: 'U što se pretvori pokazivač miša kada dođemo iznad poveznice (linka)?',
+        media: SVG_ICONS.cursorHand,
+        options: [
+          { text: 'U malenu ruku s ispruženim kažiprstom 👆', correct: true },
+          { text: 'U crveni krug ⭕', correct: false },
+          { text: 'U sliku pješčanog sata ⏳', correct: false }
+        ]
+      },
+      // 11. Zatvaranje mrežnog preglednika
+      {
+        type: 'choice',
+        category: 'Dijelovi preglednika',
+        question: 'Koji gumb u gornjem kutu kliknemo kada želimo ZATVORITI mrežni preglednik?',
+        options: [
+          { text: 'Gumb s crvenim ili sivim slovom "X" ✖️', correct: true },
+          { text: 'Gumb sa slovom "A"', correct: false },
+          { text: 'Gumb sa strelicom prema gore ⬆️', correct: false }
+        ]
+      },
+      // 12. Gumb Natrag
+      {
+        type: 'choice',
+        category: 'Navigacija',
+        question: 'Čemu služi gumb sa strelicom ulijevo (Natrag ⬅️) u pregledniku?',
+        options: [
+          { text: 'Vraća nas na prethodnu stranicu koju smo gledali 🔙', correct: true },
+          { text: 'Briše sve s računala 🗑️', correct: false },
+          { text: 'Isključuje zvuke u igrici 🔇', correct: false }
+        ]
+      },
+      // 13. INTERAKTIVNI ZADATAK BOJANJA LOGO-A
+      {
+        type: 'coloring',
+        category: 'Kreativni zadatak',
+        question: 'Oboji ikonu Google Chrome preglednika točnim bojama! (Gore: Crvena, Desno: Žuta, Dolje: Zelena, Sredina: Plava)'
+      },
+      // 14. e-Lektira web adresa
+      {
+        type: 'choice',
+        category: 'Web adrese',
+        question: 'Koja je mrežna adresa za čitanje e-Lektira za školu?',
+        options: [
+          { text: 'https://lektire.skole.hr/ 📚', correct: true },
+          { text: 'https://igrice.hr/ 🎮', correct: false },
+          { text: 'https://youtube.com/ 📺', correct: false }
+        ]
+      },
+      // 15. Točno / Netočno: Safari
+      {
+        type: 'tf',
+        category: 'Točno / Netočno',
+        question: 'Apple Safari, Opera i Microsoft Edge su također mrežni preglednici.',
+        correct: true
+      },
+      // 16. Točno / Netočno: Web stranice
+      {
+        type: 'tf',
+        category: 'Točno / Netočno',
+        question: 'Sve mrežne stranice na internetu imaju potpuno istu web-adresu.',
+        correct: false
+      },
+      // 17. Dijelovi web stranice
+      {
+        type: 'choice',
+        category: 'Sadržaj',
+        question: 'Što se sve može nalaziti na jednoj mrežnoj stranici?',
+        options: [
+          { text: 'Tekst, slike, video zapisi i poveznice 🖼️📝🎥', correct: true },
+          { text: 'Samo crno-bijela slova bez slika 📄', correct: false },
+          { text: 'Prave drvene igračke 🧸', correct: false }
+        ]
+      },
+      // 18. Prepoznavanje preglednika Edge
+      {
+        type: 'choice',
+        category: 'Preglednici',
+        question: 'Koji je ovo preglednik s plavo-zelenim valom?',
+        media: SVG_ICONS.edge,
+        options: [
+          { text: 'Microsoft Edge', correct: true },
+          { text: 'Google Chrome', correct: false },
+          { text: 'Mozilla Firefox', correct: false }
+        ]
+      },
+      // 19. Sigurnost na internetu
+      {
+        type: 'choice',
+        category: 'Sigurnost',
+        question: 'Ako na internetu naiđeš na nešto neobično ili ružno, kome se trebaš obratiti?',
+        options: [
+          { text: 'Roditeljima, učitelju ili učiteljici 👨‍👩‍👧‍👦🧑‍🏫', correct: true },
+          { text: 'Nikome, prešutjet ću 🤐', correct: false },
+          { text: 'Prijatelju iz vrtića 👶', correct: false }
+        ]
+      },
+      // 20. Završna ponoviti
+      {
+        type: 'choice',
+        category: 'Zaključak',
+        question: 'Nakon što upišemo mrežnu adresu "https://zoo.hr" u mrežni preglednik, što ćemo vidjeti?',
+        options: [
+          { text: 'Mrežnu stranicu Zoološkog vrta grada Zagreba 🐘', correct: true },
+          { text: 'Katalog trgovine cipelama 👟', correct: false },
+          { text: 'Prazan bijeli papir bez išta 📄', correct: false }
+        ]
+      }
+    ];
+
+    /* ========================================================
+       STANJE KVIZA (State Variables)
+       ======================================================== */
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let canAnswer = true;
+
+    // Za spajanje parova
+    let selectedName = null;
+    let matchedPairsCount = 0;
+
+    // Za bojanje logoa
+    let activePaintColor = '#EA4335'; // Početna crvena
+    let userColors = { top: '#CCCCCC', right: '#CCCCCC', bottom: '#CCCCCC', center: '#CCCCCC' };
+
+    /* ========================================================
+       POKRETANJE I UPRAVLJANJE KVIZOM
+       ======================================================== */
+    function startQuiz() {
+      playSound('click');
+      document.getElementById('start-screen').classList.add('hidden');
+      document.getElementById('result-screen').classList.add('hidden');
+      document.getElementById('quiz-screen').classList.remove('hidden');
+      document.getElementById('progress-container').classList.remove('hidden');
+
+      currentQuestionIndex = 0;
+      score = 0;
+      updateScoreUI();
+      loadQuestion();
+    }
+
+    function updateScoreUI() {
+      document.getElementById('score-text').innerText = `Bodovi: ${score} ⭐`;
+      const progressPercent = ((currentQuestionIndex + 1) / questions.length) * 100;
+      document.getElementById('progress-bar').style.width = `${progressPercent}%`;
+      document.getElementById('progress-text').innerText = `Pitanje ${currentQuestionIndex + 1} od ${questions.length}`;
+    }
+
+    function loadQuestion() {
+      canAnswer = true;
+      document.getElementById('feedback-message').innerText = '';
+      updateScoreUI();
+
+      const q = questions[currentQuestionIndex];
+      document.getElementById('question-category').innerText = q.category;
+      document.getElementById('question-text').innerText = q.question;
+
+      const mediaBox = document.getElementById('media-container');
+      const optionsBox = document.getElementById('options-container');
+
+      mediaBox.innerHTML = '';
+      optionsBox.innerHTML = '';
+
+      // Postavi medij ako postoji
+      if (q.media) {
+        mediaBox.innerHTML = `<div class="p-4 bg-amber-100/50 rounded-2xl border-2 border-amber-200">${q.media}</div>`;
+      }
+
+      // Ovisno o tipu pitanja
+      if (q.type === 'choice') {
+        optionsBox.className = "grid grid-cols-1 gap-3 max-w-xl mx-auto w-full";
+        q.options.forEach((opt) => {
+          const btn = document.createElement('button');
+          btn.className = "btn-bounce w-full bg-white hover:bg-amber-100 text-slate-800 font-bold p-4 rounded-2xl border-2 border-amber-300 shadow-md text-left text-base sm:text-lg transition-all flex items-center justify-between";
+          btn.innerHTML = `<span>${opt.text}</span> <span class="text-xl">👉</span>`;
+          btn.onclick = () => handleChoiceAnswer(btn, opt.correct);
+          optionsBox.appendChild(btn);
+        });
+      } else if (q.type === 'tf') {
+        optionsBox.className = "grid grid-cols-2 gap-4 max-w-md mx-auto w-full";
+        
+        const btnTrue = document.createElement('button');
+        btnTrue.className = "btn-bounce bg-emerald-500 hover:bg-emerald-600 text-white font-black p-5 rounded-2xl border-b-4 border-emerald-700 text-xl shadow-lg";
+        btnTrue.innerText = "TOČNO 👍";
+        btnTrue.onclick = () => handleChoiceAnswer(btnTrue, q.correct === true);
+
+        const btnFalse = document.createElement('button');
+        btnFalse.className = "btn-bounce bg-rose-500 hover:bg-rose-600 text-white font-black p-5 rounded-2xl border-b-4 border-rose-700 text-xl shadow-lg";
+        btnFalse.innerText = "NETOČNO 👎";
+        btnFalse.onclick = () => handleChoiceAnswer(btnFalse, q.correct === false);
+
+        optionsBox.appendChild(btnTrue);
+        optionsBox.appendChild(btnFalse);
+      } else if (q.type === 'matching') {
+        renderMatchingTask(q);
+      } else if (q.type === 'coloring') {
+        renderColoringTask(q);
+      }
+    }
+
+    /* ========================================================
+       RUKOVANJE ODGOVORIMA (Višestruki izbor i Točno/Netočno)
+       ======================================================== */
+    function handleChoiceAnswer(button, isCorrect) {
+      if (!canAnswer) return;
+      canAnswer = false;
+
+      const feedback = document.getElementById('feedback-message');
+
+      if (isCorrect) {
+        score++;
+        playSound('correct');
+        button.classList.add('bg-emerald-200', 'border-emerald-500', 'glow-success');
+        feedback.innerHTML = '<span class="text-emerald-600">Bravo! Odgovor je točan! 🎉⭐</span>';
+      } else {
+        playSound('wrong');
+        button.classList.add('bg-rose-200', 'border-rose-500', 'glow-error');
+        feedback.innerHTML = '<span class="text-rose-600">Ojoj, to nije točno! Idemo dalje! 💪</span>';
+      }
+
+      updateScoreUI();
+
+      setTimeout(() => {
+        nextQuestion();
+      }, 1600);
+    }
+
+    /* ========================================================
+       INTERAKTIVNI ZADATAK - SPAJANJE PAROVA
+       ======================================================== */
+    function renderMatchingTask(q) {
+      selectedName = null;
+      matchedPairsCount = 0;
+
+      const optionsBox = document.getElementById('options-container');
+      optionsBox.className = "w-full max-w-2xl mx-auto";
+
+      let html = `
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <!-- Nazivi -->
+          <div class="flex flex-col gap-2" id="names-column">
+            <p class="font-bold text-center text-amber-900 text-sm mb-1">1. Klikni na naziv:</p>
+      `;
+
+      // Izmješaj nazive
+      const shuffledPairs = [...q.pairs].sort(() => Math.random() - 0.5);
+
+      shuffledPairs.forEach(pair => {
+        html += `
+          <button id="match-btn-${pair.id}" onclick="selectName('${pair.id}')" 
+                  class="btn-bounce bg-white hover:bg-amber-100 font-bold p-3 rounded-xl border-2 border-amber-300 text-amber-950 text-center shadow">
+            ${pair.name}
+          </button>
+        `;
+      });
+
+      html += `
+          </div>
+          <!-- Ikone -->
+          <div class="flex flex-col gap-2" id="icons-column">
+            <p class="font-bold text-center text-amber-900 text-sm mb-1">2. Zatim na njegovu ikonu:</p>
+      `;
+
+      // Drugo miješanje za ikone
+      const shuffledIcons = [...q.pairs].sort(() => Math.random() - 0.5);
+
+      shuffledIcons.forEach(pair => {
+        html += `
+          <div id="icon-target-${pair.id}" onclick="matchIcon('${pair.id}')" 
+               class="cursor-pointer bg-white hover:bg-amber-50 p-2 rounded-xl border-2 border-dashed border-amber-300 flex items-center justify-center min-h-[60px] shadow-sm transition-all">
+            ${pair.icon}
+          </div>
+        `;
+      });
+
+      html += `</div></div>`;
+      optionsBox.innerHTML = html;
+    }
+
+    function selectName(id) {
+      if (!canAnswer) return;
+      playSound('click');
+
+      // Odznači prethodne
+      document.querySelectorAll('#names-column button').forEach(b => b.classList.remove('ring-4', 'ring-amber-500', 'bg-amber-200'));
+
+      selectedName = id;
+      const selectedBtn = document.getElementById(`match-btn-${id}`);
+      if (selectedBtn) {
+        selectedBtn.classList.add('ring-4', 'ring-amber-500', 'bg-amber-200');
+      }
+    }
+
+    function matchIcon(id) {
+      if (!canAnswer || !selectedName) return;
+
+      if (selectedName === id) {
+        playSound('correct');
+        matchedPairsCount++;
+
+        // Sakrij / Označi spojeni par
+        const nameBtn = document.getElementById(`match-btn-${id}`);
+        const iconBox = document.getElementById(`icon-target-${id}`);
+
+        nameBtn.disabled = true;
+        nameBtn.className = "bg-emerald-100 text-emerald-800 font-bold p-3 rounded-xl border-2 border-emerald-400 text-center opacity-70 cursor-not-allowed";
+        nameBtn.innerText += " ✅";
+
+        iconBox.onclick = null;
+        iconBox.className = "bg-emerald-100 p-2 rounded-xl border-2 border-emerald-400 flex items-center justify-center opacity-70";
+
+        selectedName = null;
+
+        if (matchedPairsCount === 4) {
+          canAnswer = false;
+          score++;
+          updateScoreUI();
+          document.getElementById('feedback-message').innerHTML = '<span class="text-emerald-600">Izvrstno! Sve ikone su točno spojene! 🎉⭐</span>';
+          setTimeout(nextQuestion, 1800);
+        }
+      } else {
+        playSound('wrong');
+        document.getElementById('feedback-message').innerHTML = '<span class="text-rose-600">Pokušaj ponovno spojiti pravi par! 💡</span>';
+        setTimeout(() => {
+          document.getElementById('feedback-message').innerText = '';
+        }, 1200);
+      }
+    }
+
+    /* ========================================================
+       INTERAKTIVNI ZADATAK - BOJANJE CHROME IKONE
+       ======================================================== */
+    function renderColoringTask(q) {
+      activePaintColor = '#EA4335'; // Početna crvena
+      userColors = { top: '#E2E8F0', right: '#E2E8F0', bottom: '#E2E8F0', center: '#E2E8F0' };
+
+      const mediaBox = document.getElementById('media-container');
+      const optionsBox = document.getElementById('options-container');
+
+      mediaBox.innerHTML = '';
+      optionsBox.className = "w-full max-w-md mx-auto flex flex-col items-center gap-4";
+
+      // SVG s dijelovima koji se mogu bojiti
+      const svgHTML = `
+        <div class="flex flex-col items-center">
+          <svg id="paint-chrome-svg" class="w-48 h-48 sm:w-56 sm:h-56 shadow-lg rounded-full bg-white p-2 border-4 border-amber-300" viewBox="0 0 100 100">
+            <!-- Vrh / Crvena -->
+            <path id="part-top" onclick="paintPart('top')" class="paint-part" d="M50 5 A45 45 0 0 1 88.97 27.5 L50 50 Z" fill="${userColors.top}" stroke="#aaa" stroke-width="1"/>
+            <!-- Desno / Žuta -->
+            <path id="part-right" onclick="paintPart('right')" class="paint-part" d="M88.97 27.5 A45 45 0 0 1 50 95 L50 50 Z" fill="${userColors.right}" stroke="#aaa" stroke-width="1"/>
+            <!-- Lijevo-Dolje / Zelena -->
+            <path id="part-bottom" onclick="paintPart('bottom')" class="paint-part" d="M50 95 A45 45 0 0 1 11.03 27.5 L50 50 Z" fill="${userColors.bottom}" stroke="#aaa" stroke-width="1"/>
+            <!-- Bijeli Prsten -->
+            <circle cx="50" cy="50" r="22" fill="#FFFFFF"/>
+            <!-- Sredina / Plava -->
+            <circle id="part-center" onclick="paintPart('center')" class="paint-part" cx="50" cy="50" r="18" fill="${userColors.center}" stroke="#aaa" stroke-width="1"/>
+          </svg>
+        </div>
+      `;
+
+      // Paleta Boja i Gumb Potvrdi
+      const paletteHTML = `
+        <div class="flex flex-col items-center gap-3 bg-amber-100 p-4 rounded-2xl border-2 border-amber-300 w-full">
+          <p class="font-bold text-amber-950 text-sm">1. Odaberi boju:</p>
+          <div class="flex justify-center gap-3">
+            <button onclick="selectPaintColor('#EA4335', this)" class="color-swatch w-10 h-10 rounded-full bg-[#EA4335] border-2 border-white shadow-md selected"></button>
+            <button onclick="selectPaintColor('#FBBC05', this)" class="color-swatch w-10 h-10 rounded-full bg-[#FBBC05] border-2 border-white shadow-md"></button>
+            <button onclick="selectPaintColor('#34A853', this)" class="color-swatch w-10 h-10 rounded-full bg-[#34A853] border-2 border-white shadow-md"></button>
+            <button onclick="selectPaintColor('#1A73E8', this)" class="color-swatch w-10 h-10 rounded-full bg-[#1A73E8] border-2 border-white shadow-md"></button>
+          </div>
+          <p class="text-xs text-slate-600 font-semibold mt-1">2. Klikni dio ikone za bojanje!</p>
+          <button onclick="checkColoringResult()" class="btn-bounce mt-2 bg-emerald-500 hover:bg-emerald-600 text-white font-black px-6 py-2.5 rounded-xl border-b-4 border-emerald-700 shadow-md">
+            GOTOVO! PROVJERI 🎨
+          </button>
+        </div>
+      `;
+
+      optionsBox.innerHTML = svgHTML + paletteHTML;
+    }
+
+    function selectPaintColor(color, element) {
+      playSound('click');
+      activePaintColor = color;
+      document.querySelectorAll('.color-swatch').forEach(el => el.classList.remove('selected'));
+      element.classList.add('selected');
+    }
+
+    function paintPart(partId) {
+      playSound('click');
+      userColors[partId] = activePaintColor;
+      const partEl = document.getElementById(`part-${partId}`);
+      if (partEl) {
+        partEl.setAttribute('fill', activePaintColor);
+      }
+    }
+
+    function checkColoringResult() {
+      if (!canAnswer) return;
+
+      // Točne boje: top=#EA4335 (crvena), right=#FBBC05 (žuta), bottom=#34A853 (zelena), center=#1A73E8 (plava)
+      const isCorrect = 
+        userColors.top === '#EA4335' &&
+        userColors.right === '#FBBC05' &&
+        userColors.bottom === '#34A853' &&
+        userColors.center === '#1A73E8';
+
+      canAnswer = false;
+      const feedback = document.getElementById('feedback-message');
+
+      if (isCorrect) {
+        score++;
+        playSound('correct');
+        feedback.innerHTML = '<span class="text-emerald-600">Prekrasno! Točno si obojao/la ikonu Chrome-a! 🎨✨</span>';
+      } else {
+        playSound('wrong');
+        feedback.innerHTML = '<span class="text-amber-700">Skoro točno! (Zapamti: Crvena gore, Žuta desno, Zelena dolje, Plava u sredini) 🎨</span>';
+      }
+
+      updateScoreUI();
+      setTimeout(nextQuestion, 2200);
+    }
+
+    /* ========================================================
+       NAVIGACIJA PITANJA I KRAJ KVIZA
+       ======================================================== */
+    function nextQuestion() {
+      currentQuestionIndex++;
+      if (currentQuestionIndex < questions.length) {
+        loadQuestion();
+      } else {
+        finishQuiz();
+      }
+    }
+
+    function finishQuiz() {
+      document.getElementById('quiz-screen').classList.add('hidden');
+      document.getElementById('progress-container').classList.add('hidden');
+      document.getElementById('result-screen').classList.remove('hidden');
+
+      const percentage = Math.round((score / questions.length) * 100);
+      document.getElementById('final-score').innerText = `${score} / ${questions.length}`;
+      document.getElementById('final-percentage').innerText = `Točnost: ${percentage}%`;
+
+      const badgeEl = document.getElementById('result-badge');
+      const titleEl = document.getElementById('result-title');
+      const subTitleEl = document.getElementById('result-subtitle');
+
+      playSound('fanfare');
+
+      // Okidanje konfeta
+      if (typeof confetti === 'function') {
+        confetti({
+          particleCount: 120,
+          spread: 80,
+          origin: { y: 0.6 }
+        });
+      }
+
+      if (score >= 18) {
+        badgeEl.innerText = '🏆';
+        titleEl.innerText = 'Izvanredno! Super Informatičar!';
+        subTitleEl.innerText = 'Znaš baš sve o mrežnim preglednicima i web stranicama! ⭐⭐⭐';
+      } else if (score >= 14) {
+        badgeEl.innerText = '🌟';
+        titleEl.innerText = 'Bravo! Odličan rezultat!';
+        subTitleEl.innerText = 'Pravi si Mali Informatičar! Vrlo malo ti nedostaje do savršenstva! ⭐⭐';
+      } else {
+        badgeEl.innerText = '👍';
+        titleEl.innerText = 'Dobar trud!';
+        subTitleEl.innerText = 'Možeš još jednom odigrati kviz i ponoviti gradivo! ⭐';
+      }
+    }
+
+    function restartQuiz() {
+      playSound('click');
+      startQuiz();
+    }
+  </script>
+</body>
+</html>
