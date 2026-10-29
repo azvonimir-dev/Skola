@@ -35,11 +35,10 @@
             background: #64748b;
         }
         .device-node {
-            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            transition: box-shadow 0.15s ease;
             touch-action: none;
         }
         .device-node:hover {
-            transform: scale(1.05);
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
         }
         .device-node.selected {
@@ -186,10 +185,20 @@
                 </div>
             </div>
 
-            <!-- Action Tools (Cable, Wi-Fi & Ping) -->
+            <!-- Action Tools (Select, Cable, Wi-Fi & Ping) -->
             <div class="p-2.5 border-t border-slate-200 bg-slate-50 flex flex-col gap-1.5">
-                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Mrežne Akcije</span>
+                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Mrežni Alati</span>
                 
+                <button id="tool-select" onclick="setTool('select')" class="w-full py-2 px-2.5 rounded-xl border-2 font-kids text-xs font-semibold flex items-center justify-start gap-2.5 transition bg-indigo-50 border-indigo-400 text-indigo-800 ring-2 ring-indigo-200">
+                    <div class="w-6 h-6 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs">
+                        <i class="fa-solid fa-hand-pointer"></i>
+                    </div>
+                    <div class="text-left leading-tight">
+                        <div class="font-bold">Odaberi i Pomakni</div>
+                        <div class="text-[9px] text-slate-500 font-sans">Povlačenje i postavke uređaja</div>
+                    </div>
+                </button>
+
                 <button id="tool-connect" onclick="setTool('connect')" class="w-full py-2 px-2.5 rounded-xl border-2 font-kids text-xs font-semibold flex items-center justify-start gap-2.5 transition bg-white border-slate-300 hover:border-slate-400 text-slate-700">
                     <div class="w-6 h-6 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center text-xs">
                         <i class="fa-solid fa-plug"></i>
@@ -228,13 +237,11 @@
             <!-- Active Tool / Status Bar Banner -->
             <div id="status-banner" class="absolute top-3 left-1/2 transform -translate-x-1/2 bg-slate-800/90 backdrop-blur-md text-white px-4 py-1.5 rounded-full shadow-lg z-20 font-kids text-xs sm:text-sm flex items-center gap-2 transition-all">
                 <i class="fa-solid fa-hand-pointer text-yellow-400"></i>
-                <span id="status-banner-text">Slobodna igra: Postavi uređaje i spoji ih kabelom ili Wi-Fi-jem!</span>
+                <span id="status-banner-text">Odaberi alat za pomicanje, spajanje ili testiranje!</span>
             </div>
 
             <!-- SVG Overlay for Network Cables & Wi-Fi waves -->
-            <svg id="cable-svg" class="absolute inset-0 w-full h-full pointer-events-none z-0">
-                <!-- Dynamic lines -->
-            </svg>
+            <svg id="cable-svg" class="absolute inset-0 w-full h-full pointer-events-none z-0"></svg>
 
             <!-- Container for Device Nodes -->
             <div id="canvas-container" class="absolute inset-0 z-10"></div>
@@ -242,7 +249,7 @@
             <!-- Envelope Animation Container -->
             <div id="envelope-container" class="absolute inset-0 pointer-events-none z-30"></div>
 
-            <!-- SIMULATION POPUP (Internet / YouTube / Games) -->
+            <!-- SIMULATION POPUP -->
             <div id="simulation-popup" class="hidden absolute top-20 left-1/2 transform -translate-x-1/2 bg-white/95 backdrop-blur-md border-2 border-indigo-500 shadow-2xl rounded-2xl p-4 z-40 max-w-sm w-full font-kids text-center animate-bounce">
                 <div id="sim-icon" class="text-3xl text-indigo-600 mb-1"><i class="fa-solid fa-globe"></i></div>
                 <h4 id="sim-title" class="font-bold text-slate-800 text-base">Internet učitan!</h4>
@@ -334,11 +341,11 @@
             <div class="space-y-3 font-sans text-xs text-slate-600 leading-relaxed">
                 <div class="flex items-start gap-2.5">
                     <div class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 font-bold flex items-center justify-center shrink-0">1</div>
-                    <p><strong class="font-kids text-slate-800 text-sm">Dodaj uređaje:</strong> Klikni na bilo koji uređaj u lijevom izborniku (PC, PlayStation, Mobitel, Wi-Fi Router, Internet...).</p>
+                    <p><strong class="font-kids text-slate-800 text-sm">Pomicanje i odabir:</strong> Odaberi <span class="bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded font-bold">Odaberi i Pomakni</span> kako bi mogao pomicati uređaje po ekranu ili otvarati njihove postavke dvostrukim klikom.</p>
                 </div>
                 <div class="flex items-start gap-2.5">
                     <div class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 font-bold flex items-center justify-center shrink-0">2</div>
-                    <p><strong class="font-kids text-slate-800 text-sm">Spajanje kabelom:</strong> Odaberi <span class="bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded font-bold">Spoji Kabelom</span> i klikni na 2 uređaja (za PC, TV, Switch...).</p>
+                    <p><strong class="font-kids text-slate-800 text-sm">Spajanje kabelom:</strong> Odaberi <span class="bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded font-bold">Spoji Kabelom</span> i klikni na 2 uređaja (PC, TV, Switch...). Ponovnim klikom na alat ili na "Odaberi" vraćaš se na pomicanje.</p>
                 </div>
                 <div class="flex items-start gap-2.5">
                     <div class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 font-bold flex items-center justify-center shrink-0">3</div>
@@ -356,7 +363,7 @@
         </div>
     </div>
 
-    <!-- AUDIO ENGINE (Web Audio API) -->
+    <!-- AUDIO ENGINE -->
     <script>
         let audioCtx = null;
         function initAudio() {
@@ -427,23 +434,15 @@
             internet: { name: 'Internet (Oblak)', icon: 'fa-globe', color: 'fuchsia', isHost: false, wireless: false, desc: 'Globalna mreža svih računalnih mreža na svijetu.' }
         };
 
-        const TIPS = [
-            "Wi-Fi Router emitira bežični signal za mobitele, satove i tablete!",
-            "Internet (Oblak) povezuje našu lokalnu mrežu sa cijelim svijetom.",
-            "Igraća konzola PlayStation može se spojiti na Internet za online igranje s prijateljima.",
-            "Mrežni kabel (UTP) prenosi podatke brzinom svjetlosti kroz električne impulse."
-        ];
-
         let devices = [];
-        let cables = []; // { id1, id2, type: 'cable' | 'wifi' }
+        let cables = []; 
         let currentMode = 'free';
-        let activeTool = 'select';
+        let activeTool = 'select'; // 'select', 'connect', 'wifi', 'ping'
         let selectedSourceDeviceId = null;
         let editingDeviceId = null;
         let deviceCounter = 1;
         let currentChallengeIdx = 0;
 
-        // 9 CHALLENGES FOR 4TH GRADERS
         const CHALLENGES = [
             {
                 title: "1. Spoji školska računala",
@@ -556,17 +555,8 @@
 
         window.addEventListener('DOMContentLoaded', () => {
             render();
-            rotateTip();
             window.addEventListener('resize', renderCables);
         });
-
-        function rotateTip() {
-            let idx = 0;
-            setInterval(() => {
-                idx = (idx + 1) % TIPS.length;
-                // Educational rotation if needed
-            }, 12000);
-        }
 
         function switchMode(mode) {
             playSound('click');
@@ -608,11 +598,21 @@
             activeTool = tool;
             selectedSourceDeviceId = null;
 
-            document.getElementById('tool-connect').className = "w-full py-2 px-2.5 rounded-xl border-2 font-kids text-xs font-semibold flex items-center justify-start gap-2.5 transition " + (tool === 'connect' ? "bg-orange-50 border-orange-400 text-orange-800 ring-2 ring-orange-200" : "bg-white border-slate-300 hover:border-slate-400 text-slate-700");
-            document.getElementById('tool-wifi').className = "w-full py-2 px-2.5 rounded-xl border-2 font-kids text-xs font-semibold flex items-center justify-start gap-2.5 transition " + (tool === 'wifi' ? "bg-teal-50 border-teal-400 text-teal-800 ring-2 ring-teal-200" : "bg-white border-slate-300 hover:border-slate-400 text-slate-700");
-            document.getElementById('tool-ping').className = "w-full py-2 px-2.5 rounded-xl border-2 font-kids text-xs font-semibold flex items-center justify-start gap-2.5 transition " + (tool === 'ping' ? "bg-blue-50 border-blue-400 text-blue-800 ring-2 ring-blue-200" : "bg-white border-slate-300 hover:border-slate-400 text-slate-700");
+            // Update button styles
+            const tools = ['select', 'connect', 'wifi', 'ping'];
+            const colors = { select: 'indigo', connect: 'orange', wifi: 'teal', ping: 'blue' };
 
-            if (tool === 'connect') statusBannerText.textContent = "Alat za kabel: Klikni na 1. pa 2. uređaj.";
+            tools.forEach(t => {
+                const btn = document.getElementById('tool-' + t);
+                if (t === tool) {
+                    btn.className = `w-full py-2 px-2.5 rounded-xl border-2 font-kids text-xs font-semibold flex items-center justify-start gap-2.5 transition bg-${colors[t]}-50 border-${colors[t]}-400 text-${colors[t]}-800 ring-2 ring-${colors[t]}-200`;
+                } else {
+                    btn.className = "w-full py-2 px-2.5 rounded-xl border-2 font-kids text-xs font-semibold flex items-center justify-start gap-2.5 transition bg-white border-slate-300 hover:border-slate-400 text-slate-700";
+                }
+            });
+
+            if (tool === 'select') statusBannerText.textContent = "Alat za odabir: Povlači uređaje po platnu ili klikni dvaput za postavke.";
+            else if (tool === 'connect') statusBannerText.textContent = "Alat za kabel: Klikni na 1. pa na 2. uređaj da ih spojiš kabelom.";
             else if (tool === 'wifi') statusBannerText.textContent = "Alat za Wi-Fi: Spoji bežični uređaj na Wi-Fi Router.";
             else if (tool === 'ping') statusBannerText.textContent = "Alat za pismo/Internet: Pošalji poruku unutar mreže ili prema Internetu!";
             render();
@@ -648,7 +648,7 @@
                 const isSelected = selectedSourceDeviceId === dev.id;
 
                 const el = document.createElement('div');
-                el.className = `device-node absolute cursor-pointer bg-white border-2 rounded-2xl p-2.5 shadow-md flex flex-col items-center w-28 select-none ${isSelected ? 'border-blue-500 ring-4 ring-blue-300 selected' : 'border-slate-200 hover:border-slate-400'}`;
+                el.className = `device-node absolute bg-white border-2 rounded-2xl p-2.5 shadow-md flex flex-col items-center w-28 select-none ${activeTool === 'select' ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'} ${isSelected ? 'border-blue-500 ring-4 ring-blue-300 selected' : 'border-slate-200 hover:border-slate-400'}`;
                 el.style.left = dev.x + 'px';
                 el.style.top = dev.y + 'px';
 
@@ -660,31 +660,42 @@
                     ${dev.ip ? `<span class="text-[9px] font-mono text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded mt-0.5">${dev.ip}</span>` : ''}
                 `;
 
-                let isDragging = false, startX, startY;
+                let isDragging = false, startX, startY, hasMoved = false;
+
                 el.addEventListener('pointerdown', (e) => {
+                    // Povlačenje je dozvoljeno isključivo kada je odabran 'select' alat
                     if (activeTool !== 'select') return;
                     isDragging = true;
+                    hasMoved = false;
                     startX = e.clientX - dev.x;
                     startY = e.clientY - dev.y;
                     el.setPointerCapture(e.pointerId);
                     e.stopPropagation();
                 });
+
                 el.addEventListener('pointermove', (e) => {
                     if (!isDragging) return;
+                    hasMoved = true;
                     dev.x = e.clientX - startX;
                     dev.y = e.clientY - startY;
                     el.style.left = dev.x + 'px';
                     el.style.top = dev.y + 'px';
                     renderCables();
                 });
+
                 el.addEventListener('pointerup', (e) => {
                     isDragging = false;
-                    el.releasePointerCapture(e.pointerId);
+                    try { el.releasePointerCapture(e.pointerId); } catch(err) {}
                 });
+
                 el.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    handleDeviceClick(dev.id);
+                    // Ako nismo u select modu ili nismo pomicali uređaj u select modu, izvrši akciju klika (spajanje/ping)
+                    if (activeTool !== 'select' || !hasMoved) {
+                        handleDeviceClick(dev.id);
+                    }
                 });
+
                 el.addEventListener('dblclick', (e) => {
                     e.stopPropagation();
                     openDeviceModal(dev.id);
@@ -722,14 +733,13 @@
                     if (selectedSourceDeviceId !== id) {
                         const d1 = devices.find(d => d.id === selectedSourceDeviceId);
                         const d2 = devices.find(d => d.id === id);
-                        // Check if one is router and other is wireless host
                         const isRouterPair = (d1.type === 'router' && DEVICE_TYPES[d2.type].wireless) || (d2.type === 'router' && DEVICE_TYPES[d1.type].wireless);
                         if (isRouterPair && !areDevicesConnected(selectedSourceDeviceId, id, 'wifi')) {
                             cables.push({ id1: selectedSourceDeviceId, id2: id, type: 'wifi' });
                             playSound('connect');
                         } else {
                             playSound('error');
-                            statusBannerText.textContent = "Wi-Fi se može spojiti samo između Wi-Fi Routera i bežičnog uređaja (mobitel, sat, tablet, PlayStation...).";
+                            statusBannerText.textContent = "Wi-Fi se može spojiti samo između Wi-Fi Routera i bežičnog uređaja.";
                         }
                     }
                     selectedSourceDeviceId = null;
@@ -751,7 +761,7 @@
         }
 
         function areDevicesConnected(id1, id2, type) {
-            return cables.some(c => c.type === type && ((c.id1 === id1 && c.id2 === id2) || (c.id1 === id2 && c.id2 === id1)));
+            return cables.some(c => (type ? c.type === type : true) && ((c.id1 === id1 && c.id2 === id2) || (c.id1 === id2 && c.id2 === id1)));
         }
 
         function renderCables() {
@@ -785,7 +795,7 @@
             const d2 = devices.find(d => d.id === toId);
             if (!d1 || !d2) return;
 
-            const connected = areDevicesConnected(fromId, toId, 'cable') || areDevicesConnected(fromId, toId, 'wifi') || checkPathViaHub(fromId, toId);
+            const connected = areDevicesConnected(fromId, toId) || checkPathViaHub(fromId, toId);
 
             playSound('ping');
 
@@ -816,7 +826,6 @@
                         playSound('success');
                         statusBannerText.textContent = `Uspjeh! Veza između ${d1.name} i ${d2.name} radi savršeno! 🎉`;
 
-                        // Check if hitting internet
                         if (d2.type === 'internet' || d1.type === 'internet') {
                             showInternetSimulation(d1.type === 'internet' ? d2.type : d1.type);
                             if (currentMode === 'challenges' && currentChallengeIdx === 8) {
@@ -837,7 +846,7 @@
         }
 
         function checkPathViaHub(id1, id2) {
-            const neighbors1 = cables.filter(c => c.id1 === id1 || c.id2 === id2).map(c => c.id1 === id1 ? c.id2 : c.id1);
+            const neighbors1 = cables.filter(c => c.id1 === id1 || c.id2 === id1).map(c => c.id1 === id1 ? c.id2 : c.id1);
             const neighbors2 = cables.filter(c => c.id1 === id2 || c.id2 === id2).map(c => c.id1 === id2 ? c.id2 : c.id1);
 
             for (let n of neighbors1) {
