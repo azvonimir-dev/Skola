@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduZmija - Informatički Kviz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .board-grid {
+            background-color: #1e293b;
+            background-image: 
+                linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+        }
+
+        .btn-bounce {
+            transition: transform 0.1s ease, box-shadow 0.1s ease;
+        }
+        .btn-bounce:active {
+            transform: scale(0.95);
+        }
+
+        /* Glassmorphism modal background */
+        .glass-modal {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(8px);
+        }
+
+        /* Custom scrollbar for question list modal if needed */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between overflow-x-hidden">
+
+    <!-- Zaglavlje -->
+    <header class="w-full bg-slate-800 border-b border-slate-700 py-4 px-6 shadow-lg">
+        <div class="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="bg-emerald-500 text-slate-900 p-2.5 rounded-2xl shadow-lg shadow-emerald-500/20">
+                    <i class="fa-solid font-bold text-2xl fa-worm"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">EduZmija</h1>
+                    <p class="text-xs text-slate-400">Informatički Kviz za 1. - 4. razred</p>
+                </div>
+            </div>
+
+            <!-- Kontrolne tipke za JSON i postavke -->
+            <div class="flex flex-wrap items-center gap-2">
+                <button id="reloadJsonBtn" class="btn-bounce bg-slate-700 hover:bg-slate-600 text-slate-200 px-3 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 border border-slate-600 shadow" title="Ponovno učitaj pitanja.json">
+                    <i class="fa-solid fa-rotate text-cyan-400"></i> Osvježi JSON
+                </button>
+                <label class="btn-bounce cursor-pointer bg-slate-700 hover:bg-slate-600 text-slate-200 px-3 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 border border-slate-600 shadow">
+                    <i class="fa-solid fa-file-import text-cyan-400"></i> Ručno učitaj
+                    <input type="file" id="jsonInput" accept=".json" class="hidden">
+                </label>
+                <button id="exportBtn" class="btn-bounce bg-slate-700 hover:bg-slate-600 text-slate-200 px-3 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 border border-slate-600 shadow">
+                    <i class="fa-solid fa-file-export text-emerald-400"></i> Preuzmi JSON
+                </button>
+                <button id="viewQuestionsBtn" class="btn-bounce bg-slate-700 hover:bg-slate-600 text-slate-200 px-3 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 border border-slate-600 shadow">
+                    <i class="fa-solid fa-list-check text-yellow-400"></i> Pitanja (<span id="questionCountBadge">0</span>)
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Glavni Sadržaj -->
+    <main class="flex-grow flex flex-col items-center justify-center p-4 max-w-5xl mx-auto w-full gap-4">
+
+        <!-- Statistička Traka -->
+        <div class="w-full bg-slate-800/80 border border-slate-700 rounded-2xl p-4 flex flex-wrap justify-around items-center gap-4 shadow-xl">
+            <div class="flex items-center gap-3">
+                <div class="bg-amber-500/20 p-2 rounded-xl text-amber-400">
+                    <i class="fa-solid fa-trophy text-xl"></i>
+                </div>
+                <div>
+                    <div class="text-xs text-slate-400 uppercase tracking-wider font-semibold">Najbolji Rezultat</div>
+                    <div id="highScoreText" class="text-xl font-bold text-amber-400">0</div>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <div class="bg-emerald-500/20 p-2 rounded-xl text-emerald-400">
+                    <i class="fa-solid fa-star text-xl"></i>
+                </div>
+                <div>
+                    <div class="text-xs text-slate-400 uppercase tracking-wider font-semibold">Trenutni Bodovi</div>
+                    <div id="scoreText" class="text-xl font-bold text-emerald-400">0</div>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <div class="bg-cyan-500/20 p-2 rounded-xl text-cyan-400">
+                    <i class="fa-solid fa-bullseye text-xl"></i>
+                </div>
+                <div>
+                    <div class="text-xs text-slate-400 uppercase tracking-wider font-semibold">Točni Odgovori</div>
+                    <div id="quizStatsText" class="text-xl font-bold text-cyan-400">0 / 0</div>
+                </div>
+            </div>
+
+            <div class="flex gap-2">
+                <button id="startBtn" class="btn-bounce bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-bold px-5 py-2.5 rounded-xl shadow-lg shadow-emerald-500/25 flex items-center gap-2">
+                    <i class="fa-solid fa-play"></i> Nova Igra
+                </button>
+                <button id="pauseBtn" class="btn-bounce bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold px-4 py-2.5 rounded-xl shadow border border-slate-600 disabled:opacity-50">
+                    <i class="fa-solid fa-pause" id="pauseIcon"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Kanvas za Igru & Kontrole -->
+        <div class="relative w-full flex flex-col items-center">
+            <!-- Okvir Platna -->
+            <div class="relative p-2 bg-slate-800 rounded-3xl border-2 border-slate-700 shadow-2xl overflow-hidden max-w-full">
+                <canvas id="gameCanvas" class="board-grid rounded-2xl block border border-slate-700/50 cursor-pointer"></canvas>
+
+                <!-- Overlay pri pokretanju / game over -->
+                <div id="overlay" class="absolute inset-0 bg-slate-900/90 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center z-10 transition-all duration-300">
+                    <div class="bg-emerald-500/10 border border-emerald-500/30 p-4 rounded-full mb-4 text-emerald-400 animate-bounce">
+                        <i class="fa-solid fa-gamepad text-5xl"></i>
+                    </div>
+                    <h2 id="overlayTitle" class="text-3xl font-extrabold text-white mb-2">Spreman za igru?</h2>
+                    <p id="overlaySubtitle" class="text-slate-300 max-w-md mb-6 text-sm">Sakupljaj kockice sa zmijom. Svaka kockica donosi informatičko pitanje! Odgovori točno kako bi zmija narasla.</p>
+                    <button id="overlayStartBtn" class="btn-bounce bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-bold text-lg px-8 py-3 rounded-2xl shadow-xl shadow-emerald-500/30">
+                        Započni Igru!
+                    </button>
+                </div>
+            </div>
+
+            <!-- Kontrole na dodir za Mobilne Uređaje -->
+            <div class="mt-4 grid grid-cols-3 gap-2 w-48 md:hidden">
+                <div></div>
+                <button id="btnUp" class="btn-bounce bg-slate-700 active:bg-emerald-600 text-slate-200 py-3 rounded-xl border border-slate-600 text-xl font-bold flex justify-center items-center shadow">
+                    <i class="fa-solid fa-chevron-up"></i>
+                </button>
+                <div></div>
+                <button id="btnLeft" class="btn-bounce bg-slate-700 active:bg-emerald-600 text-slate-200 py-3 rounded-xl border border-slate-600 text-xl font-bold flex justify-center items-center shadow">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+                <button id="btnDown" class="btn-bounce bg-slate-700 active:bg-emerald-600 text-slate-200 py-3 rounded-xl border border-slate-600 text-xl font-bold flex justify-center items-center shadow">
+                    <i class="fa-solid fa-chevron-down"></i>
+                </button>
+                <button id="btnRight" class="btn-bounce bg-slate-700 active:bg-emerald-600 text-slate-200 py-3 rounded-xl border border-slate-600 text-xl font-bold flex justify-center items-center shadow">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal za Kviz Pitanja -->
+    <div id="quizModal" class="fixed inset-0 glass-modal flex items-center justify-center p-4 z-50 hidden transition-opacity duration-300">
+        <div class="bg-slate-800 border-2 border-cyan-500/40 rounded-3xl p-6 md:p-8 max-w-lg w-full shadow-2xl transform transition-all">
+            <div class="flex justify-between items-center mb-4">
+                <span class="bg-cyan-500/20 text-cyan-400 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1.5">
+                    <i class="fa-solid fa-lightbulb"></i> Pitanje iz informatike
+                </span>
+                <span id="questionTimer" class="text-xs text-slate-400 font-semibold">Razmisli dobro!</span>
+            </div>
+
+            <h3 id="questionText" class="text-xl md:text-2xl font-bold text-slate-100 mb-6 leading-snug">
+                Učitavanje pitanja...
+            </h3>
+
+            <div id="optionsContainer" class="flex flex-col gap-3 mb-6">
+                <!-- Opcije odgovora se generiraju dinamički -->
+            </div>
+
+            <!-- Poruka povratne informacije -->
+            <div id="feedbackMessage" class="hidden p-3 rounded-xl text-center font-bold text-sm mb-4"></div>
+        </div>
+    </div>
+
+    <!-- Modal za pregled pitanja -->
+    <div id="questionsListModal" class="fixed inset-0 glass-modal flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6 max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl">
+            <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-700">
+                <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-book-open text-yellow-400"></i> Popis Pitanja (<span id="totalQuestionsCount">0</span>)
+                </h3>
+                <button id="closeQuestionsListBtn" class="text-slate-400 hover:text-white p-2 rounded-xl text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <div id="questionsListContent" class="overflow-y-auto flex-grow space-y-3 pr-2">
+                <!-- Pitanja se generiraju dinamički -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Obavijest / Toast Message -->
+    <div id="toast" class="fixed bottom-6 right-6 bg-slate-800 border border-slate-600 text-slate-100 px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 z-50 transform translate-y-20 opacity-0 transition-all duration-300">
+        <i id="toastIcon" class="fa-solid fa-circle-info text-cyan-400 text-lg"></i>
+        <span id="toastText" class="text-sm font-semibold">Poruka</span>
+    </div>
+
+    <!-- Podnožje -->
+    <footer class="w-full bg-slate-900 border-t border-slate-800 py-3 px-6 text-center text-xs text-slate-500">
+        EduZmija - Interaktivna edukativna igra s pitanjima iz informatike. Pristupačno i zabavno učenje!
+    </footer>
+
+    <script>
+        // --- ZADANA PITANJA IZ INFORMATIKE (1. - 4. RAZRED) ---
+        const defaultQuestions = [
+            {
+                pitanje: "Čemu služi računalni mišem?",
+                opcije: ["Za pisanje slova na zaslonu", "Za pomicanje pokazivača i klikanje", "Za slušanje glazbe", "Za tiskanje papira"],
+                tocan: 1
+            },
+            {
+                pitanje: "Koja tipka na tipkovnici radi razmak između riječi?",
+                opcije: ["Enter", "Backspace", "Razmaknica (Spacebar)", "Shift"],
+                tocan: 2
+            },
+            {
+                pitanje: "Što od navedenog POKAZUJE sliku na računalu?",
+                opcije: ["Tipkovnica", "Zvučnik", "Zaslon (Monitor)", "Miš"],
+                tocan: 2
+            },
+            {
+                pitanje: "Kako nazivamo 'mozak' računala u kojem se obrađuju svi podaci?",
+                opcije: ["Spremnik", "Procesor (CPU)", "Tipkovnica", "Kamera"],
+                tocan: 1
+            },
+            {
+                pitanje: "Koja tipka briše slovo LIJEVO od pokazivača?",
+                opcije: ["Backspace", "Delete", "Enter", "Caps Lock"],
+                tocan: 0
+            },
+            {
+                pitanje: "Što smiješ dijeliti s nepoznatim osobama na Internetu?",
+                opcije: ["Svoju kućnu adresu", "Svoju lozinku", "Koji ti je omiljeni crtić", "Broj telefona roditelja"],
+                tocan: 2
+            },
+            {
+                pitanje: "Koji program najčešće koristimo za crtanje na računalu?",
+                opcije: ["Bojanje (Paint)", "Kalkulator", "Internet preglednik", "WordPad"],
+                tocan: 0
+            },
+            {
+                pitanje: "Što znači riječ 'Lozinka' (Password)?",
+                opcije: ["Tajni niz znakova za ulazak u računalo", "Korisničko ime", "Program za crtanje", "Kabel od struje"],
+                tocan: 0
+            },
+            {
+                pitanje: "Kako zovemo dio računala koji služi za unos slova i brojeva?",
+                opcije: ["Zvučnik", "Tipkovnica", "Skener", "Pisač"],
+                tocan: 1
+            },
+            {
+                pitanje: "Što od navedenog NIJE dobro činiti s računalom?",
+                opcije: ["Proliti sok po tipkovnici", "Nježno pritiskati tipke", "Čistiti zaslon krpicom", "Isključiti ga pravilno"],
+                tocan: 0
+            },
+            {
+                pitanje: "Kojom tipkom potvrđujemo naredbu ili odlazimo u novi redak u tekstu?",
+                opcije: ["Escape (Esc)", "Enter", "Spacebar", "Shift"],
+                tocan: 1
+            },
+            {
+                pitanje: "Što su to zvučnici?",
+                opcije: ["Uređaji iz kojih čujemo zvuk s računala", "Uređaji za crtanje", "Tipke sa slovima", "Vrsta računalnog miša"],
+                tocan: 0
+            },
+            {
+                pitanje: "Što radi mikrofona na računalu?",
+                opcije: ["Snima naš glas i zvuk", "Prikazuje video zapise", "Povećava slova", "Printa papire"],
+                tocan: 0
+            },
+            {
+                pitanje: "Koja je glavna svrha pisača (printera)?",
+                opcije: ["Ispisivanje teksta i slika na papir", "Slušanje pjesama", "Snimanje fotografija", "Spajanje na internet"],
+                tocan: 0
+            },
+            {
+                pitanje: "Što moramo učiniti ako na internetu vidimo nešto ružno ili neugodno?",
+                opcije: ["Šutjeti i nikom ne reći", "Odmah reći roditeljima ili učitelju", "Poslati to svim prijateljima", "Isključiti monitor i plakati"],
+                tocan: 1
+            },
+            {
+                pitanje: "Kako nazivamo prijenosno računalo koje možemo nositi u torbi?",
+                opcije: ["Mobitel", "Tablet", "Priključak", "Prijenosno računalo (Laptop)"],
+                tocan: 3
+            },
+            {
+                pitanje: "Koja tipka se koristi za pisanje VELIKIH slova dok je držimo pritisnutom?",
+                opcije: ["Ctrl", "Alt", "Shift", "Tab"],
+                tocan: 2
+            },
+            {
+                pitanje: "Koja tipka uključuje stalno pisanje velikih slova?",
+                opcije: ["Caps Lock", "Num Lock", "Enter", "Spacebar"],
+                tocan: 0
+            },
+            {
+                pitanje: "Kako nazivamo fizičke dijelove računala koje možemo dotaknuti?",
+                opcije: ["Sklopovlje (Hardware)", "Programi (Software)", "Internet", "Oblak"],
+                tocan: 0
+            },
+            {
+                pitanje: "Kako nazivamo programe koje pokrećemo na računalu?",
+                opcije: ["Sklopovlje (Hardware)", "Programska podrška (Software)", "Žice", "Kućište"],
+                tocan: 1
+            },
+            {
+                pitanje: "Što je to Internet?",
+                opcije: ["Velika svjetska mreža povezanih računala", "Igra na računalu", "Posebna tipkovnica", "Kabel za zvučnik"],
+                tocan: 0
+            },
+            {
+                pitanje: "Što od navedenog služi za pohranu podataka i lak prijenos s računala na računalo?",
+                opcije: ["USB štapić (Stik)", "Miš", "Zaslon", "Pisač"],
+                tocan: 0
+            },
+            {
+                pitanje: "Što čini dvostruki brzi klik lijevom tipkom miša?",
+                opcije: ["Otvara datoteku ili program", "Briše program", "Gasi računalo", "Kopira tekst"],
+                tocan: 0
+            },
+            {
+                pitanje: "Kako nazivamo sličice na radnoj površini (Desktopu) koje otvaraju programe?",
+                opcije: ["Ikone", "Poruke", "Okviri", "Točke"],
+                tocan: 0
+            },
+            {
+                pitanje: "Za što služi web kamera?",
+                opcije: ["Za snimanje ili prikaza naše slike uživo", "Za tiskanje radova", "Za mjerenje brzine", "Za slušanje zvuka"],
+                tocan: 0
+            },
+            {
+                pitanje: "Što je to računalni virus?",
+                opcije: ["Bolest koju ljudi dobiju od računala", "Štetni program koji može oštetiti podatke", "Prašina u kućištu računala", "Vrsta miša"],
+                tocan: 1
+            },
+            {
+                pitanje: "Koja je sigurna lozinka?",
+                opcije: ["123456", "MojeIme123", "Kombinacija slova, brojeva i znakova", "Riječ 'lozinka'"],
+                tocan: 2
+            },
+            {
+                pitanje: "Koja tipka na tipkovnici u gornjem lijevom kutu služi za odustajanje ili izlaz?",
+                opcije: ["Enter", "Esc (Escape)", "Spacebar", "Shift"],
+                tocan: 1
+            },
+            {
+                pitanje: "Što od ovog NIJE pametan uređaj?",
+                opcije: ["Pametni telefon", "Drvena olovka", "Tablet", "Pametni sat"],
+                tocan: 1
+            },
+            {
+                pitanje: "Što nam omogućuje web preglednik (npr. Google Chrome)?",
+                opcije: ["Crtanje slika", "Pregledavanje web stranica na internetu", "Pisanje zadataka iz matematike", "Popravak tipkovnice"],
+                tocan: 1
+            }
+        ];
+
+        // --- VARIJABLE STANJA IGRE ---
+        let questions = [...defaultQuestions];
+        let remainingQuestions = [];
+
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        // Veličina mreže
+        const gridSize = 20; 
+        let tileCountX = 20;
+        let tileCountY = 20;
+
+        // Stanje zmije
+        let snake = [];
+        let snakeLength = 3;
+        let dx = 1;
+        let dy = 0;
+        let nextDx = 1;
+        let nextDy = 0;
+
+        // Hrana
+        let food = { x: 5, y: 5 };
+
+        // Rezultati i logika
+        let score = 0;
+        let highScore = localStorage.getItem("eduzmija_highscore") || 0;
+        let totalAsked = 0;
+        let correctAnswersCount = 0;
+
+        let gameInterval = null;
+        let isPaused = false;
+        let isGameRunning = false;
+        let pendingQuestion = null;
+        let gameSpeed = 140; // ms
+
+        // DOM Elementi
+        const scoreText = document.getElementById("scoreText");
+        const highScoreText = document.getElementById("highScoreText");
+        const quizStatsText = document.getElementById("quizStatsText");
+        const questionCountBadge = document.getElementById("questionCountBadge");
+
+        const startBtn = document.getElementById("startBtn");
+        const pauseBtn = document.getElementById("pauseBtn");
+        const pauseIcon = document.getElementById("pauseIcon");
+
+        const overlay = document.getElementById("overlay");
+        const overlayTitle = document.getElementById("overlayTitle");
+        const overlaySubtitle = document.getElementById("overlaySubtitle");
+        const overlayStartBtn = document.getElementById("overlayStartBtn");
+
+        const quizModal = document.getElementById("quizModal");
+        const questionText = document.getElementById("questionText");
+        const optionsContainer = document.getElementById("optionsContainer");
+        const feedbackMessage = document.getElementById("feedbackMessage");
+
+        const jsonInput = document.getElementById("jsonInput");
+        const reloadJsonBtn = document.getElementById("reloadJsonBtn");
+        const exportBtn = document.getElementById("exportBtn");
+        const viewQuestionsBtn = document.getElementById("viewQuestionsBtn");
+        const questionsListModal = document.getElementById("questionsListModal");
+        const closeQuestionsListBtn = document.getElementById("closeQuestionsListBtn");
+        const questionsListContent = document.getElementById("questionsListContent");
+        const totalQuestionsCount = document.getElementById("totalQuestionsCount");
+
+        // Inicijalizacija pri učitavanju
+        window.onload = async () => {
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            highScoreText.innerText = highScore;
+            
+            // Automatsko učitavanje pitanja.json iz mape
+            await loadQuestionsFromExternalJson();
+
+            drawBoardPlaceholder();
+            setupEventListeners();
+        };
+
+        // Automatsko dohvaćanje pitanja.json s poslužitelja/GitHuba
+        async function loadQuestionsFromExternalJson() {
+            try {
+                // Dodajemo timestamp sprečavanje keširanja na GitHub Pages
+                const res = await fetch('./pitanja.json?t=' + new Date().getTime());
+                if (!res.ok) throw new Error("Datoteka pitanja.json nije pronađena.");
+                const data = await res.json();
+                
+                if (Array.isArray(data) && data.length > 0 && validateQuestions(data)) {
+                    questions = data;
+                    updateQuestionBadge();
+                    showToast(`Automatski učitano ${questions.length} pitanja iz pitanja.json!`, "success");
+                } else {
+                    throw new Error("Neispravna struktura JSON datoteke.");
+                }
+            } catch (err) {
+                console.warn("Nije moguće učitati vanjsku pitanja.json datoteku, koriste se rezervna pitanja:", err);
+                questions = [...defaultQuestions];
+                updateQuestionBadge();
+                showToast("Koriste se ugrađena pitanja (pitanja.json nedostaje ili se pokreće lokalno).", "info");
+            }
+        }
+
+        // Pomoćni prikaz prazne ploče
+        function drawBoardPlaceholder() {
+            ctx.fillStyle = "#1e293b";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        // --- GLAVNI CIKLUS IGRE ---
+        function startGame() {
+            snake = [
+                { x: 5, y: 10 },
+                { x: 4, y: 10 },
+                { x: 3, y: 10 }
+            ];
+            snakeLength = 3;
+            dx = 1;
+            dy = 0;
+            nextDx = 1;
+            nextDy = 0;
+            score = 0;
+            totalAsked = 0;
+            correctAnswersCount = 0;
+            
+            scoreText.innerText = score;
+            quizStatsText.innerText = `0 / 0`;
+
+            // Kopiraj pitanja u preostala pitanja
+            remainingQuestions = [...questions];
+            shuffleArray(remainingQuestions);
+
+            placeFood();
+
+            isGameRunning = true;
+            isPaused = false;
+            overlay.classList.add("hidden");
+            pauseBtn.disabled = false;
+            updatePauseButtonUI();
+
+            if (gameInterval) clearInterval(gameInterval);
+            gameInterval = setInterval(gameStep, gameSpeed);
+        }
+
+        function gameStep() {
+            if (isPaused) return;
+
+            // Primijeni novu smjer iz kretanja
+            dx = nextDx;
+            dy = nextDy;
+
+            // Nova pozicija glave
+            const head = { x: snake[0].x + dx, y: snake[0].y + dy };
+
+            // Provjera kolizije sa zidovima
+            if (head.x < 0 || head.x >= tileCountX || head.y < 0 || head.y >= tileCountY) {
+                gameOver("Udarac u zid!");
+                return;
+            }
+
+            // Provjera kolizije sa samim sobom
+            for (let i = 0; i < snake.length; i++) {
+                if (head.x === snake[i].x && head.y === snake[i].y) {
+                    gameOver("Zmija je ugrizla samog sebe!");
+                    return;
+                }
+            }
+
+            // Pomakni zmiju
+            snake.unshift(head);
+
+            // Provjera hvatanja hrane
+            if (head.x === food.x && head.y === food.y) {
+                // Pauziraj igru i pokreni kviz
+                pauseGame();
+                triggerQuizQuestion();
+            } else {
+                // Ako nije pojedena hrana, ukloni zadnji dio repa
+                if (snake.length > snakeLength) {
+                    snake.pop();
+                }
+            }
+
+            drawGame();
+        }
+
+        // --- CRTANJE NA KANVASU ---
+        function drawGame() {
+            // Očisti kanvas
+            ctx.fillStyle = "#1e293b";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Nacrtaj hranu (Kockicu/Jabuku s ikonom ili sjajem)
+            ctx.fillStyle = "#ef4444";
+            ctx.beginPath();
+            ctx.roundRect(food.x * gridSize + 2, food.y * gridSize + 2, gridSize - 4, gridSize - 4, 6);
+            ctx.fill();
+            
+            // Mali sjaj na hrani
+            ctx.fillStyle = "#fca5a5";
+            ctx.fillRect(food.x * gridSize + 5, food.y * gridSize + 5, 4, 4);
+
+            // Nacrtaj zmiju
+            snake.forEach((segment, index) => {
+                if (index === 0) {
+                    // Glava zmije
+                    ctx.fillStyle = "#10b981"; // Svijetlo zelena
+                    ctx.beginPath();
+                    ctx.roundRect(segment.x * gridSize + 1, segment.y * gridSize + 1, gridSize - 2, gridSize - 2, 8);
+                    ctx.fill();
+
+                    // Oči na glavi
+                    ctx.fillStyle = "#0f172a";
+                    let eyeX1 = segment.x * gridSize + 5;
+                    let eyeY1 = segment.y * gridSize + 5;
+                    let eyeX2 = segment.x * gridSize + 13;
+                    let eyeY2 = segment.y * gridSize + 5;
+
+                    if (dx === 1) { eyeX1 = eyeX2 = segment.x * gridSize + 13; eyeY1 = segment.y * gridSize + 5; eyeY2 = segment.y * gridSize + 13; }
+                    else if (dx === -1) { eyeX1 = eyeX2 = segment.x * gridSize + 5; eyeY1 = segment.y * gridSize + 5; eyeY2 = segment.y * gridSize + 13; }
+                    else if (dy === 1) { eyeY1 = eyeY2 = segment.y * gridSize + 13; eyeX1 = segment.x * gridSize + 5; eyeX2 = segment.x * gridSize + 13; }
+
+                    ctx.beginPath();
+                    ctx.arc(eyeX1, eyeY1, 2, 0, Math.PI * 2);
+                    ctx.arc(eyeX2, eyeY2, 2, 0, Math.PI * 2);
+                    ctx.fill();
+                } else {
+                    // Tijelo zmije
+                    ctx.fillStyle = index % 2 === 0 ? "#059669" : "#10b981";
+                    ctx.beginPath();
+                    ctx.roundRect(segment.x * gridSize + 2, segment.y * gridSize + 2, gridSize - 4, gridSize - 4, 5);
+                    ctx.fill();
+                }
+            });
+        }
+
+        // Nasumični razmještaj hrane
+        function placeFood() {
+            let valid = false;
+            while (!valid) {
+                food.x = Math.floor(Math.random() * tileCountX);
+                food.y = Math.floor(Math.random() * tileCountY);
+                
+                valid = true;
+                for (let segment of snake) {
+                    if (segment.x === food.x && segment.y === food.y) {
+                        valid = false;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // --- KVIZ LOGIKA ---
+        function triggerQuizQuestion() {
+            if (questions.length === 0) {
+                showToast("Nema dostupnih pitanja u kvizu!", "warning");
+                resumeGame();
+                return;
+            }
+
+            // Ako su sva pitanja iskorištena, ponovno napuni popis
+            if (remainingQuestions.length === 0) {
+                remainingQuestions = [...questions];
+                shuffleArray(remainingQuestions);
+            }
+
+            pendingQuestion = remainingQuestions.pop();
+
+            // Prikaz modalnog prozora
+            questionText.innerText = pendingQuestion.pitanje;
+            optionsContainer.innerHTML = "";
+            feedbackMessage.classList.add("hidden");
+
+            // Generiraj gumbe s opcijama
+            pendingQuestion.opcije.forEach((opcija, idx) => {
+                const btn = document.createElement("button");
+                btn.className = "btn-bounce w-full text-left bg-slate-700 hover:bg-slate-600 border border-slate-600 hover:border-cyan-400/50 p-4 rounded-2xl text-slate-100 font-medium text-base transition-all flex items-center gap-3 shadow";
+                btn.innerHTML = `
+                    <span class="w-8 h-8 rounded-xl bg-slate-800 text-cyan-400 font-bold flex items-center justify-center text-sm border border-slate-700">
+                        ${String.fromCharCode(65 + idx)}
+                    </span>
+                    <span class="flex-grow">${opcija}</span>
+                `;
+                btn.onclick = () => handleAnswer(idx);
+                optionsContainer.appendChild(btn);
+            });
+
+            quizModal.classList.remove("hidden");
+        }
+
+        function handleAnswer(selectedIndex) {
+            totalAsked++;
+            const isCorrect = selectedIndex === pendingQuestion.tocan;
+
+            // Onemogući klikanje ostalih gumba
+            const buttons = optionsContainer.querySelectorAll("button");
+            buttons.forEach(btn => btn.style.pointerEvents = "none");
+
+            // Oboji gumbe ovisno o točnosti
+            buttons.forEach((btn, idx) => {
+                if (idx === pendingQuestion.tocan) {
+                    btn.classList.remove("bg-slate-700");
+                    btn.classList.add("bg-emerald-600", "border-emerald-400", "text-white");
+                } else if (idx === selectedIndex && !isCorrect) {
+                    btn.classList.remove("bg-slate-700");
+                    btn.classList.add("bg-rose-600", "border-rose-400", "text-white");
+                }
+            });
+
+            // Povratna informacija
+            feedbackMessage.classList.remove("hidden");
+            if (isCorrect) {
+                correctAnswersCount++;
+                score += 10;
+                snakeLength += 1; // Zmija raste samo kad se točno odgovori!
+                
+                feedbackMessage.className = "p-3 rounded-xl text-center font-bold text-sm mb-4 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+                feedbackMessage.innerHTML = "<i class='fa-solid fa-circle-check mr-2'></i> Točan odgovor! Zmija raste +10 bodova!";
+            } else {
+                feedbackMessage.className = "p-3 rounded-xl text-center font-bold text-sm mb-4 bg-rose-500/20 text-rose-400 border border-rose-500/30";
+                feedbackMessage.innerHTML = `<i class='fa-solid fa-circle-xmark mr-2'></i> Netolno! Zmija ne raste. Točan odgovor je bio pod ${String.fromCharCode(65 + pendingQuestion.tocan)}.`;
+            }
+
+            // Ažuriraj statistiku
+            scoreText.innerText = score;
+            quizStatsText.innerText = `${correctAnswersCount} / ${totalAsked}`;
+            if (score > highScore) {
+                highScore = score;
+                highScoreText.innerText = highScore;
+                localStorage.setItem("eduzmija_highscore", highScore);
+            }
+
+            // Nakon 1.8 sekundi zatvori modal i nastavi igru
+            setTimeout(() => {
+                quizModal.classList.add("hidden");
+                placeFood();
+                resumeGame();
+            }, 1800);
+        }
+
+        // --- PAUZA / NASTAVAK / GAME OVER ---
+        function pauseGame() {
+            isPaused = true;
+            updatePauseButtonUI();
+        }
+
+        function resumeGame() {
+            isPaused = false;
+            updatePauseButtonUI();
+        }
+
+        function togglePause() {
+            if (!isGameRunning) return;
+            isPaused = !isPaused;
+            updatePauseButtonUI();
+        }
+
+        function updatePauseButtonUI() {
+            if (isPaused) {
+                pauseIcon.className = "fa-solid fa-play text-emerald-400";
+            } else {
+                pauseIcon.className = "fa-solid fa-pause text-slate-200";
+            }
+        }
+
+        function gameOver(reason) {
+            isGameRunning = false;
+            clearInterval(gameInterval);
+            pauseBtn.disabled = true;
+
+            overlayTitle.innerText = "Kraj Igre!";
+            overlaySubtitle.innerText = `${reason} Osvojio si ${score} bodova uz ${correctAnswersCount} točnih odgovora!`;
+            overlayStartBtn.innerText = "Igraj Ponovno";
+            overlay.classList.remove("hidden");
+        }
+
+        // --- KONTROLE TIPKOVNICE I DODIRA ---
+        function setupEventListeners() {
+            // Tipkovnica
+            window.addEventListener("keydown", (e) => {
+                if (!isGameRunning || isPaused) return;
+
+                switch (e.key) {
+                    case "ArrowUp":
+                    case "w":
+                    case "W":
+                        if (dy !== 1) { nextDx = 0; nextDy = -1; }
+                        break;
+                    case "ArrowDown":
+                    case "s":
+                    case "S":
+                        if (dy !== -1) { nextDx = 0; nextDy = 1; }
+                        break;
+                    case "ArrowLeft":
+                    case "a":
+                    case "A":
+                        if (dx !== 1) { nextDx = -1; nextDy = 0; }
+                        break;
+                    case "ArrowRight":
+                    case "d":
+                    case "D":
+                        if (dx !== -1) { nextDx = 1; nextDy = 0; }
+                        break;
+                }
+            });
+
+            // Mobilni gumbi
+            document.getElementById("btnUp").onclick = () => { if (dy !== 1) { nextDx = 0; nextDy = -1; } };
+            document.getElementById("btnDown").onclick = () => { if (dy !== -1) { nextDx = 0; nextDy = 1; } };
+            document.getElementById("btnLeft").onclick = () => { if (dx !== 1) { nextDx = -1; nextDy = 0; } };
+            document.getElementById("btnRight").onclick = () => { if (dx !== -1) { nextDx = 1; nextDy = 0; } };
+
+            // Gumbi sučelja
+            startBtn.onclick = startGame;
+            overlayStartBtn.onclick = startGame;
+            pauseBtn.onclick = togglePause;
+
+            // JSON Radnje
+            reloadJsonBtn.onclick = () => loadQuestionsFromExternalJson();
+            jsonInput.onchange = handleJsonUpload;
+            exportBtn.onclick = exportQuestionsJson;
+            viewQuestionsBtn.onclick = openQuestionsListModal;
+            closeQuestionsListBtn.onclick = () => questionsListModal.classList.add("hidden");
+        }
+
+        // --- JSON POHRANA I UČITAVANJE ---
+        function handleJsonUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    if (Array.isArray(parsed) && parsed.length > 0 && validateQuestions(parsed)) {
+                        questions = parsed;
+                        updateQuestionBadge();
+                        showToast(`Uspješno učitano ${questions.length} pitanja!`, "success");
+                    } else {
+                        showToast("Neispravan format JSON datoteke s pitanjima!", "error");
+                    }
+                } catch (err) {
+                    showToast("Greška pri čitanju JSON datoteke!", "error");
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = ""; // Resetiraj polje
+        }
+
+        function validateQuestions(arr) {
+            return arr.every(q => 
+                typeof q.pitanje === "string" &&
+                Array.isArray(q.opcije) &&
+                q.opcije.length >= 2 &&
+                typeof q.tocan === "number" &&
+                q.tocan >= 0 && q.tocan < q.opcije.length
+            );
+        }
+
+        function exportQuestionsJson() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(questions, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", "eduzmija_pitanja.json");
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+            showToast("JSON datoteka s pitanjima je preuzeta!", "success");
+        }
+
+        function updateQuestionBadge() {
+            questionCountBadge.innerText = questions.length;
+        }
+
+        function openQuestionsListModal() {
+            totalQuestionsCount.innerText = questions.length;
+            questionsListContent.innerHTML = "";
+
+            questions.forEach((q, idx) => {
+                const card = document.createElement("div");
+                card.className = "bg-slate-700/50 border border-slate-600 rounded-2xl p-4 text-sm";
+                card.innerHTML = `
+                    <div class="font-bold text-cyan-300 mb-1">${idx + 1}. ${q.pitanje}</div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs text-slate-300 mt-2">
+                        ${q.opcije.map((opt, i) => `
+                            <div class="p-1.5 rounded-lg ${i === q.tocan ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-semibold' : 'bg-slate-800/60'}">
+                                ${String.fromCharCode(65 + i)}) ${opt}
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                questionsListContent.appendChild(card);
+            });
+
+            questionsListModal.classList.remove("hidden");
+        }
+
+        // UTILITY: Pomiješaj niz
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        // UTILITY: Prikaži Toast obavijest
+        function showToast(text, type = "info") {
+            const toast = document.getElementById("toast");
+            const toastText = document.getElementById("toastText");
+            const toastIcon = document.getElementById("toastIcon");
+
+            toastText.innerText = text;
+            if (type === "success") {
+                toastIcon.className = "fa-solid fa-circle-check text-emerald-400 text-lg";
+            } else if (type === "error") {
+                toastIcon.className = "fa-solid fa-circle-exclamation text-rose-400 text-lg";
+            } else {
+                toastIcon.className = "fa-solid fa-circle-info text-cyan-400 text-lg";
+            }
+
+            toast.classList.remove("translate-y-20", "opacity-0");
+            setTimeout(() => {
+                toast.classList.add("translate-y-20", "opacity-0");
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
