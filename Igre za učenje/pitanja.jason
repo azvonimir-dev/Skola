@@ -1,0 +1,303 @@
+[
+{
+"pitanje": "Čemu služi računalni mišem?",
+"opcije": [
+"Za pisanje slova na zaslonu",
+"Za pomicanje pokazivača i klikanje",
+"Za slušanje glazbe",
+"Za tiskanje papira"
+],
+"tocan": 1
+},
+{
+"pitanje": "Koja tipka na tipkovnici radi razmak između riječi?",
+"opcije": [
+"Enter",
+"Backspace",
+"Razmaknica (Spacebar)",
+"Shift"
+],
+"tocan": 2
+},
+{
+"pitanje": "Što od navedenog POKAZUJE sliku na računalu?",
+"opcije": [
+"Tipkovnica",
+"Zvučnik",
+"Zaslon (Monitor)",
+"Miš"
+],
+"tocan": 2
+},
+{
+"pitanje": "Kako nazivamo 'mozak' računala u kojem se obrađuju svi podaci?",
+"opcije": [
+"Spremnik",
+"Procesor (CPU)",
+"Tipkovnica",
+"Kamera"
+],
+"tocan": 1
+},
+{
+"pitanje": "Koja tipka briše slovo LIJEVO od pokazivača?",
+"opcije": [
+"Backspace",
+"Delete",
+"Enter",
+"Caps Lock"
+],
+"tocan": 0
+},
+{
+"pitanje": "Što smiješ dijeliti s nepoznatim osobama na Internetu?",
+"opcije": [
+"Svoju kućnu adresu",
+"Svoju lozinku",
+"Koji ti je omiljeni crtić",
+"Broj telefona roditelja"
+],
+"tocan": 2
+},
+{
+"pitanje": "Koji program najčešće koristimo za crtanje na računalu?",
+"opcije": [
+"Bojanje (Paint)",
+"Kalkulator",
+"Internet preglednik",
+"WordPad"
+],
+"tocan": 0
+},
+{
+"pitanje": "Što znači riječ 'Lozinka' (Password)?",
+"opcije": [
+"Tajni niz znakova za ulazak u računalo",
+"Korisničko ime",
+"Program za crtanje",
+"Kabel od struje"
+],
+"tocan": 0
+},
+{
+"pitanje": "Kako zovemo dio računala koji služi za unos slova i brojeva?",
+"opcije": [
+"Zvučnik",
+"Tipkovnica",
+"Skener",
+"Pisač"
+],
+"tocan": 1
+},
+{
+"pitanje": "Što od navedenog NIJE dobro činiti s računalom?",
+"opcije": [
+"Proliti sok po tipkovnici",
+"Nježno pritiskati tipke",
+"Čistiti zaslon krpicom",
+"Isključiti ga pravilno"
+],
+"tocan": 0
+},
+{
+"pitanje": "Kojom tipkom potvrđujemo naredbu ili odlazimo u novi redak u tekstu?",
+"opcije": [
+"Escape (Esc)",
+"Enter",
+"Spacebar",
+"Shift"
+],
+"tocan": 1
+},
+{
+"pitanje": "Što su to zvučnici?",
+"opcije": [
+"Uređaji iz kojih čujemo zvuk s računala",
+"Uređaji za crtanje",
+"Tipke sa slovima",
+"Vrsta računalnog miša"
+],
+"tocan": 0
+},
+{
+"pitanje": "Što radi mikrofona na računalu?",
+"opcije": [
+"Snima naš glas i zvuk",
+"Prikazuje video zapise",
+"Povećava slova",
+"Printa papire"
+],
+"tocan": 0
+},
+{
+"pitanje": "Koja je glavna svrha pisača (printera)?",
+"opcije": [
+"Ispisivanje teksta i slika na papir",
+"Slušanje pjesama",
+"Snimanje fotografija",
+"Spajanje na internet"
+],
+"tocan": 0
+},
+{
+"pitanje": "Što moramo učiniti ako na internetu vidimo nešto ružno ili neugodno?",
+"opcije": [
+"Šutjeti i nikom ne reći",
+"Odmah reći roditeljima ili učitelju",
+"Poslati to svim prijateljima",
+"Isključiti monitor i plakati"
+],
+"tocan": 1
+},
+{
+"pitanje": "Kako nazivamo prijenosno računalo koje možemo nositi u torbi?",
+"opcije": [
+"Mobitel",
+"Tablet",
+"Priključak",
+"Prijenosno računalo (Laptop)"
+],
+"tocan": 3
+},
+{
+"pitanje": "Koja tipka se koristi za pisanje VELIKIH slova dok je držimo pritisnutom?",
+"opcije": [
+"Ctrl",
+"Alt",
+"Shift",
+"Tab"
+],
+"tocan": 2
+},
+{
+"pitanje": "Koja tipka uključuje stalno pisanje velikih slova?",
+"opcije": [
+"Caps Lock",
+"Num Lock",
+"Enter",
+"Spacebar"
+],
+"tocan": 0
+},
+{
+"pitanje": "Kako nazivamo fizičke dijelove računala koje možemo dotaknuti?",
+"opcije": [
+"Sklopovlje (Hardware)",
+"Programi (Software)",
+"Internet",
+"Oblak"
+],
+"tocan": 0
+},
+{
+"pitanje": "Kako nazivamo programe koje pokrećemo na računalu?",
+"opcije": [
+"Sklopovlje (Hardware)",
+"Programska podrška (Software)",
+"Žice",
+"Kućište"
+],
+"tocan": 1
+},
+{
+"pitanje": "Što je to Internet?",
+"opcije": [
+"Velika svjetska mreža povezanih računala",
+"Igra na računalu",
+"Posebna tipkovnica",
+"Kabel za zvučnik"
+],
+"tocan": 0
+},
+{
+"pitanje": "Što od navedenog služi za pohranu podataka i lak prijenos s računala na računalo?",
+"opcije": [
+"USB štapić (Stik)",
+"Miš",
+"Zaslon",
+"Pisač"
+],
+"tocan": 0
+},
+{
+"pitanje": "Što čini dvostruki brzi klik lijevom tipkom miša?",
+"opcije": [
+"Otvara datoteku ili program",
+"Briše program",
+"Gasi računalo",
+"Kopira tekst"
+],
+"tocan": 0
+},
+{
+"pitanje": "Kako nazivamo sličice na radnoj površini (Desktopu) koje otvaraju programe?",
+"opcije": [
+"Ikone",
+"Poruke",
+"Okviri",
+"Točke"
+],
+"tocan": 0
+},
+{
+"pitanje": "Za što služi web kamera?",
+"opcije": [
+"Za snimanje ili prikaza naše slike uživo",
+"Za tiskanje radova",
+"Za mjerenje brzine",
+"Za slušanje zvuka"
+],
+"tocan": 0
+},
+{
+"pitanje": "Što je to računalni virus?",
+"opcije": [
+"Bolest koju ljudi dobiju od računala",
+"Štetni program koji može oštetiti podatke",
+"Prašina u kućištu računala",
+"Vrsta miša"
+],
+"tocan": 1
+},
+{
+"pitanje": "Koja je sigurna lozinka?",
+"opcije": [
+"123456",
+"MojeIme123",
+"Kombinacija slova, brojeva i znakova",
+"Riječ 'lozinka'"
+],
+"tocan": 2
+},
+{
+"pitanje": "Koja tipka na tipkovnici u gornjem lijevom kutu služi za odustajanje ili izlaz?",
+"opcije": [
+"Enter",
+"Esc (Escape)",
+"Spacebar",
+"Shift"
+],
+"tocan": 1
+},
+{
+"pitanje": "Što od ovog NIJE pametan uređaj?",
+"opcije": [
+"Pametni telefon",
+"Drvena olovka",
+"Tablet",
+"Pametni sat"
+],
+"tocan": 1
+},
+{
+"pitanje": "Što nam omogućuje web preglednik (npr. Google Chrome)?",
+"opcije": [
+"Crtanje slika",
+"Pregledavanje web stranica na internetu",
+"Pisanje zadataka iz matematike",
+"Popravak tipkovnice"
+],
+"tocan": 1
+}
+]
+
