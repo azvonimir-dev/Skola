@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kviz: Sigurnost i Život u Digitalnom Svijetu</title>
+    <!-- Google Fonts sa punom podrškom za hrvatske dijakritike -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-indigo-500 selection:text-white">
+
+    <!-- Zaglavlje -->
+    <header class="border-b border-slate-800 bg-slate-950/50 backdrop-blur sticky top-0 z-10">
+        <div class="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <span class="text-2xl">🌐</span>
+                <h1 class="text-lg md:text-xl font-bold bg-gradient-to-r from-cyan-400 to-indigo-400 bg-clip-text text-transparent">
+                    Digitalni Svijet Kviz
+                </h1>
+            </div>
+            <div id="quiz-badge" class="hidden text-xs md:text-sm font-semibold px-3 py-1 rounded-full bg-slate-800 text-indigo-300 border border-indigo-500/30">
+                Pitanje <span id="current-question-num">1</span> od <span id="total-questions-num">8</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Glavni sadržaj -->
+    <main class="flex-grow flex items-center justify-center p-4 md:p-6">
+        <div class="w-full max-w-2xl">
+
+            <!-- Početni ekran -->
+            <div id="start-screen" class="bg-slate-800/80 border border-slate-700/60 rounded-2xl p-6 md:p-8 shadow-2xl backdrop-blur-md fade-in text-center">
+                <div class="w-16 h-16 bg-indigo-500/10 text-indigo-400 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-indigo-500/20 text-3xl">
+                    🛡️
+                </div>
+                <h2 class="text-2xl md:text-3xl font-extrabold text-white mb-3">
+                    Provjeri svoje znanje o digitalnom svijetu!
+                </h2>
+                <p class="text-slate-300 mb-6 text-sm md:text-base leading-relaxed max-w-xl mx-auto">
+                    Upoznat/a si s prednostima, ali i neugodnostima na internetu. Testiraj svoje znanje o sigurnosti, lozinkama, anonimnosti i elektroničkom nasilju kroz kratki kviz.
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-left mb-8 bg-slate-900/60 p-4 rounded-xl border border-slate-700/40 text-xs md:text-sm">
+                    <div class="flex items-start space-x-2">
+                        <span class="text-emerald-400 text-base">✓</span>
+                        <span class="text-slate-300">Nauči prepoznati dobre i loše strane interneta</span>
+                    </div>
+                    <div class="flex items-start space-x-2">
+                        <span class="text-emerald-400 text-base">✓</span>
+                        <span class="text-slate-300">Saznaj kako zaštititi svoje podatke</span>
+                    </div>
+                    <div class="flex items-start space-x-2">
+                        <span class="text-emerald-400 text-base">✓</span>
+                        <span class="text-slate-300">Saznaj više o trajnosti tragova na mreži</span>
+                    </div>
+                    <div class="flex items-start space-x-2">
+                        <span class="text-emerald-400 text-base">✓</span>
+                        <span class="text-slate-300">Dobij trenutačne objašnjenja za svaki odgovor</span>
+                    </div>
+                </div>
+
+                <button id="start-btn" onclick="startQuiz()" class="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-indigo-500 to-cyan-500 hover:from-indigo-600 hover:to-cyan-600 text-white font-bold rounded-xl shadow-lg transition-all transform hover:-translate-y-0.5 active:translate-y-0">
+                    Započni kviz
+                </button>
+            </div>
+
+            <!-- Kartica s pitanjem -->
+            <div id="quiz-screen" class="hidden bg-slate-800/80 border border-slate-700/60 rounded-2xl p-6 md:p-8 shadow-2xl backdrop-blur-md fade-in">
+                <!-- Progress bar -->
+                <div class="w-full bg-slate-700/60 rounded-full h-2.5 mb-6 overflow-hidden">
+                    <div id="progress-bar" class="bg-gradient-to-r from-cyan-400 to-indigo-500 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+
+                <h3 id="question-text" class="text-lg md:text-xl font-bold text-white mb-6 leading-snug">
+                    Učitavanje pitanja...
+                </h3>
+
+                <div id="options-container" class="space-y-3 mb-6">
+                    <!-- Opcije odgovora učitavaju se putem JS-a -->
+                </div>
+
+                <!-- Objašnjenje (pojavljuje se nakon odabira) -->
+                <div id="explanation-box" class="hidden p-4 rounded-xl mb-6 text-sm leading-relaxed fade-in">
+                    <p id="explanation-text" class="font-medium"></p>
+                </div>
+
+                <div class="flex justify-between items-center pt-2 border-t border-slate-700/50">
+                    <div class="text-xs text-slate-400">
+                        Bodovi: <span id="score-counter" class="font-bold text-indigo-400">0</span>
+                    </div>
+                    <button id="next-btn" onclick="nextQuestion()" disabled class="px-6 py-2.5 bg-slate-700 text-slate-400 font-semibold rounded-xl transition-all cursor-not-allowed">
+                        Sljedeće pitanje
+                    </button>
+                </div>
+            </div>
+
+            <!-- Završni ekran -->
+            <div id="result-screen" class="hidden bg-slate-800/80 border border-slate-700/60 rounded-2xl p-6 md:p-8 shadow-2xl backdrop-blur-md fade-in text-center">
+                <div id="result-icon" class="text-5xl mb-4">🏆</div>
+                <h2 class="text-2xl md:text-3xl font-extrabold text-white mb-2">Čestitamo! Završili ste kviz.</h2>
+                <p id="result-subtitle" class="text-slate-300 text-sm md:text-base mb-6">Ovo su tvoji ostvareni rezultati:</p>
+
+                <div class="bg-slate-900/80 rounded-2xl p-6 border border-slate-700/50 mb-6 max-w-sm mx-auto">
+                    <div class="text-4xl md:text-5xl font-black bg-gradient-to-r from-cyan-400 to-indigo-400 bg-clip-text text-transparent mb-2">
+                        <span id="final-score">0</span> / <span id="final-total">0</span>
+                    </div>
+                    <div id="score-percentage" class="text-sm font-semibold text-slate-400"></div>
+                </div>
+
+                <p id="feedback-message" class="text-slate-200 mb-8 px-4 text-sm md:text-base leading-relaxed"></p>
+
+                <button onclick="restartQuiz()" class="px-8 py-3.5 bg-gradient-to-r from-indigo-500 to-cyan-500 hover:from-indigo-600 hover:to-cyan-600 text-white font-bold rounded-xl shadow-lg transition-all transform hover:-translate-y-0.5">
+                    Riješi ponovno
+                </button>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Podnožje -->
+    <footer class="border-t border-slate-800/80 py-4 text-center text-xs text-slate-500">
+        Kviz je izrađen na temelju nastavnog materijala o dobrim i lošim stranama digitalnog svijeta.
+    </footer>
+
+    <!-- JavaScript logika -->
+    <script>
+        // Pitanja sastavljena isključivo iz priloženih slika s potpunim hrvatskim dijakritičkim znakovima
+        const quizData = [
+            {
+                question: "Što od navedenog spada u DOBRE strane digitalnog svijeta?",
+                options: [
+                    "Nisu svi ljudi u digitalnom svijetu dobronamjerni",
+                    "Brza komunikacija s velikim brojem ljudi u kratkom vremenu",
+                    "Aplikacije koje traže uvid u tvoje kontakte i fotografije",
+                    "Trajno spremanje svih tvojih aktivnosti na mreži"
+                ],
+                correct: 1,
+                explanation: "Dobra strana digitalnog svijeta je brza komunikacija s velikim brojem ljudi u kratkom vremenu, kao i lakše učenje te zabava."
+            },
+            {
+                question: "Što se događa sa sadržajem i aktivnostima koje radiš na internetu?",
+                options: [
+                    "Automatski se brišu nakon 24 sata",
+                    "Sve što radiš na internetu ostaje trajno sačuvano",
+                    "Spremaju se samo ako ih označiš sa 'Spremi'",
+                    "Vidi ih samo tvoj pružatelj internet usluge"
+                ],
+                correct: 1,
+                explanation: "Važno pravilo digitalnog svijeta glasi: Sve što radiš na internetu, ostaje trajno sačuvano!"
+            },
+            {
+                question: "Zašto je potreban oprez prilikom dopisivanja na internetu s nepoznatim osobama?",
+                options: [
+                    "Jer poruke putuju sporije ako se s nekim ne poznaješ",
+                    "Jer nikad nisi siguran/sigurna s kim se stvarno dopisuješ",
+                    "Jer se internetska veza može lakše prekinuti",
+                    "Jer poruke moraju proći odobrenje roditelja"
+                ],
+                correct: 1,
+                explanation: "Na internetu nikad nisi u potpunosti siguran/sigurna tko se zapravo nalazi s druge strane ekrana."
+            },
+            {
+                question: "Što se može dogoditi ako ne paziš na svoja korisnička imena i lozinke?",
+                options: [
+                    "Aplikacije će ti automatski obrisati račun",
+                    "Netko ih lako može zloupotrijebiti i pristupiti tvojim računima",
+                    "Možeš izgubiti internet vezu u kući",
+                    "Nećeš više moći instalirati nove igrice"
+                ],
+                correct: 1,
+                explanation: "Ako ne čuvaš pažljivo svoja korisnička imena i lozinke, netko ih može zloupotrijebiti i predstavljati se u tvoje ime."
+            },
+            {
+                question: "Zašto neki ljudi na internetu češće govore neprimjereno nego u stvarnom životu?",
+                options: [
+                    "Zato što brže tipkaju nego što govore",
+                    "Zato što se osjećaju zaštićeno kad su anonimni",
+                    "Zato što ih tipkovnica potiče na to",
+                    "Zato što ih u digitalnom svijetu nitko ne čuje"
+                ],
+                correct: 1,
+                explanation: "Ljudi češće neprimjereno govore i ponašaju se kad su anonimni, jer misle da nemaju posljedica."
+            },
+            {
+                question: "Koja je opasnost vezana uz objavljivanje vlastitih autorskih sadržaja (slika, tekstova, radova)?",
+                options: [
+                    "Sadržaj koji objaviš netko drugi može prisvojiti i predstaviti kao svoj",
+                    "Sadržaj će promijeniti boju nakon objave",
+                    "Fotografije gube na kvaliteti automatski",
+                    "Nitko drugi ga neće moći vidjeti osim tebe"
+                ],
+                correct: 0,
+                explanation: "Sadržaj koji objaviš na internetu netko drugi može preuzeti, prisvojiti i lažno predstaviti kao svoj rad."
+            },
+            {
+                question: "Što od navedenog spada u LOŠE strane digitalnog svijeta?",
+                options: [
+                    "Olakšavanje učenja zabavnim i zanimljivim sadržajima",
+                    "Pratitelji koji objavljuju ili prate nasilan i ružan sadržaj te elektroničko nasilje",
+                    "Zabava i opuštanje uz glazbu i videozapise",
+                    "Lako i brzo dolaženje do potrebnih informacija za školu"
+                ],
+                correct: 1,
+                explanation: "Loše strane uključuju izloženost elektroničkom nasilju, nasilnom sadržaju i činjenicu da nisu svi ljudi na mreži dobronamjerni."
+            },
+            {
+                question: "Koju od ovih opcija treba izbjegavati radi osobne sigurnosti na internetu?",
+                options: [
+                    "Slušanje glazbe i igranje igara radi opuštanja",
+                    "Traženje korisnih informacija za učenje",
+                    "Olako davanje dozvola aplikacijama za uvid u fotografije i kontakte",
+                    "Brza komunikacija s prijateljima iz razreda"
+                ],
+                correct: 2,
+                explanation: "Mnoge aplikacije traže nepotrebne dozvole za uvid u tvoje privatne fotografije i kontakte, što predstavlja rizik za privatnost."
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let answered = false;
+
+        function startQuiz() {
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            document.getElementById('quiz-badge').classList.remove('hidden');
+            
+            document.getElementById('total-questions-num').textContent = quizData.length;
+            currentQuestionIndex = 0;
+            score = 0;
+            updateScoreDisplay();
+            showQuestion();
+        }
+
+        function showQuestion() {
+            answered = false;
+            const currentData = quizData[currentQuestionIndex];
+
+            // Ažuriranje indikatora
+            document.getElementById('current-question-num').textContent = currentQuestionIndex + 1;
+            const progressPercent = ((currentQuestionIndex) / quizData.length) * 100;
+            document.getElementById('progress-bar').style.width = `${progressPercent}%`;
+
+            // Postavljanje teksta pitanja
+            document.getElementById('question-text').textContent = currentData.question;
+
+            // Sakrij objašnjenje i onemogući gumb dalje
+            const explanationBox = document.getElementById('explanation-box');
+            explanationBox.classList.add('hidden');
+            explanationBox.className = "hidden p-4 rounded-xl mb-6 text-sm leading-relaxed fade-in";
+            
+            const nextBtn = document.getElementById('next-btn');
+            nextBtn.disabled = true;
+            nextBtn.className = "px-6 py-2.5 bg-slate-700 text-slate-400 font-semibold rounded-xl transition-all cursor-not-allowed";
+
+            // Renderiranje opcija
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+
+            currentData.options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.className = "w-full text-left p-4 rounded-xl border border-slate-700/80 bg-slate-900/50 hover:bg-slate-700/50 hover:border-indigo-500/50 transition-all flex items-start space-x-3 group";
+                button.onclick = () => selectOption(index);
+
+                button.innerHTML = `
+                    <span class="w-6 h-6 rounded-full border border-slate-600 group-hover:border-indigo-400 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5 text-slate-400 group-hover:text-indigo-400 transition-colors">
+                        ${String.fromCharCode(65 + index)}
+                    </span>
+                    <span class="text-slate-200 group-hover:text-white transition-colors text-sm md:text-base">${option}</span>
+                `;
+                optionsContainer.appendChild(button);
+            });
+        }
+
+        function selectOption(selectedIndex) {
+            if (answered) return;
+            answered = true;
+
+            const currentData = quizData[currentQuestionIndex];
+            const optionsContainer = document.getElementById('options-container');
+            const buttons = optionsContainer.children;
+            const isCorrect = selectedIndex === currentData.correct;
+
+            if (isCorrect) {
+                score++;
+                updateScoreDisplay();
+            }
+
+            // Označavanje gumba točno/netočno
+            Array.from(buttons).forEach((button, index) => {
+                button.onclick = null; // Onemogući daljnje klikove
+                button.classList.remove('hover:bg-slate-700/50', 'hover:border-indigo-500/50');
+                
+                if (index === currentData.correct) {
+                    button.className = "w-full text-left p-4 rounded-xl border-2 border-emerald-500 bg-emerald-950/40 text-emerald-200 flex items-start space-x-3 font-medium";
+                } else if (index === selectedIndex && !isCorrect) {
+                    button.className = "w-full text-left p-4 rounded-xl border-2 border-rose-500 bg-rose-950/40 text-rose-200 flex items-start space-x-3";
+                } else {
+                    button.className = "w-full text-left p-4 rounded-xl border border-slate-800 bg-slate-900/30 text-slate-500 opacity-60 flex items-start space-x-3";
+                }
+            });
+
+            // Prikaži objašnjenje
+            const explanationBox = document.getElementById('explanation-box');
+            const explanationText = document.getElementById('explanation-text');
+            explanationText.textContent = (isCorrect ? "Točno! " : "Netočno. ") + currentData.explanation;
+            
+            explanationBox.classList.remove('hidden');
+            if (isCorrect) {
+                explanationBox.classList.add('bg-emerald-950/50', 'border', 'border-emerald-500/40', 'text-emerald-300');
+            } else {
+                explanationBox.classList.add('bg-rose-950/50', 'border', 'border-rose-500/40', 'text-rose-300');
+            }
+
+            // Omogući gumb Dalje
+            const nextBtn = document.getElementById('next-btn');
+            nextBtn.disabled = false;
+            nextBtn.className = "px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl shadow-md transition-all cursor-pointer transform hover:-translate-y-0.5";
+        }
+
+        function updateScoreDisplay() {
+            document.getElementById('score-counter').textContent = score;
+        }
+
+        function nextQuestion() {
+            if (!answered) return;
+
+            currentQuestionIndex++;
+            if (currentQuestionIndex < quizData.length) {
+                showQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('quiz-badge').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+
+            document.getElementById('final-score').textContent = score;
+            document.getElementById('final-total').textContent = quizData.length;
+
+            const percentage = Math.round((score / quizData.length) * 100);
+            document.getElementById('score-percentage').textContent = `${percentage}% uspješnosti`;
+
+            const iconEl = document.getElementById('result-icon');
+            const messageEl = document.getElementById('feedback-message');
+
+            if (percentage === 100) {
+                iconEl.textContent = "🥇";
+                messageEl.textContent = "Izvrsno! Savršeno razumeš sve prednosti, ali i zamke i opasnosti u digitalnom svijetu. Nastavi se tako odgovorno ponašati na internetu!";
+            } else if (percentage >= 70) {
+                iconEl.textContent = "🌟";
+                messageEl.textContent = "Vrlodobar rezultat! Znaš većinu pravila o sigurnosti i ponašanju na internetu. Obrati pozornost na detalje koje si pogriješio/la.";
+            } else if (percentage >= 50) {
+                iconEl.textContent = "👍";
+                messageEl.textContent = "Dobar pokušaj! Znaš osnove, ali svakako još jednom ponovi pravila o lozinkama, privatnosti i anonimnosti na mreži.";
+            } else {
+                iconEl.textContent = "⚠️";
+                messageEl.textContent = "Trebaš još malo ponoviti gradivo! Digitalni svijet nudi puno dobrih stvari, ali važno je dobro naučiti kako se zaštititi od neugodnosti.";
+            }
+        }
+
+        function restartQuiz() {
+            document.getElementById('result-screen').classList.add('hidden');
+            startQuiz();
+        }
+    </script>
+</body>
+</html>
