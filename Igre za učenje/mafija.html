@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="hr" class="h-full bg-slate-950 text-slate-100 dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mafija - Grad Spava | Društvena Igra</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        mafia: {
+                            red: '#e11d48',
+                            darkred: '#881337',
+                            gold: '#fbbf24',
+                            noir: '#0f172a',
+                            card: '#1e293b'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Cinzel', 'serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts & FontAwesome Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Lucide / Custom Styles -->
+    <style>
+        .font-title { font-family: 'Cinzel', serif; }
+        .card-flip {
+            perspective: 1000px;
+        }
+        .card-inner {
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        .card-inner.flipped {
+            transform: rotateY(180deg);
+        }
+        .card-front, .card-back {
+            backface-visibility: hidden;
+        }
+        .card-back {
+            transform: rotateY(180deg);
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+    </style>
+</head>
+<body class="h-full flex flex-col font-sans bg-slate-950 text-slate-100 antialiased selection:bg-rose-500 selection:text-white">
+
+    <!-- Header Navigation -->
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-40">
+        <div class="max-w-4xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-3 cursor-pointer" onclick="resetToHome()">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-600 to-rose-950 flex items-center justify-center shadow-lg shadow-rose-950/50 border border-rose-500/30">
+                    <i class="fa-solid font-title text-xl text-amber-400">M</i>
+                </div>
+                <div>
+                    <h1 class="font-title text-lg font-bold tracking-wider text-slate-100 flex items-center gap-2">
+                        MAFIJA <span class="text-xs font-sans font-normal px-2 py-0.5 rounded bg-rose-950/80 border border-rose-800 text-rose-300">Grad Spava</span>
+                    </h1>
+                </div>
+            </div>
+            
+            <div id="headerStats" class="hidden flex items-center gap-3 text-xs">
+                <span class="px-2.5 py-1 rounded-full bg-slate-800 border border-slate-700 text-slate-300">
+                    <i class="fa-solid font-title fa-users text-rose-400 mr-1"></i> Živi: <strong id="headerAliveCount" class="text-white">0</strong>
+                </span>
+                <span class="px-2.5 py-1 rounded-full bg-slate-800 border border-slate-700 text-slate-300">
+                    Dan: <strong id="headerDayCount" class="text-amber-400">1</strong>
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-4xl w-full mx-auto p-4 flex flex-col justify-center">
+
+        <!-- ================= STEP 1: SETUP PLAYERS & ROLES ================= -->
+        <section id="setupSection" class="space-y-6">
+            <div class="text-center space-y-2">
+                <h2 class="text-3xl font-bold font-title text-amber-400 tracking-wide">Priprema Igre</h2>
+                <p class="text-slate-400 text-sm max-w-md mx-auto">Unesite imena igrača i prilagodite uloge. Preporučeni omjer se automatski izračunava.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Add Players Box -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-semibold text-slate-200 flex items-center gap-2">
+                                <i class="fa-solid fa-user-plus text-rose-500"></i> Popis Igrača (<span id="playerCountDisplay">0</span>)
+                            </h3>
+                            <span class="text-xs text-slate-400">Min. 4 igrača</span>
+                        </div>
+
+                        <!-- Add Player Input -->
+                        <div class="flex gap-2 mb-4">
+                            <input type="text" id="playerNameInput" placeholder="Ime igrača..." 
+                                class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-rose-500 transition-colors"
+                                onkeypress="if(event.key==='Enter') addPlayer()">
+                            <button onclick="addPlayer()" class="bg-rose-600 hover:bg-rose-500 text-white font-medium px-4 py-2 rounded-xl text-sm transition-all active:scale-95">
+                                Add
+                            </button>
+                        </div>
+
+                        <!-- Player List -->
+                        <div id="playerList" class="flex flex-wrap gap-2 max-h-56 overflow-y-auto p-1">
+                            <!-- Dynamically filled -->
+                        </div>
+                    </div>
+
+                    <div class="mt-4 pt-3 border-t border-slate-800 flex justify-between items-center text-xs text-slate-400">
+                        <button onclick="addQuickDemoPlayers()" class="text-rose-400 hover:text-rose-300 underline">
+                            + Dodaj demo igrače (6)
+                        </button>
+                        <button onclick="clearAllPlayers()" class="text-slate-500 hover:text-slate-400">
+                            Očisti sve
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Configure Roles Box -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-semibold text-slate-200 flex items-center gap-2">
+                                <i class="fa-solid fa-chess-queen text-amber-400"></i> Uloge u Igri
+                            </h3>
+                            <button onclick="applyRecommendedRoles()" class="text-xs text-amber-400 hover:text-amber-300 bg-amber-950/50 border border-amber-800 px-2.5 py-1 rounded-lg">
+                                Autokonfig
+                            </button>
+                        </div>
+
+                        <!-- Role Counters -->
+                        <div class="space-y-3 max-h-60 overflow-y-auto pr-1" id="rolesConfigList">
+                            <!-- Dynamically generated role controls -->
+                        </div>
+                    </div>
+
+                    <div class="mt-4 pt-3 border-t border-slate-800 flex justify-between items-center">
+                        <div class="text-xs">
+                            <span class="text-slate-400">Ukupno uloga: </span>
+                            <span id="totalRolesCounter" class="font-bold text-white">0</span> / <span id="requiredRolesCounter" class="font-bold text-rose-400">0</span>
+                        </div>
+                        <div id="roleValidationMsg" class="text-xs text-rose-400 hidden">
+                            Broj uloga mora odgovarati broju igrača!
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mode Selection & Start Button -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-4">
+                <h3 class="font-semibold text-slate-200 text-center">Odaberite Način Vođenja Igre</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <label class="relative flex flex-col p-4 rounded-xl border border-slate-700 bg-slate-950/60 cursor-pointer hover:border-slate-500 transition-all">
+                        <input type="radio" name="gameMode" value="auto" checked class="peer sr-only">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="font-bold text-rose-400 flex items-center gap-2">
+                                <i class="fa-solid fa-robot"></i> Automatski Voditelj
+                            </span>
+                            <i class="fa-solid fa-circle-check text-rose-500 opacity-0 peer-checked:opacity-100 text-lg"></i>
+                        </div>
+                        <p class="text-xs text-slate-400">Aplikacija vodi noćne i dnevne faze. Nitko od igrača ne mora izostati iz igre kao fizicki voditelj!</p>
+                        <div class="absolute inset-0 rounded-xl border-2 border-transparent peer-checked:border-rose-500 pointer-events-none"></div>
+                    </label>
+
+                    <label class="relative flex flex-col p-4 rounded-xl border border-slate-700 bg-slate-950/60 cursor-pointer hover:border-slate-500 transition-all">
+                        <input type="radio" name="gameMode" value="moderator" class="peer sr-only">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="font-bold text-amber-400 flex items-center gap-2">
+                                <i class="fa-solid fa-user-ninja"></i> Ljudski Voditelj
+                            </span>
+                            <i class="fa-solid fa-circle-check text-amber-400 opacity-0 peer-checked:opacity-100 text-lg"></i>
+                        </div>
+                        <p class="text-xs text-slate-400">Jedan igrač drži uređaj i djeluje kao narator/voditelj (Game Master Dashboard).</p>
+                        <div class="absolute inset-0 rounded-xl border-2 border-transparent peer-checked:border-amber-400 pointer-events-none"></div>
+                    </label>
+                </div>
+
+                <button onclick="startRoleAssignment()" class="w-full py-4 bg-gradient-to-r from-rose-600 via-rose-700 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white font-title text-lg font-bold rounded-xl shadow-lg shadow-rose-950/60 transition-all transform active:scale-98 flex items-center justify-center gap-2">
+                     započni podjelu uloga <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- ================= STEP 2: PASS & PLAY ROLE REVEAL ================= -->
+        <section id="revealSection" class="hidden space-y-6 max-w-md mx-auto">
+            <div class="text-center space-y-2">
+                <span class="text-xs uppercase tracking-widest text-rose-400 font-bold">Tajne Uloge</span>
+                <h2 id="revealPlayerTitle" class="text-2xl font-bold text-slate-100">Izruči uređaj igraču: <span class="text-amber-400 font-title" id="currentPlayerName">Ime</span></h2>
+                <p class="text-slate-400 text-xs">Pazi da drugi igrači ne gledaju u zaslon!</p>
+            </div>
+
+            <!-- Card Flip Component -->
+            <div class="card-flip w-full h-96 cursor-pointer" onclick="flipRoleCard()">
+                <div id="roleCardInner" class="card-inner w-full h-full relative rounded-2xl shadow-2xl border border-slate-700">
+                    <!-- Front (Hidden / Sealed) -->
+                    <div class="card-front absolute inset-0 w-full h-full bg-slate-900 rounded-2xl flex flex-col items-center justify-center p-6 text-center border-2 border-rose-900/50 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-rose-950">
+                        <div class="w-20 h-20 rounded-full bg-rose-950/60 border border-rose-500/30 flex items-center justify-center mb-4 text-rose-400 text-3xl">
+                            <i class="fa-solid fa-user-secret"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-200 mb-1" id="passToNameDisplay">Ime Igrača</h3>
+                        <p class="text-xs text-rose-400/80 mb-6">Dodirnite karticu za otkrivanje tajne uloge</p>
+                        <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-rose-600/20 text-rose-300 text-xs border border-rose-500/30">
+                            <i class="fa-solid fa-hand-pointer"></i> Klikni za okretanje
+                        </span>
+                    </div>
+
+                    <!-- Back (Revealed Role) -->
+                    <div class="card-back absolute inset-0 w-full h-full bg-slate-900 rounded-2xl flex flex-col justify-between p-6 text-center border-2 border-amber-500/40 bg-gradient-to-b from-slate-900 to-slate-950">
+                        <div class="flex justify-between items-center text-xs text-slate-400 border-b border-slate-800 pb-2">
+                            <span>Tvoja Uloga</span>
+                            <span id="roleBadge" class="px-2 py-0.5 rounded font-bold uppercase text-[10px]">Tabor</span>
+                        </div>
+
+                        <div class="my-auto space-y-3">
+                            <div id="roleIconContainer" class="w-20 h-20 mx-auto rounded-2xl flex items-center justify-center text-4xl shadow-inner">
+                                <!-- Role Icon -->
+                            </div>
+                            <h3 id="roleTitle" class="text-2xl font-bold font-title text-amber-400 tracking-wide">Uloga</h3>
+                            <p id="roleDescription" class="text-xs text-slate-300 leading-relaxed px-2">Opis uloge i cilj u igri.</p>
+                        </div>
+
+                        <div id="roleSecretActionInfo" class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs text-slate-400">
+                            <!-- Secret Info e.g., teammates -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button id="nextPlayerBtn" onclick="confirmRoleSeen()" class="w-full py-3.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-xl border border-slate-700 transition-all flex items-center justify-center gap-2">
+                <i class="fa-solid fa-eye-slash"></i> Sakrij ulogu i predaj dalje
+            </button>
+        </section>
+
+        <!-- ================= STEP 3: MAIN GAME LOOP ================= -->
+        <section id="gameLoopSection" class="hidden space-y-6">
+
+            <!-- Dynamic Header Phase Indicator -->
+            <div id="phaseBanner" class="rounded-2xl p-4 border text-center transition-all bg-slate-900 border-slate-800">
+                <div class="flex items-center justify-center gap-3">
+                    <i id="phaseIcon" class="fa-solid fa-moon text-indigo-400 text-2xl"></i>
+                    <div>
+                        <h2 id="phaseTitle" class="text-xl font-bold font-title tracking-wider text-indigo-300">NOĆNA FAZA</h2>
+                        <p id="phaseSubtitle" class="text-xs text-slate-400">Grad spava... Otvorite oči samo kad se prozoze vaša uloga.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AUTO-MODERATOR NIGHT STEPS -->
+            <div id="autoNightContainer" class="hidden space-y-4">
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-5 text-center">
+                    <!-- Step Indicator -->
+                    <div class="flex justify-center gap-2 text-xs font-semibold text-slate-400">
+                        <span id="nightStepBadge" class="px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-rose-400">Korak 1 od 3</span>
+                    </div>
+
+                    <!-- Step Title & Narrator Script -->
+                    <div class="space-y-2">
+                        <h3 id="nightStepTitle" class="text-2xl font-bold font-title text-amber-400">Mafija se budi</h3>
+                        <p id="nightStepScript" class="text-sm text-slate-300 italic bg-slate-950 p-3 rounded-xl border border-slate-800">
+                            "Grad spava. Mafija otvara oči i potajno bira svoju žrtvu."
+                        </p>
+                    </div>
+
+                    <!-- Interactive Target Selector for active role -->
+                    <div id="nightActionArea" class="space-y-3 pt-2">
+                        <p class="text-xs text-slate-400 font-medium">Odaberite metu ili cilj akcije:</p>
+                        <div id="nightTargetGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                            <!-- Targets filled dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Secret Feedback Box (e.g. Detective result) -->
+                    <div id="nightFeedbackBox" class="hidden p-4 rounded-xl bg-slate-950 border border-amber-500/40 text-amber-300 text-sm font-semibold">
+                    </div>
+
+                    <button id="nightAdvanceBtn" onclick="nextNightStep()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2">
+                        Sljedeći korak noći <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- MODERATOR DASHBOARD MODE -->
+            <div id="moderatorDashboard" class="hidden space-y-4">
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-4">
+                    <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                        <h3 class="font-bold text-amber-400 font-title flex items-center gap-2">
+                            <i class="fa-solid fa-clipboard-user"></i> Nadzorna Ploča Voditelja
+                        </h3>
+                        <span class="text-xs bg-slate-800 px-2.5 py-1 rounded-full text-slate-300">Skriveni pregled</span>
+                    </div>
+
+                    <!-- All players status table for moderator -->
+                    <div class="space-y-2 max-h-60 overflow-y-auto">
+                        <p class="text-xs text-slate-400">Pregled svih igrača i njihovih uloga:</p>
+                        <div id="moderatorPlayerList" class="space-y-1.5">
+                            <!-- Filled dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Quick Night Action Controls for Moderator -->
+                    <div id="modNightControls" class="p-3 bg-slate-950 rounded-xl border border-slate-800 space-y-3">
+                        <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Noćni Unos Rezultata</h4>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                            <div>
+                                <label class="block text-slate-400 mb-1">Žrtva Mafije:</label>
+                                <select id="modMafiaTargetSelect" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white">
+                                    <option value="">-- Nitko / Promašaj --</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-slate-400 mb-1">Spašen od Liječnika:</label>
+                                <select id="modDoctorTargetSelect" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white">
+                                    <option value="">-- Nitko --</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button onclick="submitModeratorNight()" class="w-full py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-semibold rounded-lg text-xs transition-all">
+                            Završi Noć i Objavi Rezultate
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DAY PHASE & VOTING -->
+            <div id="dayPhaseContainer" class="hidden space-y-4">
+                <!-- Night Recap Banner -->
+                <div id="nightRecapCard" class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-3">
+                    <h3 class="font-bold text-amber-400 font-title flex items-center gap-2">
+                        <i class="fa-solid fa-newspaper"></i> Jutarnje Izvješće
+                    </h3>
+                    <div id="recapContent" class="text-sm text-slate-200 bg-slate-950 p-4 rounded-xl border border-slate-800 leading-relaxed">
+                        <!-- Filled dynamically -->
+                    </div>
+                </div>
+
+                <!-- Discussion Timer -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 rounded-xl bg-amber-950/60 border border-amber-500/30 flex items-center justify-center text-amber-400 text-xl">
+                            <i class="fa-solid fa-stopwatch"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-slate-200">Mjerač Rasprave</h4>
+                            <p class="text-xs text-slate-400">Pustite vrijeme za debatu i međusobno optuživanje.</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-3">
+                        <span id="timerDisplay" class="font-mono text-3xl font-bold text-amber-400 w-24 text-center">02:00</span>
+                        <button onclick="toggleTimer()" id="timerToggleBtn" class="w-10 h-10 rounded-xl bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center">
+                            <i class="fa-solid fa-play"></i>
+                        </button>
+                        <button onclick="resetTimer()" class="w-10 h-10 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center">
+                            <i class="fa-solid fa-rotate-left"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Voting Section -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-4">
+                    <div class="flex justify-between items-center">
+                        <h3 class="font-bold text-slate-200 font-title flex items-center gap-2">
+                            <i class="fa-solid fa-gavel text-rose-500"></i> Glasanje Grada za Izbacivanje
+                        </h3>
+                        <span class="text-xs text-slate-400">Koga grad protjeruje?</span>
+                    </div>
+
+                    <div id="votingGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        <!-- Dynamic vote targets -->
+                    </div>
+
+                    <button onclick="executeVoteOut()" id="confirmVoteBtn" disabled class="w-full py-3 bg-rose-600 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-rose-500 text-white font-semibold rounded-xl transition-all">
+                        Potvrdi izbacivanje odabranog igrača
+                    </button>
+                    <button onclick="skipVoteOut()" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl transition-all">
+                        Preskoči glasanje (Nitko nije izbačen)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Alive Roster Footer -->
+            <div class="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4 space-y-2">
+                <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Status Svih Igrača</h4>
+                <div id="gameRosterGrid" class="flex flex-wrap gap-2 text-xs">
+                    <!-- Status chips -->
+                </div>
+            </div>
+
+        </section>
+
+        <!-- ================= STEP 4: GAME OVER & REVEAL ================= -->
+        <section id="gameOverSection" class="hidden space-y-6 text-center max-w-lg mx-auto">
+            <div class="bg-slate-900 border-2 border-amber-500/50 rounded-3xl p-8 shadow-2xl space-y-6 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-slate-950">
+                <div id="winnerIcon" class="w-24 h-24 mx-auto rounded-3xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-5xl text-amber-400 shadow-xl">
+                    <i class="fa-solid fa-trophy"></i>
+                </div>
+
+                <div class="space-y-2">
+                    <span class="text-xs uppercase tracking-widest text-amber-400 font-bold">Kraj Igre</span>
+                    <h2 id="winnerText" class="text-3xl font-bold font-title text-white">GRAĐANI POBJEĐUJU!</h2>
+                    <p id="winnerSubtext" class="text-slate-400 text-sm">Svi mafijaši su uspješno otkriveni i izbačeni iz grada.</p>
+                </div>
+
+                <!-- Final Roles Reveal Table -->
+                <div class="space-y-3 text-left">
+                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider text-center">Konačne Uloge Igrača</h4>
+                    <div id="finalRolesList" class="space-y-2 max-h-60 overflow-y-auto pr-1">
+                        <!-- Filled dynamically -->
+                    </div>
+                </div>
+
+                <button onclick="resetToHome()" class="w-full py-4 bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white font-title font-bold rounded-xl shadow-lg transition-all transform active:scale-95">
+                    <i class="fa-solid fa-rotate-right mr-2"></i> Nova Igra
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modal / Dialog Popup -->
+    <div id="appModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl">
+            <h3 id="modalTitle" class="text-lg font-bold text-slate-100 font-title">Obavijest</h3>
+            <p id="modalBody" class="text-sm text-slate-300">Poruka...</p>
+            <button onclick="closeModal()" class="w-full py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-semibold rounded-xl text-sm transition-all">
+                U redu
+            </button>
+        </div>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // --- ROLE DEFINITIONS ---
+        const ROLE_TYPES = {
+            MAFIA: {
+                id: 'mafia',
+                name: 'Mafijaš',
+                team: 'mafia',
+                teamName: 'Mafija',
+                icon: 'fa-user-ninja',
+                color: 'text-rose-500',
+                bgColor: 'bg-rose-950/60 border-rose-800',
+                badgeColor: 'bg-rose-900 text-rose-200',
+                desc: 'Tijekom noći s ostalim mafijašima tajno birate građanina kojeg želite eliminirati. Danju se pravite nevini!'
+            },
+            CITIZEN: {
+                id: 'citizen',
+                name: 'Nevini Građanin',
+                team: 'town',
+                teamName: 'Grad',
+                icon: 'fa-user-shield',
+                color: 'text-emerald-400',
+                bgColor: 'bg-emerald-950/60 border-emerald-800',
+                badgeColor: 'bg-emerald-900 text-emerald-200',
+                desc: 'Nemate posebne moći noću. Vaše najjače oružje su pažljivo promatranje, rasprava i glas na dnevnom glasanju!'
+            },
+            DOCTOR: {
+                id: 'doctor',
+                name: 'Liječnik',
+                team: 'town',
+                teamName: 'Grad',
+                icon: 'fa-user-doctor',
+                color: 'text-cyan-400',
+                bgColor: 'bg-cyan-950/60 border-cyan-800',
+                badgeColor: 'bg-cyan-900 text-cyan-200',
+                desc: 'Svake noći odabirete jednog igrača (možete i sebe) kojeg spašavate od mogućeg napada mafije.'
+            },
+            DETECTIVE: {
+                id: 'detective',
+                name: 'Detektiv',
+                team: 'town',
+                teamName: 'Grad',
+                icon: 'fa-magnifying-glass font-bold',
+                color: 'text-amber-400',
+                bgColor: 'bg-amber-950/60 border-amber-800',
+                badgeColor: 'bg-amber-900 text-amber-200',
+                desc: 'Svake noći provjeravate jednog igrača. Voditelj ili aplikacija tajno vam otkriva je li on Mafijaš ili ne.'
+            },
+            GODMOTHER: {
+                id: 'godmother',
+                name: 'Kum Mafije',
+                team: 'mafia',
+                teamName: 'Mafija',
+                icon: 'fa-crown',
+                color: 'text-purple-400',
+                bgColor: 'bg-purple-950/60 border-purple-800',
+                badgeColor: 'bg-purple-900 text-purple-200',
+                desc: 'Vođa mafije. Ako ga detektiv provjerava noću, detektiv dobiva lažnu informaciju da je Kum nevini građanin!'
+            }
+        };
+
+        // --- GAME STATE ---
+        let players = []; // { id, name, roleKey, alive: true }
+        let roleConfig = {
+            mafia: 1,
+            doctor: 1,
+            detective: 1,
+            godmother: 0,
+            citizen: 3
+        };
+        let gameMode = 'auto'; // 'auto' or 'moderator'
+        let currentRevealIndex = 0;
+        let isCardFlipped = false;
+
+        // Active Game State
+        let currentDay = 1;
+        let currentPhase = 'NIGHT'; // 'NIGHT' or 'DAY'
+        let nightStepIndex = 0; // 0: Mafia, 1: Doctor, 2: Detective
+        let nightActions = {
+            mafiaTarget: null,
+            doctorTarget: null,
+            detectiveTarget: null
+        };
+        let selectedVoteTarget = null;
+
+        // Timer
+        let timerInterval = null;
+        let timerSeconds = 120;
+        let isTimerRunning = false;
+
+        // --- INITIALIZATION ---
+        window.onload = function() {
+            addQuickDemoPlayers();
+            renderRoleConfig();
+        };
+
+        // --- SETUP PHASE FUNCTIONS ---
+        function addPlayer() {
+            const input = document.getElementById('playerNameInput');
+            const name = input.value.trim();
+            if (!name) return;
+            if (players.some(p => p.name.toLowerCase() === name.toLowerCase())) {
+                showModal('Pogreška', 'Igrač s tim imenom već postoji!');
+                return;
+            }
+
+            players.push({
+                id: Date.now() + Math.random(),
+                name: name,
+                roleKey: null,
+                alive: true
+            });
+
+            input.value = '';
+            updatePlayerUI();
+            applyRecommendedRoles();
+        }
+
+        function removePlayer(id) {
+            players = players.filter(p => p.id !== id);
+            updatePlayerUI();
+            applyRecommendedRoles();
+        }
+
+        function clearAllPlayers() {
+            players = [];
+            updatePlayerUI();
+            applyRecommendedRoles();
+        }
+
+        function addQuickDemoPlayers() {
+            const demoNames = ['Ana', 'Marko', 'Ivan', 'Elena', 'Luka', 'Marta'];
+            players = demoNames.map((name, i) => ({
+                id: i + 1,
+                name: name,
+                roleKey: null,
+                alive: true
+            }));
+            updatePlayerUI();
+            applyRecommendedRoles();
+        }
+
+        function updatePlayerUI() {
+            const listEl = document.getElementById('playerList');
+            const countEl = document.getElementById('playerCountDisplay');
+            countEl.textContent = players.length;
+
+            listEl.innerHTML = players.map(p => `
+                <span class="inline-flex items-center gap-1.5 bg-slate-800 border border-slate-700 text-slate-200 px-3 py-1 rounded-xl text-xs">
+                    <i class="fa-solid fa-user text-slate-400"></i> ${escapeHtml(p.name)}
+                    <button onclick="removePlayer(${p.id})" class="text-slate-500 hover:text-rose-400 ml-1">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </span>
+            `).join('');
+
+            validateRoleCounts();
+        }
+
+        function applyRecommendedRoles() {
+            const count = players.length;
+            if (count < 4) {
+                roleConfig = { mafia: 1, doctor: 0, detective: 0, godmother: 0, citizen: Math.max(0, count - 1) };
+            } else if (count === 4) {
+                roleConfig = { mafia: 1, doctor: 1, detective: 0, godmother: 0, citizen: 2 };
+            } else if (count <= 6) {
+                roleConfig = { mafia: 1, doctor: 1, detective: 1, godmother: 0, citizen: count - 3 };
+            } else if (count <= 9) {
+                roleConfig = { mafia: 2, doctor: 1, detective: 1, godmother: 0, citizen: count - 4 };
+            } else {
+                roleConfig = { mafia: 2, doctor: 1, detective: 1, godmother: 1, citizen: count - 5 };
+            }
+            renderRoleConfig();
+        }
+
+        function renderRoleConfig() {
+            const container = document.getElementById('rolesConfigList');
+            container.innerHTML = Object.keys(ROLE_TYPES).map(key => {
+                const role = ROLE_TYPES[key.toUpperCase()];
+                const qty = roleConfig[role.id] || 0;
+                return `
+                    <div class="flex items-center justify-between p-2.5 bg-slate-950 rounded-xl border border-slate-800">
+                        <div class="flex items-center gap-2.5">
+                            <i class="fa-solid ${role.icon} ${role.color} text-lg w-5 text-center"></i>
+                            <div>
+                                <div class="text-xs font-semibold text-slate-200">${role.name}</div>
+                                <div class="text-[10px] text-slate-400">${role.teamName}</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="changeRoleQty('${role.id}', -1)" class="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center font-bold text-sm">-</button>
+                            <span class="w-5 text-center font-bold text-sm text-amber-400">${qty}</span>
+                            <button onclick="changeRoleQty('${role.id}', 1)" class="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center font-bold text-sm">+</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            validateRoleCounts();
+        }
+
+        function changeRoleQty(roleId, delta) {
+            const current = roleConfig[roleId] || 0;
+            const updated = Math.max(0, current + delta);
+            roleConfig[roleId] = updated;
+            renderRoleConfig();
+        }
+
+        function validateRoleCounts() {
+            const totalRoles = Object.values(roleConfig).reduce((a, b) => a + b, 0);
+            const totalPlayers = players.length;
+
+            document.getElementById('totalRolesCounter').textContent = totalRoles;
+            document.getElementById('requiredRolesCounter').textContent = totalPlayers;
+
+            const msgEl = document.getElementById('roleValidationMsg');
+            if (totalRoles !== totalPlayers && totalPlayers > 0) {
+                msgEl.classList.remove('hidden');
+                return false;
+            } else {
+                msgEl.classList.add('hidden');
+                return true;
+            }
+        }
+
+        // --- PASS & PLAY REVEAL PHASE ---
+        function startRoleAssignment() {
+            if (players.length < 4) {
+                showModal('Nedovoljno igrača', 'Za igru je potrebno najmanje 4 igrača.');
+                return;
+            }
+            if (!validateRoleCounts()) {
+                showModal('Neispravne uloge', 'Ukupan broj uloga mora biti jednak broju igrača!');
+                return;
+            }
+
+            // Get selected mode
+            const modeRadios = document.getElementsByName('gameMode');
+            for (let radio of modeRadios) {
+                if (radio.checked) gameMode = radio.value;
+            }
+
+            // Prepare Deck of Roles
+            let roleDeck = [];
+            Object.keys(roleConfig).forEach(roleId => {
+                for (let i = 0; i < roleConfig[roleId]; i++) {
+                    roleDeck.push(roleId);
+                }
+            });
+
+            // Shuffle Deck
+            for (let i = roleDeck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [roleDeck[i], roleDeck[j]] = [roleDeck[j], roleDeck[i]];
+            }
+
+            // Assign to players
+            players.forEach((p, idx) => {
+                p.roleKey = roleDeck[idx];
+                p.alive = true;
+            });
+
+            currentRevealIndex = 0;
+            document.getElementById('setupSection').classList.add('hidden');
+            document.getElementById('revealSection').classList.remove('hidden');
+            setupCardForPlayer(currentRevealIndex);
+        }
+
+        function setupCardForPlayer(index) {
+            isCardFlipped = false;
+            document.getElementById('roleCardInner').classList.remove('flipped');
+            
+            const player = players[index];
+            document.getElementById('currentPlayerName').textContent = player.name;
+            document.getElementById('passToNameDisplay').textContent = player.name;
+
+            const role = ROLE_TYPES[player.roleKey.toUpperCase()];
+            document.getElementById('roleTitle').textContent = role.name;
+            document.getElementById('roleDescription').textContent = role.desc;
+
+            const badge = document.getElementById('roleBadge');
+            badge.textContent = role.teamName;
+            badge.className = `px-2.5 py-0.5 rounded font-bold uppercase text-[10px] ${role.badgeColor}`;
+
+            const iconContainer = document.getElementById('roleIconContainer');
+            iconContainer.className = `w-20 h-20 mx-auto rounded-2xl flex items-center justify-center text-4xl shadow-inner ${role.bgColor}`;
+            iconContainer.innerHTML = `<i class="fa-solid ${role.icon} ${role.color}"></i>`;
+
+            // Teammates Secret Info for Mafia
+            const secretBox = document.getElementById('roleSecretActionInfo');
+            if (role.team === 'mafia') {
+                const mafiaTeammates = players
+                    .filter(p => ROLE_TYPES[p.roleKey.toUpperCase()].team === 'mafia' && p.id !== player.id)
+                    .map(p => p.name);
+                
+                if (mafiaTeammates.length > 0) {
+                    secretBox.innerHTML = `<i class="fa-solid fa-mask text-rose-400"></i> Tvoji mafijaški partneri: <strong>${mafiaTeammates.join(', ')}</strong>`;
+                } else {
+                    secretBox.innerHTML = `<i class="fa-solid fa-user-secret text-rose-400"></i> Ti si jedini mafijaš u gradu!`;
+                }
+                secretBox.classList.remove('hidden');
+            } else {
+                secretBox.classList.add('hidden');
+            }
+        }
+
+        function flipRoleCard() {
+            isCardFlipped = !isCardFlipped;
+            const inner = document.getElementById('roleCardInner');
+            if (isCardFlipped) {
+                inner.classList.add('flipped');
+            } else {
+                inner.classList.remove('flipped');
+            }
+        }
+
+        function confirmRoleSeen() {
+            currentRevealIndex++;
+            if (currentRevealIndex < players.length) {
+                setupCardForPlayer(currentRevealIndex);
+            } else {
+                // Done with all reveals
+                document.getElementById('revealSection').classList.add('hidden');
+                document.getElementById('gameLoopSection').classList.remove('hidden');
+                document.getElementById('headerStats').classList.remove('hidden');
+                initMainGameLoop();
+            }
+        }
+
+        // --- MAIN GAME LOOP LOGIC ---
+        function initMainGameLoop() {
+            currentDay = 1;
+            startNightPhase();
+        }
+
+        function updateHeaderStats() {
+            const aliveCount = players.filter(p => p.alive).length;
+            document.getElementById('headerAliveCount').textContent = aliveCount;
+            document.getElementById('headerDayCount').textContent = currentDay;
+        }
+
+        function renderRosterChips() {
+            const container = document.getElementById('gameRosterGrid');
+            container.innerHTML = players.map(p => `
+                <span class="px-3 py-1 rounded-xl text-xs flex items-center gap-1.5 border ${
+                    p.alive 
+                    ? 'bg-slate-800 border-slate-700 text-slate-200' 
+                    : 'bg-rose-950/30 border-rose-900/50 text-rose-400/60 line-through'
+                }">
+                    <i class="fa-solid ${p.alive ? 'fa-heart text-emerald-400' : 'fa-skull text-rose-500'}"></i>
+                    ${escapeHtml(p.name)}
+                </span>
+            `).join('');
+        }
+
+        function checkWinCondition() {
+            const alivePlayers = players.filter(p => p.alive);
+            const aliveMafia = alivePlayers.filter(p => ROLE_TYPES[p.roleKey.toUpperCase()].team === 'mafia');
+            const aliveTown = alivePlayers.filter(p => ROLE_TYPES[p.roleKey.toUpperCase()].team === 'town');
+
+            if (aliveMafia.length === 0) {
+                triggerGameOver('town');
+                return true;
+            } else if (aliveMafia.length >= aliveTown.length) {
+                triggerGameOver('mafia');
+                return true;
+            }
+            return false;
+        }
+
+        // --- NIGHT PHASE ---
+        function startNightPhase() {
+            currentPhase = 'NIGHT';
+            nightStepIndex = 0;
+            nightActions = { mafiaTarget: null, doctorTarget: null, detectiveTarget: null };
+
+            updateHeaderStats();
+            renderRosterChips();
+
+            // Update UI Banner
+            const banner = document.getElementById('phaseBanner');
+            banner.className = "rounded-2xl p-4 border text-center transition-all bg-indigo-950/40 border-indigo-800/60";
+            document.getElementById('phaseIcon').className = "fa-solid fa-moon text-indigo-400 text-2xl";
+            document.getElementById('phaseTitle').textContent = `NOĆ ${currentDay}`;
+            document.getElementById('phaseTitle').className = "text-xl font-bold font-title tracking-wider text-indigo-300";
+            document.getElementById('phaseSubtitle').textContent = "Grad spava... Svi igrači zatvaraju oči.";
+
+            document.getElementById('dayPhaseContainer').classList.add('hidden');
+
+            if (gameMode === 'auto') {
+                document.getElementById('moderatorDashboard').classList.add('hidden');
+                document.getElementById('autoNightContainer').classList.remove('hidden');
+                renderAutoNightStep();
+            } else {
+                document.getElementById('autoNightContainer').classList.add('hidden');
+                document.getElementById('moderatorDashboard').classList.remove('hidden');
+                renderModeratorDashboard();
+            }
+        }
+
+        // Auto Night Steps Config
+        const AUTO_NIGHT_STEPS = [
+            {
+                roleId: 'mafia',
+                title: 'Mafija se budi',
+                script: '"Grad spava. Mafija otvara oči i tiho odabire svoju žrtvu."',
+                targetLabel: 'Odaberi žrtvu napada mafije:'
+            },
+            {
+                roleId: 'doctor',
+                title: 'Liječnik se budi',
+                script: '"Mafija spava. Liječnik otvara oči i odabire koga želi spasiti ove noći."',
+                targetLabel: 'Odaberi koga želiš izliječiti:'
+            },
+            {
+                roleId: 'detective',
+                title: 'Detektiv se budi',
+                script: '"Liječnik spava. Detektiv otvara oči i bira osumnjičenika za istragu."',
+                targetLabel: 'Odaberi osumnjičenog za pregled uloge:'
+            }
+        ];
+
+        function renderAutoNightStep() {
+            // Find active step matching roles present and alive
+            const activeSteps = AUTO_NIGHT_STEPS.filter(step => {
+                return players.some(p => p.alive && (p.roleKey === step.roleId || (step.roleId === 'mafia' && ROLE_TYPES[p.roleKey.toUpperCase()].team === 'mafia')));
+            });
+
+            if (nightStepIndex >= activeSteps.length) {
+                // Night finished
+                finishNightPhase();
+                return;
+            }
+
+            const currentStepData = activeSteps[nightStepIndex];
+
+            document.getElementById('nightStepBadge').textContent = `Korak ${nightStepIndex + 1} od ${activeSteps.length}`;
+            document.getElementById('nightStepTitle').textContent = currentStepData.title;
+            document.getElementById('nightStepScript').textContent = currentStepData.script;
+
+            document.getElementById('nightFeedbackBox').classList.add('hidden');
+            const targetGrid = document.getElementById('nightTargetGrid');
+            const aliveList = players.filter(p => p.alive);
+
+            targetGrid.innerHTML = aliveList.map(p => `
+                <button onclick="selectNightTarget(${p.id}, '${currentStepData.roleId}')" 
+                    id="targetBtn_${p.id}"
+                    class="p-3 bg-slate-950 border border-slate-800 hover:border-indigo-500 rounded-xl text-xs font-medium text-slate-200 transition-all flex items-center justify-between">
+                    <span>${escapeHtml(p.name)}</span>
+                    <i class="fa-regular fa-circle text-slate-600 border-icon"></i>
+                </button>
+            `).join('');
+
+            // Highlight if already selected
+            const currentSelected = nightActions[currentStepData.roleId + 'Target'];
+            if (currentSelected) {
+                highlightSelectedTarget(currentSelected);
+            }
+        }
+
+        function selectNightTarget(playerId, stepRoleId) {
+            if (stepRoleId === 'mafia') nightActions.mafiaTarget = playerId;
+            if (stepRoleId === 'doctor') nightActions.doctorTarget = playerId;
+            if (stepRoleId === 'detective') {
+                nightActions.detectiveTarget = playerId;
+
+                // Show instant detective feedback
+                const targetPlayer = players.find(p => p.id === playerId);
+                const feedbackBox = document.getElementById('nightFeedbackBox');
+                
+                // Godmother trick
+                let isMafia = false;
+                if (targetPlayer.roleKey === 'mafia') isMafia = true;
+                if (targetPlayer.roleKey === 'godmother') isMafia = false; // Godmother appears safe!
+
+                feedbackBox.innerHTML = `
+                    <i class="fa-solid fa-magnifying-glass mr-1"></i> Nalaz Istrage za <strong>${escapeHtml(targetPlayer.name)}</strong>: 
+                    <span class="${isMafia ? 'text-rose-400 font-bold' : 'text-emerald-400 font-bold'}">
+                        ${isMafia ? 'OSUMNJIČENI JE MAFIJAŠ!' : 'SIGURAN (Nije obična Mafija)'}
+                    </span>
+                `;
+                feedbackBox.classList.remove('hidden');
+            }
+
+            highlightSelectedTarget(playerId);
+        }
+
+        function highlightSelectedTarget(playerId) {
+            const buttons = document.querySelectorAll('#nightTargetGrid button');
+            buttons.forEach(btn => {
+                btn.classList.remove('border-indigo-500', 'bg-indigo-950/40', 'text-amber-400');
+                const icon = btn.querySelector('.border-icon');
+                if (icon) icon.className = "fa-regular fa-circle text-slate-600 border-icon";
+            });
+
+            const selBtn = document.getElementById(`targetBtn_${playerId}`);
+            if (selBtn) {
+                selBtn.classList.add('border-indigo-500', 'bg-indigo-950/40', 'text-amber-400');
+                const icon = selBtn.querySelector('.border-icon');
+                if (icon) icon.className = "fa-solid fa-circle-check text-indigo-400 border-icon";
+            }
+        }
+
+        function nextNightStep() {
+            nightStepIndex++;
+            renderAutoNightStep();
+        }
+
+        // --- MODERATOR DASHBOARD LOGIC ---
+        function renderModeratorDashboard() {
+            const listEl = document.getElementById('moderatorPlayerList');
+            listEl.innerHTML = players.map(p => {
+                const role = ROLE_TYPES[p.roleKey.toUpperCase()];
+                return `
+                    <div class="flex items-center justify-between p-2 rounded-xl bg-slate-950 border border-slate-800 text-xs ${!p.alive ? 'opacity-40' : ''}">
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-slate-200">${escapeHtml(p.name)}</span>
+                            <span class="text-[10px] px-2 py-0.5 rounded ${role.badgeColor}">${role.name}</span>
+                        </div>
+                        <span class="${p.alive ? 'text-emerald-400' : 'text-rose-400'} font-semibold">
+                            ${p.alive ? 'Živ' : 'Eliminiran'}
+                        </span>
+                    </div>
+                `;
+            }).join('');
+
+            // Select dropdowns
+            const alivePlayers = players.filter(p => p.alive);
+            const mafiaSelect = document.getElementById('modMafiaTargetSelect');
+            const docSelect = document.getElementById('modDoctorTargetSelect');
+
+            const optionsHtml = '<option value="">-- Nitko --</option>' + 
+                alivePlayers.map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
+
+            mafiaSelect.innerHTML = optionsHtml;
+            docSelect.innerHTML = optionsHtml;
+        }
+
+        function submitModeratorNight() {
+            const mafiaVal = document.getElementById('modMafiaTargetSelect').value;
+            const docVal = document.getElementById('modDoctorTargetSelect').value;
+
+            nightActions.mafiaTarget = mafiaVal ? parseFloat(mafiaVal) : null;
+            nightActions.doctorTarget = docVal ? parseFloat(docVal) : null;
+
+            finishNightPhase();
+        }
+
+        // --- RESOLVE NIGHT ACTIONS ---
+        function finishNightPhase() {
+            let eliminatedPlayer = null;
+
+            if (nightActions.mafiaTarget) {
+                // Check if healed by doctor
+                if (nightActions.mafiaTarget !== nightActions.doctorTarget) {
+                    eliminatedPlayer = players.find(p => p.id === nightActions.mafiaTarget);
+                    if (eliminatedPlayer) {
+                        eliminatedPlayer.alive = false;
+                    }
+                }
+            }
+
+            // Start Day Phase
+            startDayPhase(eliminatedPlayer);
+        }
+
+        // --- DAY PHASE ---
+        function startDayPhase(eliminatedPlayer) {
+            currentPhase = 'DAY';
+            updateHeaderStats();
+            renderRosterChips();
+
+            // Update UI Banner
+            const banner = document.getElementById('phaseBanner');
+            banner.className = "rounded-2xl p-4 border text-center transition-all bg-amber-950/40 border-amber-800/60";
+            document.getElementById('phaseIcon').className = "fa-solid fa-sun text-amber-400 text-2xl";
+            document.getElementById('phaseTitle').textContent = `DAN ${currentDay}`;
+            document.getElementById('phaseTitle').className = "text-xl font-bold font-title tracking-wider text-amber-300";
+            document.getElementById('phaseSubtitle').textContent = "Grad se budi. Otvorite eyes i započnite raspravu!";
+
+            document.getElementById('autoNightContainer').classList.add('hidden');
+            document.getElementById('moderatorDashboard').classList.add('hidden');
+            document.getElementById('dayPhaseContainer').classList.remove('hidden');
+
+            // Recap text
+            const recapEl = document.getElementById('recapContent');
+            if (eliminatedPlayer) {
+                recapEl.innerHTML = `
+                    <div class="flex items-center gap-3 text-rose-400 font-bold mb-1">
+                        <i class="fa-solid fa-skull-crossbones text-xl"></i> Tragične vijesti jutros!
+                    </div>
+                    Tijekom noći stradao je igrač: <strong class="text-white text-base">${escapeHtml(eliminatedPlayer.name)}</strong>. 
+                    <span class="text-xs block text-slate-400 mt-1">Njegova uloga ostaje tajna do kraja igre.</span>
+                `;
+            } else {
+                recapEl.innerHTML = `
+                    <div class="flex items-center gap-3 text-emerald-400 font-bold mb-1">
+                        <i class="fa-solid fa-shield-halved text-xl"></i> Mirna noć u gradu!
+                    </div>
+                    Svi igrači su preživjeli noć. Liječnik je uspješno intervenirao ili mafija nije imala jasan cilj!
+                `;
+            }
+
+            // Check if game over right away
+            if (checkWinCondition()) return;
+
+            // Render voting target buttons
+            renderVotingGrid();
+            resetTimer();
+        }
+
+        function renderVotingGrid() {
+            const aliveList = players.filter(p => p.alive);
+            const grid = document.getElementById('votingGrid');
+            selectedVoteTarget = null;
+            document.getElementById('confirmVoteBtn').disabled = true;
+
+            grid.innerHTML = aliveList.map(p => `
+                <button onclick="selectVoteTarget(${p.id})" id="voteBtn_${p.id}"
+                    class="p-3 bg-slate-950 border border-slate-800 hover:border-rose-500 rounded-xl text-xs font-semibold text-slate-200 transition-all flex items-center justify-between">
+                    <span>${escapeHtml(p.name)}</span>
+                    <i class="fa-regular fa-circle text-slate-600 vote-icon"></i>
+                </button>
+            `).join('');
+        }
+
+        function selectVoteTarget(playerId) {
+            selectedVoteTarget = playerId;
+            document.getElementById('confirmVoteBtn').disabled = false;
+
+            const buttons = document.querySelectorAll('#votingGrid button');
+            buttons.forEach(btn => {
+                btn.classList.remove('border-rose-500', 'bg-rose-950/40', 'text-rose-300');
+                const icon = btn.querySelector('.vote-icon');
+                if (icon) icon.className = "fa-regular fa-circle text-slate-600 vote-icon";
+            });
+
+            const selBtn = document.getElementById(`voteBtn_${playerId}`);
+            if (selBtn) {
+                selBtn.classList.add('border-rose-500', 'bg-rose-950/40', 'text-rose-300');
+                const icon = selBtn.querySelector('.vote-icon');
+                if (icon) icon.className = "fa-solid fa-circle-check text-rose-500 vote-icon";
+            }
+        }
+
+        function executeVoteOut() {
+            if (!selectedVoteTarget) return;
+
+            const targetPlayer = players.find(p => p.id === selectedVoteTarget);
+            if (targetPlayer) {
+                targetPlayer.alive = false;
+                showModal('Odluka Grada', `Većinom glasova igrač <strong>${escapeHtml(targetPlayer.name)}</strong> je protjeran iz grada!`);
+            }
+
+            if (!checkWinCondition()) {
+                currentDay++;
+                startNightPhase();
+            }
+        }
+
+        function skipVoteOut() {
+            showModal('Preskočeno Glasanje', 'Grad nije izglasao ničije izbacivanje. Prelazi se na novu noć.');
+            currentDay++;
+            startNightPhase();
+        }
+
+        // --- TIMER FUNCTIONS ---
+        function toggleTimer() {
+            if (isTimerRunning) {
+                clearInterval(timerInterval);
+                isTimerRunning = false;
+                document.getElementById('timerToggleBtn').innerHTML = '<i class="fa-solid fa-play"></i>';
+            } else {
+                isTimerRunning = true;
+                document.getElementById('timerToggleBtn').innerHTML = '<i class="fa-solid fa-pause"></i>';
+                timerInterval = setInterval(() => {
+                    if (timerSeconds > 0) {
+                        timerSeconds--;
+                        updateTimerDisplay();
+                    } else {
+                        clearInterval(timerInterval);
+                        isTimerRunning = false;
+                        document.getElementById('timerToggleBtn').innerHTML = '<i class="fa-solid fa-play"></i>';
+                        showModal('Vrijeme Isteklo!', 'Vrijeme za raspravu je završilo. Započnite glasanje!');
+                    }
+                }, 1000);
+            }
+        }
+
+        function resetTimer() {
+            clearInterval(timerInterval);
+            isTimerRunning = false;
+            timerSeconds = 120;
+            updateTimerDisplay();
+            document.getElementById('timerToggleBtn').innerHTML = '<i class="fa-solid fa-play"></i>';
+        }
+
+        function updateTimerDisplay() {
+            const mins = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
+            const secs = (timerSeconds % 60).toString().padStart(2, '0');
+            document.getElementById('timerDisplay').textContent = `${mins}:${secs}`;
+        }
+
+        // --- GAME OVER & REVEAL ---
+        function triggerGameOver(winningTeam) {
+            document.getElementById('gameLoopSection').classList.add('hidden');
+            document.getElementById('gameOverSection').classList.remove('hidden');
+
+            const winnerText = document.getElementById('winnerText');
+            const winnerSubtext = document.getElementById('winnerSubtext');
+            const winnerIcon = document.getElementById('winnerIcon');
+
+            if (winningTeam === 'town') {
+                winnerText.textContent = 'GRAĐANI POBJEĐUJU!';
+                winnerText.className = 'text-3xl font-bold font-title text-emerald-400';
+                winnerSubtext.textContent = 'Svi mafijaši su uspješno otkriveni i uklonjeni!';
+                winnerIcon.className = 'w-24 h-24 mx-auto rounded-3xl bg-emerald-950/60 border border-emerald-500/40 flex items-center justify-center text-5xl text-emerald-400 shadow-xl';
+                winnerIcon.innerHTML = '<i class="fa-solid fa-city"></i>';
+            } else {
+                winnerText.textContent = 'MAFIJA POBJEĐUJE!';
+                winnerText.className = 'text-3xl font-bold font-title text-rose-500';
+                winnerSubtext.textContent = 'Mafija je preuzela potpunu kontrolu nad gradom!';
+                winnerIcon.className = 'w-24 h-24 mx-auto rounded-3xl bg-rose-950/60 border border-rose-500/40 flex items-center justify-center text-5xl text-rose-500 shadow-xl';
+                winnerIcon.innerHTML = '<i class="fa-solid fa-user-ninja"></i>';
+            }
+
+            // Reveal all roles
+            const finalRolesList = document.getElementById('finalRolesList');
+            finalRolesList.innerHTML = players.map(p => {
+                const role = ROLE_TYPES[p.roleKey.toUpperCase()];
+                return `
+                    <div class="flex items-center justify-between p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid ${role.icon} ${role.color} text-sm w-4 text-center"></i>
+                            <span class="font-bold text-slate-100">${escapeHtml(p.name)}</span>
+                        </div>
+                        <span class="px-2.5 py-0.5 rounded font-bold uppercase text-[10px] ${role.badgeColor}">
+                            ${role.name}
+                        </span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function resetToHome() {
+            clearInterval(timerInterval);
+            document.getElementById('gameOverSection').classList.add('hidden');
+            document.getElementById('gameLoopSection').classList.add('hidden');
+            document.getElementById('revealSection').classList.add('hidden');
+            document.getElementById('headerStats').classList.add('hidden');
+            document.getElementById('setupSection').classList.remove('hidden');
+        }
+
+        // --- UTILS & MODAL ---
+        function showModal(title, body) {
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalBody').innerHTML = body;
+            document.getElementById('appModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('appModal').classList.add('hidden');
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>
