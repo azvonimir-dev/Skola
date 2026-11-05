@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kviz: Pretraživanje interneta (2. razred)</title>
+    <!-- Tailwind CSS za moderan i prilagodljiv dizajn -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts za dječji, iznimno čitljiv font s podrškom za latin-ext (č, ć, š, đ, ž) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome ikone za atraktivniji izgled -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Nunito', 'Fredoka', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #e0f2fe 0%, #fef3c7 100%);
+            min-height: 100vh;
+        }
+
+        .card-bounce {
+            animation: bounceIn 0.5s ease-out;
+        }
+
+        @keyframes bounceIn {
+            0% { opacity: 0; transform: scale(0.9); }
+            50% { transform: scale(1.02); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        .btn-option {
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .btn-option:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-option:active:not(:disabled) {
+            transform: translateY(1px);
+        }
+
+        /* Pulsirajuća animacija za zvezdice */
+        .star-pulse {
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4 md:p-6 min-h-screen">
+
+    <!-- Glavni kontejner kviza -->
+    <div id="quiz-container" class="bg-white rounded-3xl shadow-2xl p-6 md:p-10 w-full max-w-2xl border-4 border-sky-300 relative overflow-hidden card-bounce">
+        
+        <!-- Zaglavlje kviza -->
+        <div class="text-center mb-6">
+            <span class="bg-amber-100 text-amber-800 text-sm md:text-base font-bold px-4 py-1.5 rounded-full inline-block mb-2 shadow-sm border border-amber-300">
+                <i class="fa-solid fa-laptop-code mr-2"></i>Informatika - 2. Razred
+            </span>
+            <h1 class="text-2xl md:text-3xl font-bold text-sky-600 tracking-wide">
+                🔍 Pretraživanje Interneta
+            </h1>
+        </div>
+
+        <!-- Uvodni zaslon -->
+        <div id="start-screen" class="text-center py-6">
+            <div class="text-6xl mb-4 text-sky-500">
+                <i class="fa-solid fa-compass-drafting animate-bounce"></i>
+            </div>
+            <h2 class="text-xl md:text-2xl font-semibold text-slate-700 mb-4">
+                Bok istraživače! 🚀
+            </h2>
+            <p class="text-slate-600 text-base md:text-lg mb-8 leading-relaxed max-w-md mx-auto">
+                Testiraj svoje znanje o internetu, tražilicama i sigurnom pretraživanju. Čeka te 20 zabavnih pitanja!
+            </p>
+            <button onclick="startQuiz()" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xl py-4 px-8 rounded-2xl shadow-lg hover:shadow-xl transition duration-200 transform hover:-translate-y-1 active:translate-y-0 w-full sm:w-auto">
+                Započni kviz! <i class="fa-solid fa-play ml-2"></i>
+            </button>
+        </div>
+
+        <!-- Ekran s pitanjima (skriven na početku) -->
+        <div id="question-screen" class="hidden">
+            
+            <!-- Napredak i Bodovi -->
+            <div class="flex justify-between items-center mb-4 text-slate-600 font-semibold text-sm md:text-base">
+                <span id="question-number" class="bg-sky-100 text-sky-700 px-3 py-1 rounded-lg border border-sky-200">
+                    Pitanje 1 od 20
+                </span>
+                <span id="score-counter" class="bg-amber-100 text-amber-700 px-3 py-1 rounded-lg border border-amber-200">
+                    <i class="fa-solid fa-star text-amber-500 mr-1"></i> Bodovi: 0
+                </span>
+            </div>
+
+            <!-- Traka napretka (Progress bar) -->
+            <div class="w-full bg-slate-200 h-4 rounded-full mb-6 overflow-hidden">
+                <div id="progress-bar" class="bg-sky-500 h-full transition-all duration-300 rounded-full" style="width: 5%"></div>
+            </div>
+
+            <!-- Tekst pitanja -->
+            <div class="bg-sky-50 p-5 md:p-6 rounded-2xl border-2 border-sky-200 mb-6">
+                <h3 id="question-text" class="text-lg md:text-xl font-bold text-slate-800 leading-snug">
+                    Učitavanje pitanja...
+                </h3>
+            </div>
+
+            <!-- Ponuđeni odgovori -->
+            <div id="options-container" class="space-y-3 mb-6">
+                <!-- Gumbi odgovora se dinamički dodaju iz JS-a -->
+            </div>
+
+            <!-- Poruka povratne informacije -->
+            <div id="feedback-message" class="hidden text-center p-3 rounded-xl font-bold text-lg mb-4">
+                <!-- Prikazuje 'Točno!' ili 'Netočno!' -->
+            </div>
+
+            <!-- Gumb za sljedeće pitanje -->
+            <div class="text-right">
+                <button id="next-btn" onclick="nextQuestion()" class="hidden bg-sky-500 hover:bg-sky-600 text-white font-bold py-3 px-6 rounded-xl shadow-md transition duration-200">
+                    Sljedeće pitanje <i class="fa-solid fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Završni zaslon (skriven na početku) -->
+        <div id="result-screen" class="hidden text-center py-6">
+            <div id="result-icon" class="text-6xl mb-4 text-amber-400 star-pulse">
+                <i class="fa-solid fa-trophy"></i>
+            </div>
+            <h2 class="text-2xl md:text-3xl font-bold text-slate-800 mb-2">
+                Bravo, završen kviz! 🎉
+            </h2>
+            <p id="result-score" class="text-xl md:text-2xl font-semibold text-sky-600 mb-4">
+                Tvoj rezultat: 0 / 20
+            </p>
+            
+            <div id="result-message-box" class="bg-amber-50 border-2 border-amber-200 p-4 rounded-2xl mb-8 max-w-md mx-auto">
+                <p id="result-message" class="text-slate-700 font-medium text-base md:text-lg">
+                    Poruka ohrabrenja...
+                </p>
+            </div>
+
+            <button onclick="restartQuiz()" class="bg-sky-500 hover:bg-sky-600 text-white font-bold text-lg py-3.5 px-8 rounded-2xl shadow-lg hover:shadow-xl transition duration-200 transform hover:-translate-y-1 active:translate-y-0">
+                <i class="fa-solid fa-rotate-right mr-2"></i> Zaigraj ponovno
+            </button>
+        </div>
+
+    </div>
+
+    <!-- JavaScript logika kviza -->
+    <script>
+        // Baza od 20 pitanja prilagođenih 2. razredu osnovne škole
+        const rawQuizData = [
+            {
+                question: "1. Što nam služi za traženje informacija i slika na računalu i internetu?",
+                options: ["Internetska tražilica", "Kalkulator", "Tipkovnica"],
+                answer: 0
+            },
+            {
+                question: "2. Koji je od navedenih naziva poznata internetska tražilica?",
+                options: ["Google", "Bojanka", "Sat"],
+                answer: 0
+            },
+            {
+                question: "3. Koja je još jedna poznata tražilica osim Googlea?",
+                options: ["Bing", "Zmija", "Miš"],
+                answer: 0
+            },
+            {
+                question: "4. Riječi koje upisujemo u tražilicu kada nešto tražimo zovu se:",
+                options: ["Ključne riječi", "Čarobne riječi", "Tajne riječi"],
+                answer: 0
+            },
+            {
+                question: "5. Što je od navedenog program za otvaranje internetskih stranica (preglednik)?",
+                options: ["Google Chrome", "Bojanje", "Zvučnik"],
+                answer: 0
+            },
+            {
+                question: "6. Gdje upisujemo riječi koje želimo pretražiti na internetu?",
+                options: ["U okvir za pretraživanje", "Na tipku za gašenje", "Na prazan papir"],
+                answer: 0
+            },
+            {
+                question: "7. Koji znak najčešće prikazuje traženje ili povećalo na internetu?",
+                options: ["🔍", "✏️", "✂️"],
+                answer: 0
+            },
+            {
+                question: "8. Što ćemo napraviti ako na internetu vidimo nešto ružno ili uplašujuće?",
+                options: ["Reći roditelju ili učitelju/ici", "Sami to popraviti", "Sakriti se"],
+                answer: 0
+            },
+            {
+                question: "9. Možemo li na internetu pronaći slike životinja i crtiće?",
+                options: ["Da, pomoću tražilice", "Ne, internet služi samo za pisanje", "Samo ako imamo čarobni štapić"],
+                answer: 0
+            },
+            {
+                question: "10. Smijemo li nepoznatim ljudima na internetu davati svoje ime, prezime i adresu?",
+                options: ["Nikada!", "Uvijek", "Samo ako nam daju igračku"],
+                answer: 0
+            },
+            {
+                question: "11. Što pritisnemo na tipkovnici nakon što upišemo riječ u tražilicu?",
+                options: ["Tipku Enter (Ulaz)", "Tipku za razmak", "Tipku za brisanje"],
+                answer: 0
+            },
+            {
+                question: "12. Ako želimo pronaći sliku psa, koje je najbolje upisati ključne riječi?",
+                options: ["Pas slike", "Ja volim trčati po parku", "Što ima danas za ručak"],
+                answer: 0
+            },
+            {
+                question: "13. Što nam omogućuje povezanost s cijelim svijetom i gledanje edukativnih sadržaja?",
+                options: ["Internet", "Stolna svjetiljka", "Školska torba"],
+                answer: 0
+            },
+            {
+                question: "14. Kako zovemo pravilo da smo pristojni i dobri prema drugima na internetu?",
+                options: ["Sigurno i pristojno ponašanje", "Brzo tipkanje", "Igranje bez prestanka"],
+                answer: 0
+            },
+            {
+                question: "15. Kada pretražujemo internet u školi, čije upute trebate slušati?",
+                options: ["Učitelja ili učiteljice", "Samo svoje", "Prolaznika na ulici"],
+                answer: 0
+            },
+            {
+                question: "16. Je li sve što pročitamo na internetu uvijek točno i istinito?",
+                options: ["Nije uvijek, treba provjeriti s odraslima", "Da, sve je točno", "Na internetu nema nikakvih informacija"],
+                answer: 0
+            },
+            {
+                question: "17. Što nam pomaže da lakše kliknemo na poveznicu (link) na ekranu?",
+                options: ["Računalni miš ili dodirni ekran", "Ravnalo", "Gumica za brisanje"],
+                answer: 0
+            },
+            {
+                question: "18. Što je 'Google Gemini' ili 'ChatGPT'?",
+                options: ["Pametni pomoćnici (umjetna inteligencija)", "Igre s loptom", "Vrste računalnih tipkovnica"],
+                answer: 0
+            },
+            {
+                question: "19. Koliko dugo bismo trebali dnevno sjediti pred ekranom računala ili mobitela?",
+                options: ["Umjereno, uz pauze za igru na zraku", "Cijeli dan i noć", "Sto sati bez prestanka"],
+                answer: 0
+            },
+            {
+                question: "20. Što je najvažnije dok istražujemo internet?",
+                options: ["Sigurnost i oprez", "Pobijediti u svim igricama", "Tipkati što brže možemo"],
+                answer: 0
+            }
+        ];
+
+        // Varijable stanja
+        let quizData = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let answered = false;
+
+        // Elementi sučelja
+        const startScreen = document.getElementById("start-screen");
+        const questionScreen = document.getElementById("question-screen");
+        const resultScreen = document.getElementById("result-screen");
+        
+        const questionText = document.getElementById("question-text");
+        const optionsContainer = document.getElementById("options-container");
+        const questionNumber = document.getElementById("question-number");
+        const scoreCounter = document.getElementById("score-counter");
+        const progressBar = document.getElementById("progress-bar");
+        const feedbackMessage = document.getElementById("feedback-message");
+        const nextBtn = document.getElementById("next-btn");
+
+        // Pomoćna funkcija za nasumično miješanje polja (Fisher-Yates Shuffle)
+        function shuffleArray(array) {
+            const arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        // Priprema pitanja s pomiješanim pitanjima i pomiješanim opcijama
+        function prepareQuizData() {
+            // Miješamo redoslijed pitanja
+            const shuffledQuestions = shuffleArray(rawQuizData);
+
+            quizData = shuffledQuestions.map((q, qIndex) => {
+                // Zapamti koja je bila točna opcija (u originalu uvek na indeksu 0)
+                const correctAnswerText = q.options[q.answer];
+
+                // Promješaj opcije odgovora za to pitanje
+                const shuffledOptions = shuffleArray(q.options);
+                const newAnswerIndex = shuffledOptions.indexOf(correctAnswerText);
+
+                // Očisti redni broj iz teksta originalnog pitanja radi nasumičnog redoslijeda
+                const cleanQuestionText = q.question.replace(/^\d+\.\s*/, '');
+
+                return {
+                    question: `${qIndex + 1}. ${cleanQuestionText}`,
+                    options: shuffledOptions,
+                    answer: newAnswerIndex
+                };
+            });
+        }
+
+        // Funkcija za pokretanje kviza
+        function startQuiz() {
+            prepareQuizData();
+            startScreen.classList.add("hidden");
+            resultScreen.classList.add("hidden");
+            questionScreen.classList.remove("hidden");
+            
+            currentQuestionIndex = 0;
+            score = 0;
+            updateScoreDisplay();
+            loadQuestion();
+        }
+
+        // Učitavanje pojedinog pitanja
+        function loadQuestion() {
+            answered = false;
+            feedbackMessage.classList.add("hidden");
+            nextBtn.classList.add("hidden");
+
+            const currentQ = quizData[currentQuestionIndex];
+            
+            // Ažuriraj tekstove
+            questionNumber.textContent = `Pitanje ${currentQuestionIndex + 1} od ${quizData.length}`;
+            questionText.textContent = currentQ.question;
+
+            // Ažuriraj napredak
+            const progressPercent = ((currentQuestionIndex + 1) / quizData.length) * 100;
+            progressBar.style.width = `${progressPercent}%`;
+
+            // Očisti stare opcije
+            optionsContainer.innerHTML = "";
+
+            // Stvori gumbe s odgovorima
+            currentQ.options.forEach((optionText, index) => {
+                const btn = document.createElement("button");
+                btn.className = "btn-option w-full text-left bg-slate-50 border-2 border-slate-200 hover:border-sky-400 text-slate-700 font-bold p-4 rounded-xl text-base md:text-lg flex items-center justify-between";
+                
+                // Oznaka slova (A, B, C)
+                const letter = String.fromCharCode(65 + index); // 0=A, 1=B, 2=C
+                btn.innerHTML = `
+                    <span class="flex items-center"><span class="inline-block bg-sky-200 text-sky-800 rounded-lg w-8 h-8 text-center leading-8 mr-3 font-extrabold shrink-0">${letter}</span><span>${optionText}</span></span>
+                    <i class="fa-regular fa-circle text-slate-300 text-xl status-icon ml-2 shrink-0"></i>
+                `;
+
+                btn.onclick = () => selectOption(index, btn);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        // Logika odabira odgovora
+        function selectOption(selectedIndex, selectedBtn) {
+            if (answered) return; // onemogući više klikova
+            answered = true;
+
+            const currentQ = quizData[currentQuestionIndex];
+            const allButtons = optionsContainer.querySelectorAll("button");
+
+            // Onemogući sve gumbe
+            allButtons.forEach(btn => btn.disabled = true);
+
+            if (selectedIndex === currentQ.answer) {
+                // Točan odgovor
+                score++;
+                updateScoreDisplay();
+                
+                selectedBtn.classList.remove("bg-slate-50", "border-slate-200");
+                selectedBtn.classList.add("bg-emerald-100", "border-emerald-500", "text-emerald-900");
+                selectedBtn.querySelector(".status-icon").className = "fa-solid fa-circle-check text-emerald-600 text-xl";
+
+                feedbackMessage.textContent = "🌟 Točno! Odlično urađeno!";
+                feedbackMessage.className = "text-center p-3 rounded-xl font-bold text-lg mb-4 bg-emerald-100 text-emerald-800 border border-emerald-300 block";
+            } else {
+                // Netočan odgovor
+                selectedBtn.classList.remove("bg-slate-50", "border-slate-200");
+                selectedBtn.classList.add("bg-rose-100", "border-rose-400", "text-rose-900");
+                selectedBtn.querySelector(".status-icon").className = "fa-solid fa-circle-xmark text-rose-600 text-xl";
+
+                // Prikaži koji je bio točan
+                const correctBtn = allButtons[currentQ.answer];
+                correctBtn.classList.remove("bg-slate-50", "border-slate-200");
+                correctBtn.classList.add("bg-emerald-100", "border-emerald-400", "text-emerald-800");
+                correctBtn.querySelector(".status-icon").className = "fa-solid fa-circle-check text-emerald-600 text-xl";
+
+                feedbackMessage.textContent = "💡 Blizu! Točan odgovor je označen zelenom bojom.";
+                feedbackMessage.className = "text-center p-3 rounded-xl font-bold text-lg mb-4 bg-amber-100 text-amber-800 border border-amber-300 block";
+            }
+
+            // Prikaži gumb za dalje
+            if (currentQuestionIndex < quizData.length - 1) {
+                nextBtn.innerHTML = `Sljedeće pitanje <i class="fa-solid fa-arrow-right ml-2"></i>`;
+            } else {
+                nextBtn.innerHTML = `Prikaži rezultat <i class="fa-solid fa-trophy ml-2"></i>`;
+            }
+            nextBtn.classList.remove("hidden");
+        }
+
+        // Sljedeće pitanje ili završi
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < quizData.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        // Ažuriranje brojača bodova
+        function updateScoreDisplay() {
+            scoreCounter.innerHTML = `<i class="fa-solid fa-star text-amber-500 mr-1"></i> Bodovi: ${score}`;
+        }
+
+        // Prikaz rezultata na kraju
+        function showResults() {
+            questionScreen.classList.add("hidden");
+            resultScreen.classList.remove("hidden");
+
+            const resultScore = document.getElementById("result-score");
+            const resultMessage = document.getElementById("result-message");
+            const resultIcon = document.getElementById("result-icon");
+
+            resultScore.textContent = `Tvoj rezultat: ${score} / ${quizData.length}`;
+
+            if (score === 20) {
+                resultIcon.innerHTML = `<i class="fa-solid fa-crown text-amber-400"></i>`;
+                resultMessage.innerHTML = "🏆 **SAVRŠENO!** Ti si pravi mali stručnjak za internet i tražilice!";
+            } else if (score >= 15) {
+                resultIcon.innerHTML = `<i class="fa-solid fa-trophy text-amber-400"></i>`;
+                resultMessage.innerHTML = "🌟 **IZVRSNO!** Svojim znanjem sigurno ploviš internetom!";
+            } else if (score >= 10) {
+                resultIcon.innerHTML = `<i class="fa-solid fa-thumbs-up text-sky-400"></i>`;
+                resultMessage.innerHTML = "👍 **VRLO DOBRO!** Znaš puno o internetu, samo tako nastavi!";
+            } else {
+                resultIcon.innerHTML = `<i class="fa-solid fa-seedling text-emerald-400"></i>`;
+                resultMessage.innerHTML = "Dobar trud! Pokušaj ponovno i naučit ćeš još više o sigurnom pretraživanju! 💪";
+            }
+        }
+
+        // Ponovno pokretanje
+        function restartQuiz() {
+            startQuiz();
+        }
+    </script>
+</body>
+</html>
