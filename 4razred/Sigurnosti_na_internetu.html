@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kviz: Sigurnost na internetu i digitalno zdravlje</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .custom-shadow {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col justify-between selection:bg-indigo-500 selection:text-white">
+
+    <!-- Zaglavlje -->
+    <header class="bg-indigo-600 text-white shadow-md sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <span class="text-2xl">🛡️</span>
+                <h1 class="font-bold text-lg md:text-xl tracking-wide">Sigurnost na internetu</h1>
+            </div>
+            <div id="score-badge" class="bg-indigo-700 px-3 py-1.5 rounded-full text-xs font-semibold tracking-wider uppercase flex items-center gap-1.5">
+                <span>Bodovi:</span>
+                <span id="current-score" class="text-amber-300 font-bold text-sm">0</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Glavni Sadržaj / Kviz Kontejner -->
+    <main class="max-w-3xl w-full mx-auto p-4 md:p-6 flex-grow flex items-center justify-center">
+        
+        <!-- Kartica za početak kviza -->
+        <div id="start-card" class="bg-white p-6 md:p-10 rounded-2xl border border-slate-100 custom-shadow text-center w-full">
+            <div class="w-20 h-20 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl shadow-inner">
+                🌐
+            </div>
+            <h2 class="text-2xl md:text-3xl font-extrabold text-slate-900 mb-4">Interaktivni kviz znanja</h2>
+            <p class="text-slate-600 text-sm md:text-base leading-relaxed mb-8 max-w-xl mx-auto">
+                Testirajte svoje znanje o pravilima ponašanja na mreži (netiketi), zaštiti privatnosti, digitalnim tragovima, dobna upozorenja te održavanju psihičkog i fizičkog zdravlja! Kviz se sastoji od <strong>30 interaktivnih pitanja</strong>.
+            </p>
+            <button id="start-btn" onclick="startQuiz()" class="w-full sm:w-auto px-8 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl transition duration-200 transform hover:-translate-y-0.5 shadow-lg shadow-indigo-200 active:translate-y-0">
+                Započni kviz
+            </button>
+        </div>
+
+        <!-- Kartica s Pitanjima -->
+        <div id="quiz-card" class="bg-white p-6 md:p-8 rounded-2xl border border-slate-100 custom-shadow w-full hidden">
+            
+            <!-- Napredak -->
+            <div class="mb-6">
+                <div class="flex justify-between items-center text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                    <span id="question-number">Pitanje 1 od 30</span>
+                    <span id="progress-percentage">3%</span>
+                </div>
+                <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                    <div id="progress-bar" class="bg-indigo-600 h-2.5 rounded-full transition-all duration-300" style="width: 3.33%"></div>
+                </div>
+            </div>
+
+            <!-- Tekst pitanja -->
+            <h3 id="question-text" class="text-lg md:text-xl font-bold text-slate-900 mb-6 leading-snug">
+                Učitavanje pitanja...
+            </h3>
+
+            <!-- Opcije odgovora -->
+            <div id="options-container" class="space-y-3 mb-6">
+                <!-- Opcije se dinamički dodaju putem JS-a -->
+            </div>
+
+            <!-- Kutija za objašnjenje -->
+            <div id="explanation-box" class="p-4 rounded-xl border mb-6 hidden">
+                <div class="font-bold text-sm mb-1 flex items-center gap-2" id="explanation-title">
+                    <!-- Naslov točno/netočno -->
+                </div>
+                <p id="explanation-text" class="text-sm text-slate-700 leading-relaxed"></p>
+            </div>
+
+            <!-- Gumb za Sljedeće pitanje -->
+            <button id="next-btn" onclick="nextQuestion()" class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl transition duration-200 shadow-md hidden">
+                Sljedeće pitanje ➔
+            </button>
+        </div>
+
+        <!-- Kartica s Rezultatima -->
+        <div id="result-card" class="bg-white p-6 md:p-10 rounded-2xl border border-slate-100 custom-shadow text-center w-full hidden">
+            <div id="result-icon" class="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 text-5xl shadow-inner">
+                🏆
+            </div>
+            <h2 class="text-2xl md:text-3xl font-bold text-slate-900 mb-2">Kviz je završen!</h2>
+            <p id="result-subtitle" class="text-slate-500 mb-6">Pogledajte ostvareni rezultat:</p>
+            
+            <div class="bg-slate-50 p-6 rounded-xl border border-slate-100 mb-8 max-w-sm mx-auto">
+                <div class="text-4xl font-extrabold text-indigo-600 mb-1" id="final-score">0 / 30</div>
+                <div class="text-sm text-slate-500 font-medium" id="final-percentage">0% točnih odgovora</div>
+            </div>
+
+            <p id="result-message" class="text-slate-700 text-sm md:text-base leading-relaxed mb-8 max-w-md mx-auto">
+                <!-- Poruka o uspjehu -->
+            </p>
+
+            <button onclick="restartQuiz()" class="px-8 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl transition duration-200 shadow-lg shadow-indigo-200">
+                Ponovno pokreni kviz 🔄
+            </button>
+        </div>
+
+    </main>
+
+    <!-- Podnožje -->
+    <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500">
+        <div class="max-w-4xl mx-auto px-4">
+            Edukativni kviz o sigurnosti na internetu i digitalnom zdravlju &bull; Podržava hrvatska slova (Č, Ć, Š, Đ, Ž)
+        </div>
+    </footer>
+
+    <!-- JavaScript Logika -->
+    <script>
+        // Baza od 30 pitanja temeljenih na tekstovima sa slika
+        const quizData = [
+            {
+                question: "Koliko često treba odmaknuti pogled s računala tijekom rada ili igranja?",
+                options: [
+                    "Svakih 60 minuta",
+                    "Svakih 20 minuta",
+                    "Jednom u nekoliko sati",
+                    "Nije potrebno odmicati pogled"
+                ],
+                correct: 1,
+                explanation: "Preporučuje se odmaknuti pogled s računala svakih 20 minuta kako bi se odmorile oči te napravile pauze i vježbe razgibavanja."
+            },
+            {
+                question: "Što se preporučuje raditi tijekom pauza od rada na računalu?",
+                options: [
+                    "Gledati u zaslon mobitela",
+                    "Igrati drugu igru na tabletu",
+                    "Prošetati i raditi vježbe razgibavanja",
+                    "Spavati sat vremena"
+                ],
+                correct: 2,
+                explanation: "Tijekom pauze iznimno je važno prošetati i napraviti vježbe razgibavanja kako bismo očuvali fizičko zdravlje."
+            },
+            {
+                question: "Osim fizičkih problema, na što još utječe dugotrajno korištenje digitalne tehnologije?",
+                options: [
+                    "Samo na vid",
+                    "Na psihičko stanje, razvoj i ponašanje",
+                    "Nemaju nikakav utjecaj",
+                    "Samo na brzinu tipkanja"
+                ],
+                correct: 1,
+                explanation: "Brojni ekrani i medijski sadržaji utječu i na psihičko stanje, kao i na cjelokupni razvoj i ponašanje pojedinca."
+            },
+            {
+                question: "Što je ključno pri odabiru sadržaja koji gledamo na ekranima?",
+                options: [
+                    "Prihvatiti sve što nam se nudi",
+                    "Kritičko mišljenje – odlučiti što je dobro, a što nije",
+                    "Gledati isključivo reklame",
+                    "Uvijek birati najnasilnije sadržaje"
+                ],
+                correct: 1,
+                explanation: "Važno je razvijati kritičko mišljenje kako bismo znali prepoznati i odlučiti koji je sadržaj za nas dobar i primjeren."
+            },
+            {
+                question: "Što označavaju oznake 12, 15 ili 18 na TV-u i igrama?",
+                options: [
+                    "Broj igrača u igri",
+                    "Broj epizoda serije",
+                    "Minimalnu dob za koju sadržaj nije prikladan ako je osoba mlađa",
+                    "Cijenu igre u eurima"
+                ],
+                correct: 2,
+                explanation: "Oznake dobi označavaju da prikazani sadržaj ili igra nije prikladna za osobe mlađe od navedenog broja godina."
+            },
+            {
+                question: "Koja je glavna svrha nasilnog sadržaja na internetu i u medijima?",
+                options: [
+                    "Da nekog pouči fizici",
+                    "Da nekog povrijedi ili mu našteti",
+                    "Da nas nasmije",
+                    "Da nam pomogne u učenju"
+                ],
+                correct: 1,
+                explanation: "Svrha je nasilnog sadržaja da nekoga povrijedi ili mu našteti, stoga ga treba izbjegavati."
+            },
+            {
+                question: "Kakav sadržaj vezan uz rizična ponašanja treba izbjegavati na internetu?",
+                options: [
+                    "Sadržaj o kuhanju",
+                    "Konzumiranje sredstava koja izazivaju ovisnost",
+                    "Edukativne dokumentarce",
+                    "Sportske prijenose"
+                ],
+                correct: 1,
+                explanation: "Treba izbjegavati gledanje sadržaja koji prikazuje rizična ponašanja poput konzumiranja sredstava ovisnosti."
+            },
+            {
+                question: "Kako treba započeti i završiti poruku pri komunikaciji na mreži?",
+                options: [
+                    "Samo poslati smajlić",
+                    "Započeti i završiti pozdravom",
+                    "Ne treba ništa napisati",
+                    "Započeti sa zahtjevom"
+                ],
+                correct: 1,
+                explanation: "Osnovno pravilo netikete (bontona na mreži) nalaže da poruku uvijek započneš i završiš pozdravom."
+            },
+            {
+                question: "O čemu treba posebno paziti pri komunikaciji na mreži?",
+                options: [
+                    "S kime komuniciraš",
+                    "Koliko brzo tipkaš",
+                    "Koju boju pozadine koristiš",
+                    "Koliko slika pošalješ u minuti"
+                ],
+                correct: 0,
+                explanation: "Uvijek pazi s kime komuniciraš jer na internetu nije svatko onakav kakvim se predstavlja."
+            },
+            {
+                question: "Što NIKADA ne smiješ ostavljati na mreži?",
+                options: [
+                    "Svoje omiljene boje",
+                    "Svoje osobne podatke",
+                    "Školske predmete koje voliš",
+                    "Najdraži sport"
+                ],
+                correct: 1,
+                explanation: "Osobne podatke (adresa, broj telefona, OIB, prezime) nikada ne treba ostavljati javno na mreži."
+            },
+            {
+                question: "Što sve čini tvoje digitalne tragove?",
+                options: [
+                    "Samo lozinke koje koristiš",
+                    "Stranice koje posjećuješ, slike i videozapisi koje objavljuješ te način na koji se predstavljaš",
+                    "Otisci prstiju na zaslonu mobitela",
+                    "Samo obrisani podatci"
+                ],
+                correct: 1,
+                explanation: "Digitalni tragovi uključuju sve stranice koje posjećuješ, objavljene medije i način tvojeg predstavljanja na mreži."
+            },
+            {
+                question: "Što je preporučljivo koristiti u igricama ili pri dopisivanju s nepoznatima radi zaštite privatnosti?",
+                options: [
+                    "Puno ime, prezime i adresu",
+                    "Nadimke",
+                    "Korisničko ime roditelja",
+                    "Broj osobne iskaznice"
+                ],
+                correct: 1,
+                explanation: "Korištenje nadimaka umjesto pravog imena i prezimena pomaže u zaštiti osobne privatnosti."
+            },
+            {
+                question: "Kome JEDINO smiješ pokazati svoje lozinke?",
+                options: [
+                    "Najboljem prijatelju iz klupe",
+                    "Osobama u online igri",
+                    "Samo svojim roditeljima ili učiteljima",
+                    "Bilo kome tko te zamoli"
+                ],
+                correct: 2,
+                explanation: "Lozinke su stroga tajna i pokazuju se i povjeravaju isključivo roditeljima ili učiteljima."
+            },
+            {
+                question: "Što trebaš učiniti ako na internetu naiđeš na neprimjeren sadržaj?",
+                options: [
+                    "Podijeliti ga sa svim prijateljima",
+                    "Prikazati ga odrasloj osobi od povjerenja",
+                    "Ugasiti računalo i nikome ne reći",
+                    "Spremiti ga na radnu površinu"
+                ],
+                correct: 1,
+                explanation: "Ako uočiš neprimjeren ili uznemirujući sadržaj, odmah ga pokaži odrasloj osobi (roditelju, učitelju)."
+            },
+            {
+                question: "Gdje sve vrijede pravila ponašanja na mreži (netiketa)?",
+                options: [
+                    "Samo kod kuće",
+                    "Samo u školi",
+                    "I u školi i u svim drugim javnim ustanovama te na internetu",
+                    "Nigdje, na internetu nema pravila"
+                ],
+                correct: 2,
+                explanation: "Pravila ponašanja na mreži vrijede svugdje – i kod kuće, u školi te u drugim javnim ustanovama."
+            },
+            {
+                question: "Kakav sadržaj treba otvarati i pratiti u školi?",
+                options: [
+                    "Sadržaj koji savjetuje učitelj ili učiteljica",
+                    "Samo smiješne videozapise",
+                    "Igre bez provjere dobi",
+                    "Nenamjenske oglase"
+                ],
+                correct: 0,
+                explanation: "Uvijek prati i otvaraj sadržaje koje ti savjetuje tvoj učitelj ili učiteljica."
+            },
+            {
+                question: "Što od navedenog spada u NEPRIHVATLJIVO ponašanje na mreži?",
+                options: [
+                    "Slanje pozdrava u poruci",
+                    "Slanje uvredljivog sadržaja",
+                    "Korištenje nadimaka u igri",
+                    "Pauziranje rada nakon 20 minuta"
+                ],
+                correct: 1,
+                explanation: "Slanje uvredljivog sadržaja je oblik elektroničkog nasilja i potpuno je neprihvatljivo."
+            },
+            {
+                question: "Govor mržnje na internetu je:",
+                options: [
+                    "Prihvatljiv ako je u šali",
+                    "Neprihvatljivo i štetno ponašanje koje treba izbjegavati i prijaviti",
+                    "Korisna komunikacijska vještina",
+                    "Dozvoljen ako smo anonimni"
+                ],
+                correct: 1,
+                explanation: "Govor mržnje je neprihvatljiv. Nemoj ga čitati, komentirati niti upućivati bilo kome."
+            },
+            {
+                question: "Što znači ugrožavanje privatnosti drugih na mreži?",
+                options: [
+                    "Slanje poruke 'Dobar dan'",
+                    "Objavljivanje tuđih slika ili osobnih podataka bez dopuštenja",
+                    "Igranje igre u paru",
+                    "Preporučivanje edukativne stranice"
+                ],
+                correct: 1,
+                explanation: "Objavljivanje fotografija, videa ili osobnih podataka drugih osoba bez njihove dozvole direktno ugrožava njihovu privatnost."
+            },
+            {
+                question: "Gdje se najčešće može susresti govor mržnje na internetu?",
+                options: [
+                    "Na novinskim portalima, forumima i servisima za dopisivanje",
+                    "U kalkulatoru",
+                    "U edukativnim dokumentarcima o prirodi",
+                    "U pisanim udžbenicima"
+                ],
+                correct: 0,
+                explanation: "Govor mržnje često se pojavljuje u komentarima novinskih portala, forumima i aplikacijama za dopisivanje."
+            },
+            {
+                question: "Koje su poznate aplikacije za dopisivanje i komunikaciju spomenute u tekstovima?",
+                options: [
+                    "Viber, WhatsApp, Messenger, Snapchat, Skype",
+                    "Word, Excel, PowerPoint",
+                    "Photoshop, Paint, Illustrator",
+                    "Google Maps i Earth"
+                ],
+                correct: 0,
+                explanation: "U tekstu su spomenuti alati za dopisivanje i videopozive poput Vibera, WhatsAppa, Messengera, Snapchata i Skypea."
+            },
+            {
+                question: "Zašto se neki ljudi na internetu ponašaju neprihvatljivo (npr. šire govor mržnje)?",
+                options: [
+                    "Jer misle da su anonimni (bez pravog imena)",
+                    "Jer ih računalo na to prisiljava",
+                    "Jer je to po zakonu obavezno",
+                    "Jer ih učitelji tako savjetuju"
+                ],
+                correct: 0,
+                explanation: "Mnogi se neprihvatljivo ponašaju jer se skrivaju iza anonimnosti na internetu, no pravila lijepog ponašanja vrijede i tamo."
+            },
+            {
+                question: "Bi li se ljudi koji šire govor mržnje na internetu jednako ponašali i u stvarnom svijetu?",
+                options: [
+                    "Da, uvijek se ponašaju jednako",
+                    "Uglavnom ne, jer u stvarnom svijetu nemaju zaklon anonimnosti",
+                    "U stvarnom svijetu svi samo šute",
+                    "U stvarnom svijetu to nije važno"
+                ],
+                correct: 1,
+                explanation: "U stvarnom svijetu nemaju zaklon anonimnosti pa se u pravilu ne bi usudili tako ponašati."
+            },
+            {
+                question: "Koje je glavno pravilo u vezi ponašanja u stvarnom i virtualnom svijetu?",
+                options: [
+                    "U virtualnom svijetu pravila ne postoje",
+                    "Pridržavaj se svih pravila koja si naučio/naučila i u stvarnom i u virtualnom svijetu",
+                    "Virtualni svijet je važniji od stvarnoga",
+                    "Pravila vrijede samo kada nas roditelji gledaju"
+                ],
+                correct: 1,
+                explanation: "Pravila pristojnosti, poštovanja i sigurnosti vrijede podjednako u stvarnom i u virtualnom svijetu!"
+            },
+            {
+                question: "Ako na TV-u ili igrici vidiš oznaku '18', što to znači?",
+                options: [
+                    "Dopušteno je za sve od 8 godina naviše",
+                    "Sadržaj nije prikladan za osobe mlađe od 18 godina",
+                    "Igra traje 18 minuta",
+                    "Igra košta 18 eura"
+                ],
+                correct: 1,
+                explanation: "Oznaka 18 jasno upozorava da je sadržaj namijenjen isključivo punoljetnim osobama i nije prikladan za mlađe."
+            },
+            {
+                question: "Zašto trebamo izbjegavati igranje igara bez provjere njihove dobne primjerenosti?",
+                options: [
+                    "Možemo naići na nasilje i neprikladan sadržaj",
+                    "Igre će se sporije učitavati",
+                    "Može nam se pokvariti tipkovnica",
+                    "Nema nikakvog razloga"
+                ],
+                correct: 0,
+                explanation: "Neprovjerene igre mogu sadržavati nasilje i traumatične sadržaje koji nisu prikladni za mlađu dob."
+            },
+            {
+                question: "Koje podatke opisuje pojam 'digitalni tragovi' pri objavljivanju fotografija i videa?",
+                options: [
+                    "Tragove prašine po zaslonu",
+                    "Sve što objavimo ostaje zabilježeno na mreži i utječe na to kako nas drugi vide",
+                    "Samo poslane SMS poruke",
+                    "Model uređaja koji kupujemo"
+                ],
+                correct: 1,
+                explanation: "Digitalni trag je zapis svega što radimo na mreži. Sve objavljeno može ostati trajno sačuvano."
+            },
+            {
+                question: "Kako treba reagirati ako ti nepoznata osoba u online igri zatraži broj telefona ili adresu?",
+                options: [
+                    "Odmah joj poslati podatke",
+                    "Odbiti dati podatke i obavijestiti roditelje ili učitelje",
+                    "Dati podatke prijatelja",
+                    "Poslati joj svoju lozinku"
+                ],
+                correct: 1,
+                explanation: "Nikada ne treba davati osobne podatke nepoznatim osobama na mreži; o incidentu obavijesti odrasle."
+            },
+            {
+                question: "Koja je uloga odrasle osobe od povjerenja kad na mreži naiđeš na neprijatan sadržaj?",
+                options: [
+                    "Da te kazni",
+                    "Da ti pomogne, zaštiti te i prijavi neprimjeren sadržaj",
+                    "Da ugasi internet zauvijek",
+                    "Nemaju nikakvu ulogu"
+                ],
+                correct: 1,
+                explanation: "Odrasla osoba od povjerenja (roditelj, učitelj) pružit će ti podršku, zaštititi te i poduzeti korake za prijavu sadržaja."
+            },
+            {
+                question: "Što uključuje pravilna briga o fizičkom zdravlju pri korištenju ekrana?",
+                options: [
+                    "Neprekidno sjedenje 5 sati",
+                    "Pauze svakih 20 min, razgibavanje i odmicanje pogleda s računala",
+                    "Gledanje u ekran iz neposredne blizine u mraku",
+                    "Korištenje računala bez odmora"
+                ],
+                correct: 1,
+                explanation: "Redovite pauze svakih 20 minuta, odmicanje pogleda i razgibavanje tijela štite naše fizičko zdravlje."
+            }
+        ];
+
+        // Stanje kviza
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let answered = false;
+
+        // Elementi DOM-a
+        const startCard = document.getElementById('start-card');
+        const quizCard = document.getElementById('quiz-card');
+        const resultCard = document.getElementById('result-card');
+        
+        const questionNumberEl = document.getElementById('question-number');
+        const progressPercentageEl = document.getElementById('progress-percentage');
+        const progressBarEl = document.getElementById('progress-bar');
+        const questionTextEl = document.getElementById('question-text');
+        const optionsContainerEl = document.getElementById('options-container');
+        const explanationBoxEl = document.getElementById('explanation-box');
+        const explanationTitleEl = document.getElementById('explanation-title');
+        const explanationTextEl = document.getElementById('explanation-text');
+        const nextBtnEl = document.getElementById('next-btn');
+        const currentScoreEl = document.getElementById('current-score');
+
+        // Pokretanje kviza
+        function startQuiz() {
+            startCard.classList.add('hidden');
+            quizCard.classList.remove('hidden');
+            resultCard.classList.add('hidden');
+            currentQuestionIndex = 0;
+            score = 0;
+            currentScoreEl.textContent = score;
+            loadQuestion();
+        }
+
+        // Učitavanje pitanja
+        function loadQuestion() {
+            answered = false;
+            const q = quizData[currentQuestionIndex];
+            
+            // Ažuriraj napredak
+            const currentNum = currentQuestionIndex + 1;
+            const totalNum = quizData.length;
+            const progressPercent = Math.round((currentNum / totalNum) * 100);
+
+            questionNumberEl.textContent = `Pitanje ${currentNum} od ${totalNum}`;
+            progressPercentageEl.textContent = `${progressPercent}%`;
+            progressBarEl.style.width = `${progressPercent}%`;
+
+            // Tekst pitanja
+            questionTextEl.textContent = `${currentNum}. ${q.question}`;
+
+            // Sakrij objašnjenje i gumb dalje
+            explanationBoxEl.classList.add('hidden');
+            nextBtnEl.classList.add('hidden');
+
+            // Generiraj opcije
+            optionsContainerEl.innerHTML = '';
+            q.options.forEach((opt, idx) => {
+                const button = document.createElement('button');
+                button.className = "w-full text-left p-4 rounded-xl border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/50 transition-all duration-150 flex items-start gap-3 group font-medium text-slate-700 text-sm md:text-base";
+                
+                const letter = String.fromCharCode(65 + idx); // A, B, C, D
+                button.innerHTML = `
+                    <span class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-slate-100 text-slate-600 font-bold text-xs group-hover:bg-indigo-600 group-hover:text-white transition-colors shrink-0">${letter}</span>
+                    <span class="pt-0.5">${escapeHtml(opt)}</span>
+                `;
+                button.onclick = () => selectOption(idx);
+                optionsContainerEl.appendChild(button);
+            });
+        }
+
+        // Pomocna funkcija za escape HTML znakova
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Odabir odgovora
+        function selectOption(selectedIndex) {
+            if (answered) return;
+            answered = true;
+
+            const q = quizData[currentQuestionIndex];
+            const buttons = optionsContainerEl.children;
+
+            // Označi sve gumbe onemogućenima
+            for (let i = 0; i < buttons.length; i++) {
+                buttons[i].disabled = true;
+                buttons[i].classList.remove('hover:border-indigo-300', 'hover:bg-indigo-50/50');
+                buttons[i].classList.add('cursor-default');
+            }
+
+            if (selectedIndex === q.correct) {
+                // Točan odgovor
+                score++;
+                currentScoreEl.textContent = score;
+                
+                const btn = buttons[selectedIndex];
+                btn.classList.remove('border-slate-200');
+                btn.classList.add('bg-emerald-50', 'border-emerald-500', 'text-emerald-900');
+                btn.querySelector('span').classList.remove('bg-slate-100', 'text-slate-600');
+                btn.querySelector('span').classList.add('bg-emerald-600', 'text-white');
+
+                // Objašnjenje
+                explanationBoxEl.className = "p-4 rounded-xl border border-emerald-200 bg-emerald-50/60 mb-6";
+                explanationTitleEl.className = "font-bold text-sm text-emerald-800 mb-1 flex items-center gap-2";
+                explanationTitleEl.innerHTML = "<span>✅</span> Točno!";
+            } else {
+                // Netočan odgovor
+                const wrongBtn = buttons[selectedIndex];
+                wrongBtn.classList.remove('border-slate-200');
+                wrongBtn.classList.add('bg-rose-50', 'border-rose-400', 'text-rose-900');
+                wrongBtn.querySelector('span').classList.remove('bg-slate-100', 'text-slate-600');
+                wrongBtn.querySelector('span').classList.add('bg-rose-600', 'text-white');
+
+                // Istakni točan odgovor
+                const correctBtn = buttons[q.correct];
+                correctBtn.classList.remove('border-slate-200');
+                correctBtn.classList.add('bg-emerald-50', 'border-emerald-500', 'text-emerald-900');
+                correctBtn.querySelector('span').classList.remove('bg-slate-100', 'text-slate-600');
+                correctBtn.querySelector('span').classList.add('bg-emerald-600', 'text-white');
+
+                // Objašnjenje
+                explanationBoxEl.className = "p-4 rounded-xl border border-rose-200 bg-rose-50/60 mb-6";
+                explanationTitleEl.className = "font-bold text-sm text-rose-800 mb-1 flex items-center gap-2";
+                explanationTitleEl.innerHTML = "<span>❌</span> Netočno!";
+            }
+
+            explanationTextEl.textContent = q.explanation;
+            explanationBoxEl.classList.remove('hidden');
+            nextBtnEl.classList.remove('hidden');
+        }
+
+        // Prelazak na sljedeće pitanje
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < quizData.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        // Prikaz završnih rezultata
+        function showResults() {
+            quizCard.classList.add('hidden');
+            resultCard.classList.remove('hidden');
+
+            const total = quizData.length;
+            const percentage = Math.round((score / total) * 100);
+
+            document.getElementById('final-score').textContent = `${score} / ${total}`;
+            document.getElementById('final-percentage').textContent = `${percentage}% točnih odgovora`;
+
+            const iconEl = document.getElementById('result-icon');
+            const messageEl = document.getElementById('result-message');
+
+            if (percentage >= 90) {
+                iconEl.className = "w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 text-5xl bg-emerald-100 text-emerald-600 shadow-inner";
+                iconEl.textContent = "🥇";
+                messageEl.textContent = "Izvanredno! Izvrsno poznajete pravila sigurnosti na internetu, netiketu i važnost brige o zdravlju!";
+            } else if (percentage >= 70) {
+                iconEl.className = "w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 text-5xl bg-indigo-100 text-indigo-600 shadow-inner";
+                iconEl.textContent = "🥈";
+                messageEl.textContent = "Vrlo dobro! Imate visoku razinu svijesti o sigurnosti na mreži, ali obratite pozornost na sitne detalje koje ste propustili.";
+            } else if (percentage >= 50) {
+                iconEl.className = "w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 text-5xl bg-amber-100 text-amber-600 shadow-inner";
+                iconEl.textContent = "🥉";
+                messageEl.textContent = "Dobar rezultat, ali ima prostora za napredak. Preporučujemo da ponovno pregledate pravila netikete i sigurnosti.";
+            } else {
+                iconEl.className = "w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 text-5xl bg-rose-100 text-rose-600 shadow-inner";
+                iconEl.textContent = "⚠️";
+                messageEl.textContent = "Potrebno je još učenja. Svakako ponovno pročitajte savjete o zaštiti privatnosti, lozinkama i ponašanju na internetu.";
+            }
+        }
+
+        // Ponovno pokretanje kviza
+        function restartQuiz() {
+            startQuiz();
+        }
+    </script>
+</body>
+</html>
