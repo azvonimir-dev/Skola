@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mali Internet Detektivi: Je li istina?</title>
+    <!-- Učitavanje Google Fonta 'Nunito' koji ima potpunu podršku za hrvatske dijakritičke znakove (č, ć, ž, š, đ) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,500;0,700;0,800;0,900;1,700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Nunito', 'sans-serif'],
+                    },
+                    colors: {
+                        detective: {
+                            blue: '#2563EB',
+                            light: '#EFF6FF',
+                            yellow: '#F59E0B',
+                            green: '#10B981',
+                            red: '#EF4444',
+                            purple: '#8B5CF6'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(135deg, #e0f2fe 0%, #fef3c7 50%, #ede9fe 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Prilagođene animacije za simulirane videozapise i elemente igre */
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-12px) rotate(3deg); }
+        }
+
+        @keyframes wingFlap {
+            0%, 100% { transform: scaleY(1); }
+            50% { transform: scaleY(0.45); }
+        }
+
+        @keyframes skateToMoon {
+            0% { transform: translate(0px, 0px) rotate(0deg); }
+            30% { transform: translate(60px, -10px) rotate(0deg); }
+            65% { transform: translate(140px, -110px) rotate(360deg); }
+            100% { transform: translate(210px, -155px) rotate(720deg); }
+        }
+
+        @keyframes freezeWater {
+            0% { fill: #38bdf8; rx: 24px; transform: scale(1); }
+            50% { fill: #7dd3fc; rx: 12px; transform: scale(0.96); }
+            100% { fill: #bae6fd; rx: 4px; transform: scale(1.02); }
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.5); }
+            50% { box-shadow: 0 0 0 12px rgba(245, 158, 11, 0); }
+        }
+
+        @keyframes popIn {
+            0% { opacity: 0; transform: scale(0.85) translateY(15px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .animate-float {
+            animation: floatSlow 3.5s ease-in-out infinite;
+        }
+
+        .animate-wings {
+            transform-origin: center;
+            animation: wingFlap 0.4s ease-in-out infinite;
+        }
+
+        .video-playing .skate-dog {
+            animation: skateToMoon 4s ease-in-out infinite alternate;
+        }
+
+        .video-playing .ice-cube {
+            animation: freezeWater 3s ease-in-out infinite alternate;
+        }
+
+        .pop-in {
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        .btn-3d {
+            transition: all 0.15s ease;
+            box-shadow: 0 6px 0 rgba(0, 0, 0, 0.18);
+        }
+        .btn-3d:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 rgba(0, 0, 0, 0.18);
+        }
+
+        /* Stil za konfete */
+        .confetti-piece {
+            position: fixed;
+            width: 12px;
+            height: 12px;
+            top: -20px;
+            z-index: 100;
+            pointer-events: none;
+            animation: confettiFall linear forwards;
+        }
+
+        @keyframes confettiFall {
+            to {
+                transform: translateY(105vh) rotate(720deg);
+            }
+        }
+    </style>
+</head>
+<body class="text-slate-800 select-none flex flex-col justify-between">
+
+    <!-- Gornja navigacijska traka -->
+    <header class="w-full bg-white/90 backdrop-blur-md shadow-sm border-b-4 border-amber-400 sticky top-0 z-30">
+        <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-2">
+            <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-2xl bg-amber-400 flex items-center justify-center text-2xl shadow-inner border-2 border-amber-500">
+                    🕵️‍♂️
+                </div>
+                <div>
+                    <h1 class="text-lg sm:text-xl font-black text-blue-700 leading-tight">Mali Internet Detektivi</h1>
+                    <p class="text-xs sm:text-sm font-bold text-slate-500">Je li istina? • 2. razred</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 sm:gap-3">
+                <!-- Gumb za podsjetnik iz udžbenika -->
+                <button onclick="toggleCluesModal()" class="flex items-center gap-1.5 bg-blue-100 hover:bg-blue-200 text-blue-800 font-extrabold text-xs sm:text-sm px-3 py-2 rounded-xl border-2 border-blue-300 transition cursor-pointer" title="Otvori detektivske tragove iz udžbenika">
+                    <span>🔍</span>
+                    <span class="hidden sm:inline">Detektivski tragovi</span>
+                    <span class="sm:hidden">Pomoć</span>
+                </button>
+
+                <!-- Brojač zvjezdica -->
+                <div id="header-score-badge" class="hidden flex items-center gap-1.5 bg-amber-100 text-amber-900 font-black text-sm sm:text-base px-3.5 py-1.5 rounded-xl border-2 border-amber-300">
+                    <span>⭐</span>
+                    <span id="score-display">0</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Glavni sadržaj aplikacije -->
+    <main class="flex-grow flex items-center justify-center p-3 sm:p-6">
+        <div class="w-full max-w-3xl">
+
+            <!-- 1. POČETNI EKRAN -->
+            <section id="start-screen" class="bg-white rounded-3xl shadow-xl border-4 border-blue-200 p-6 sm:p-10 text-center pop-in">
+                <div class="inline-flex items-center justify-center w-24 h-24 rounded-full bg-amber-100 border-4 border-amber-400 text-5xl mb-4 animate-float shadow-md">
+                    🔎
+                </div>
+                <h2 class="text-3xl sm:text-4xl font-black text-slate-800 mb-3">
+                    Dobrodošli, mladi detektivi!
+                </h2>
+                <p class="text-base sm:text-lg text-slate-600 font-semibold max-w-xl mx-auto mb-6 leading-relaxed">
+                    Na internetu se nalaze razne <span class="text-blue-600 font-extrabold">slike</span>, <span class="text-purple-600 font-extrabold">videozapisi</span>, <span class="text-emerald-600 font-extrabold">priče</span> i <span class="text-amber-600 font-extrabold">mrežne stranice</span>. Neke su stvarne, a neke su izmišljene!
+                </p>
+
+                <!-- 3 pravila iz udžbenika -->
+                <div class="bg-blue-50/90 rounded-2xl p-4 sm:p-6 border-2 border-blue-200 mb-8 text-left">
+                    <h3 class="text-center font-black text-blue-800 text-lg mb-4 flex items-center justify-center gap-2">
+                        <span>📖</span> Kako provjeriti točnost informacija?
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                        <div class="bg-white p-3.5 rounded-2xl border-2 border-blue-100 shadow-sm flex flex-col items-center text-center">
+                            <span class="text-3xl mb-1.5">🌐</span>
+                            <span class="font-black text-blue-700 text-sm mb-1">1. Adresa stranice</span>
+                            <p class="text-xs text-slate-600 font-semibold">Pogledaj piše li na vrhu poznata adresa (npr. <em>skole.hr</em>) ili nešto čudno.</p>
+                        </div>
+                        <div class="bg-white p-3.5 rounded-2xl border-2 border-blue-100 shadow-sm flex flex-col items-center text-center">
+                            <span class="text-3xl mb-1.5">✍️</span>
+                            <span class="font-black text-purple-700 text-sm mb-1">2. Tko je napisao</span>
+                            <p class="text-xs text-slate-600 font-semibold">Provjeri čija je stranica i tko je autor vijesti (učitelj, škola ili nepoznat netko).</p>
+                        </div>
+                        <div class="bg-white p-3.5 rounded-2xl border-2 border-blue-100 shadow-sm flex flex-col items-center text-center">
+                            <span class="text-3xl mb-1.5">📅</span>
+                            <span class="font-black text-emerald-700 text-sm mb-1">3. Datum vijesti</span>
+                            <p class="text-xs text-slate-600 font-semibold">Pogledaj kada je informacija napisana – je li nova ili jako stara.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <button onclick="startGame()" class="btn-3d bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xl sm:text-2xl px-8 py-4 rounded-2xl border-b-4 border-emerald-700 inline-flex items-center gap-3 cursor-pointer">
+                    <span>Započni istragu!</span>
+                    <span>🚀</span>
+                </button>
+            </section>
+
+            <!-- 2. EKRAN KVIZA / ZADATAKA -->
+            <section id="quiz-screen" class="hidden">
+                <!-- Traka napretka -->
+                <div class="bg-white/90 rounded-2xl p-3 sm:p-4 mb-4 shadow-sm border-2 border-slate-200 flex items-center justify-between gap-4">
+                    <span id="question-counter" class="font-black text-slate-700 text-sm sm:text-base whitespace-nowrap">
+                        Zadatak 1 od 8
+                    </span>
+                    <div class="w-full bg-slate-200 h-4 rounded-full overflow-hidden p-0.5">
+                        <div id="progress-bar" class="bg-gradient-to-r from-blue-500 to-emerald-400 h-full rounded-full transition-all duration-500" style="width: 12.5%"></div>
+                    </div>
+                    <span id="category-badge" class="text-xs font-extrabold px-3 py-1 rounded-full bg-purple-100 text-purple-800 whitespace-nowrap">
+                        🖼️ Slika
+                    </span>
+                </div>
+
+                <!-- Kartica zadatka -->
+                <div id="question-card" class="bg-white rounded-3xl shadow-xl border-4 border-slate-200 p-5 sm:p-8 pop-in">
+                    <h2 id="question-title" class="text-xl sm:text-2xl font-black text-slate-800 text-center mb-4">
+                        Pogledaj sliku i odluči: je li ovo istina ili laž?
+                    </h2>
+
+                    <!-- Dinamički spremnik za sliku, video, web stranicu ili priču -->
+                    <div id="media-container" class="my-4">
+                        <!-- Sadržaj se ubacuje putem JavaScripta -->
+                    </div>
+
+                    <!-- Gumbi za odgovor -->
+                    <div id="answer-buttons" class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
+                        <button onclick="submitAnswer(true)" class="btn-3d bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xl sm:text-2xl py-4 px-6 rounded-2xl border-2 border-emerald-600 flex items-center justify-center gap-3 cursor-pointer">
+                            <span class="text-3xl">✅</span>
+                            <span>ISTINA</span>
+                        </button>
+                        <button onclick="submitAnswer(false)" class="btn-3d bg-rose-500 hover:bg-rose-600 text-white font-black text-xl sm:text-2xl py-4 px-6 rounded-2xl border-2 border-rose-600 flex items-center justify-center gap-3 cursor-pointer">
+                            <span class="text-3xl">❌</span>
+                            <span>LAŽ</span>
+                        </button>
+                    </div>
+
+                    <!-- Povratna informacija nakon odgovora -->
+                    <div id="feedback-box" class="hidden mt-6 rounded-2xl p-5 border-4 pop-in">
+                        <div class="flex items-start gap-4">
+                            <div id="feedback-icon" class="text-4xl sm:text-5xl shrink-0">🎉</div>
+                            <div class="flex-grow">
+                                <h3 id="feedback-heading" class="text-xl sm:text-2xl font-black mb-1">Točno! Bravo, detektive!</h3>
+                                <p id="feedback-text" class="text-base sm:text-lg font-semibold text-slate-700 leading-relaxed mb-3">
+                                    Objašnjenje...
+                                </p>
+                                <div id="feedback-rule-tag" class="inline-block bg-white/80 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-extrabold border border-slate-300 text-slate-700 mb-4">
+                                    🔍 Detektivski trag: ...
+                                </div>
+                                <div>
+                                    <button onclick="nextQuestion()" id="next-btn" class="btn-3d bg-blue-600 hover:bg-blue-700 text-white font-black text-lg px-6 py-3 rounded-xl inline-flex items-center gap-2 cursor-pointer">
+                                        <span>Sljedeći zadatak</span>
+                                        <span>➡️</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. ZAVRŠNI EKRAN (DIPLOMA) -->
+            <section id="end-screen" class="hidden bg-white rounded-3xl shadow-2xl border-4 border-amber-400 p-6 sm:p-10 text-center pop-in relative overflow-hidden">
+                <!-- Ukrasni kutovi diplome -->
+                <div class="border-4 border-dashed border-amber-300 rounded-2xl p-5 sm:p-8 bg-amber-50/40">
+                    <div class="text-6xl mb-3">🏆</div>
+                    <span class="inline-block bg-amber-400 text-amber-950 font-black text-xs sm:text-sm uppercase tracking-wider px-4 py-1 rounded-full mb-2">
+                        Službena potvrda • 2. razred
+                    </span>
+                    <h2 class="text-3xl sm:text-4xl font-black text-blue-800 mb-2">
+                        Diploma za malog internet detektiva!
+                    </h2>
+                    <p class="text-base sm:text-lg font-bold text-slate-600 mb-5">
+                        Uspješno si provjerio/la slike, videozapise, priče i mrežne stranice!
+                    </p>
+
+                    <!-- Osvojene zvjezdice -->
+                    <div class="bg-white rounded-2xl p-4 border-2 border-amber-200 max-w-md mx-auto mb-6 shadow-sm">
+                        <p class="text-sm font-extrabold text-slate-500 uppercase mb-1">Tvoj rezultat</p>
+                        <div class="text-3xl sm:text-4xl font-black text-amber-500 mb-2">
+                            <span id="final-score">0</span> / 8 ⭐
+                        </div>
+                        <div id="stars-row" class="flex justify-center flex-wrap gap-1 text-2xl"></div>
+                        <p id="final-message" class="text-sm font-bold text-slate-700 mt-2"></p>
+                    </div>
+
+                    <!-- Zlatno pravilo za kraj -->
+                    <div class="bg-blue-100/80 border-2 border-blue-300 rounded-2xl p-4 max-w-lg mx-auto mb-6 text-left flex items-center gap-3">
+                        <span class="text-3xl">👨‍👩‍👧‍👦</span>
+                        <p class="text-xs sm:text-sm font-bold text-blue-900">
+                            <strong>Zapamti zlatno pravilo:</strong> Kada nisi siguran/sigurna je li nešto na internetu istinito, uvijek pitaj roditelje, učiteljicu ili učitelja!
+                        </p>
+                    </div>
+
+                    <div class="flex flex-wrap justify-center gap-3">
+                        <button onclick="restartGame()" class="btn-3d bg-emerald-500 hover:bg-emerald-600 text-white font-black text-lg px-7 py-3.5 rounded-2xl inline-flex items-center gap-2 cursor-pointer">
+                            <span>🔄</span>
+                            <span>Igraj ponovno</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- Podnožje -->
+    <footer class="text-center py-3 text-xs font-bold text-slate-500">
+        Edukativna vježba za 2. razred osnovne škole • Tema: Istinitost informacija na internetu
+    </footer>
+
+    <!-- MODAL: Podsjetnik na pravila iz udžbenika -->
+    <div id="clues-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 border-4 border-blue-400 shadow-2xl pop-in">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl sm:text-2xl font-black text-blue-800 flex items-center gap-2">
+                    <span>🔍</span> Detektivsko povećalo
+                </h3>
+                <button onclick="toggleCluesModal()" class="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 font-black text-slate-600 flex items-center justify-center cursor-pointer">
+                    ✕
+                </button>
+            </div>
+            <p class="text-sm font-bold text-slate-600 mb-4">
+                Prije nego što povjeruješ onome što vidiš na internetu, uvijek provjeri ova 3 traga iz našeg udžbenika:
+            </p>
+            <ul class="space-y-3 mb-6">
+                <li class="bg-blue-50 p-3 rounded-xl border border-blue-200 flex items-start gap-3">
+                    <span class="text-2xl">🌐</span>
+                    <div>
+                        <p class="font-black text-blue-900 text-sm">1. Adresa mrežne stranice</p>
+                        <p class="text-xs font-semibold text-slate-600">Poznate stranice imaju jasnu adresu poput <strong>www.skole.hr</strong>. Lažne stranice često imaju čudna i neozbiljna imena.</p>
+                    </div>
+                </li>
+                <li class="bg-purple-50 p-3 rounded-xl border border-purple-200 flex items-start gap-3">
+                    <span class="text-2xl">🏫</span>
+                    <div>
+                        <p class="font-black text-purple-900 text-sm">2. Tko je napisao / čija je stranica</p>
+                        <p class="text-xs font-semibold text-slate-600">Provjeri stoji li iza stranice škola, CARNET, učitelj ili neki nepoznati šaljivac.</p>
+                    </div>
+                </li>
+                <li class="bg-emerald-50 p-3 rounded-xl border border-emerald-200 flex items-start gap-3">
+                    <span class="text-2xl">📅</span>
+                    <div>
+                        <p class="font-black text-emerald-900 text-sm">3. Datum vijesti</p>
+                        <p class="text-xs font-semibold text-slate-600">Svaka prava vijest ima datum kada je napisana. Ako nema datuma ili je jako star, budi oprezan!</p>
+                    </div>
+                </li>
+            </ul>
+            <button onclick="toggleCluesModal()" class="w-full btn-3d bg-blue-600 hover:bg-blue-700 text-white font-black py-3 rounded-xl cursor-pointer">
+                Razumijem, idemo dalje! 👍
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Baza od 8 raznolikih zadataka prilagođenih 2. razredu OŠ (slike, simulirani videozapisi, mrežne stranice iz udžbenika i kratke priče)
+        const questions = [
+            {
+                id: 1,
+                type: "image",
+                categoryLabel: "🖼️ Slika s interneta",
+                title: "Pogledaj ovu fotografiju s interneta. Može li ovakva životinja postojati u stvarnosti?",
+                isTrue: false,
+                ruleTag: "Provjera stvarnosti i fotomontaže",
+                explanation: "Ovo je LAŽ! Na internetu svatko može pomoću računala spojiti dvije slike. Mačke nemaju šarena leptirova krila i ne mogu letjeti iznad duge.",
+                renderMedia: () => `
+                    <div class="max-w-md mx-auto bg-gradient-to-b from-sky-300 via-sky-100 to-emerald-200 rounded-2xl p-4 border-4 border-sky-300 shadow-inner relative overflow-hidden">
+                        <svg viewBox="0 0 400 240" class="w-full h-auto rounded-xl">
+                            <!-- Duga u pozadini -->
+                            <path d="M 30 220 A 170 170 0 0 1 370 220" fill="none" stroke="#f87171" stroke-width="14"/>
+                            <path d="M 44 220 A 156 156 0 0 1 356 220" fill="none" stroke="#fbbf24" stroke-width="14"/>
+                            <path d="M 58 220 A 142 142 0 0 1 342 220" fill="none" stroke="#34d399" stroke-width="14"/>
+                            <path d="M 72 220 A 128 128 0 0 1 328 220" fill="none" stroke="#60a5fa" stroke-width="14"/>
+                            <!-- Oblaci -->
+                            <g fill="#ffffff" opacity="0.9">
+                                <circle cx="70" cy="55" r="22"/><circle cx="95" cy="50" r="28"/><circle cx="120" cy="58" r="20"/>
+                                <circle cx="290" cy="45" r="20"/><circle cx="315" cy="42" r="25"/><circle cx="338" cy="50" r="18"/>
+                            </g>
+                            <!-- Mačka s leptirovim krilima (animirana) -->
+                            <g class="animate-float">
+                                <!-- Leptirova krila -->
+                                <g class="animate-wings">
+                                    <ellipse cx="155" cy="110" rx="48" ry="32" transform="rotate(-25 155 110)" fill="#f472b6" stroke="#db2777" stroke-width="3"/>
+                                    <circle cx="145" cy="105" r="10" fill="#fef08a"/>
+                                    <ellipse cx="245" cy="110" rx="48" ry="32" transform="rotate(25 245 110)" fill="#f472b6" stroke="#db2777" stroke-width="3"/>
+                                    <circle cx="255" cy="105" r="10" fill="#fef08a"/>
+                                </g>
+                                <!-- Tijelo i glava mačke -->
+                                <ellipse cx="200" cy="135" rx="34" ry="26" fill="#fb923c" stroke="#ea580c" stroke-width="3"/>
+                                <circle cx="200" cy="95" r="28" fill="#fb923c" stroke="#ea580c" stroke-width="3"/>
+                                <!-- Uši -->
+                                <polygon points="176,78 182,52 195,70" fill="#fb923c" stroke="#ea580c" stroke-width="3"/>
+                                <polygon points="224,78 218,52 205,70" fill="#fb923c" stroke="#ea580c" stroke-width="3"/>
+                                <!-- Oči i njuškica -->
+                                <circle cx="190" cy="92" r="4" fill="#1e293b"/>
+                                <circle cx="210" cy="92" r="4" fill="#1e293b"/>
+                                <polygon points="196,100 204,100 200,105" fill="#f43f5e"/>
+                                <path d="M 192 108 Q 200 114 208 108" fill="none" stroke="#1e293b" stroke-width="2.5" stroke-linecap="round"/>
+                                <!-- Brkovi -->
+                                <line x1="165" y1="96" x2="182" y2="99" stroke="#1e293b" stroke-width="2"/>
+                                <line x1="218" y1="99" x2="235" y2="96" stroke="#1e293b" stroke-width="2"/>
+                            </g>
+                        </svg>
+                        <p class="text-center text-xs font-extrabold text-sky-900 mt-1">Objavljeno na: <em>čudesne-životinje-svijeta.net</em></p>
+                    </div>
+                `
+            },
+            {
+                id: 2,
+                type: "webpage",
+                categoryLabel: "🌐 Mrežna stranica",
+                title: "Pogledaj adresu stranice, tko ju je objavio i datum. Je li ova školska obavijest istinita?",
+                isTrue: true,
+                ruleTag: "Tragovi: Adresa (skole.hr), Autor (CARNET / MZO) i Datum",
+                explanation: "Ovo je ISTINA! Baš kao u našem udžbeniku, vidimo pravu adresu www.skole.hr, znamo čija je stranica (Portal za škole / CARNET) i vidimo točan datum vijesti.",
+                renderMedia: () => `
+                    <div class="max-w-xl mx-auto rounded-2xl border-4 border-slate-300 overflow-hidden shadow-md bg-white text-left">
+                        <!-- Traka preglednika -->
+                        <div class="bg-slate-200 px-3 py-2 flex items-center gap-2 border-b border-slate-300">
+                            <div class="flex gap-1.5">
+                                <span class="w-3 h-3 rounded-full bg-rose-400"></span>
+                                <span class="w-3 h-3 rounded-full bg-amber-400"></span>
+                                <span class="w-3 h-3 rounded-full bg-emerald-400"></span>
+                            </div>
+                            <div class="flex-grow bg-white rounded-lg px-3 py-1 text-xs sm:text-sm font-extrabold text-emerald-700 border-2 border-emerald-400 flex items-center gap-1.5">
+                                <span>🔒</span>
+                                <span>https://www.skole.hr/natjecanje-u-citanju</span>
+                            </div>
+                        </div>
+                        <!-- Sadržaj stranice nalik udžbeniku -->
+                        <div class="p-4 sm:p-5">
+                            <div class="flex flex-wrap items-center justify-between gap-2 pb-3 mb-3 border-b-2 border-slate-100">
+                                <div>
+                                    <span class="text-2xl font-black text-slate-700 tracking-tight">skole<span class="text-amber-500">.hr</span></span>
+                                    <span class="ml-2 bg-rose-600 text-white text-xs font-extrabold px-2 py-0.5 rounded">Portal za škole</span>
+                                </div>
+                                <div class="text-xs font-extrabold bg-blue-50 text-blue-800 px-2.5 py-1 rounded-lg border border-blue-200">
+                                    🏛️ CARNET i Ministarstvo znanosti i obrazovanja
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 text-xs font-bold text-slate-500 mb-1">
+                                <span>📅 Datum objave: <strong class="text-slate-800">13. 2. 2026.</strong></span>
+                                <span>•</span>
+                                <span>✍️ Autor: <strong class="text-slate-800">Uredništvo portala</strong></span>
+                            </div>
+                            <h4 class="text-lg font-black text-blue-800 mb-2">
+                                Pratite uživo državno natjecanje u čitanju naglas!
+                            </h4>
+                            <p class="text-sm text-slate-600 font-semibold leading-relaxed">
+                                Učenici osnovnih škola iz cijele Hrvatske sudjeluju u natjecanju čitanja naglas. Prijenos možete pratiti zajedno sa svojom učiteljicom u razredu.
+                            </p>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 3,
+                type: "video",
+                categoryLabel: "🎬 Kratki videozapis",
+                title: "Pokreni videozapis i pogledaj što pas radi. Je li ovakav video stvaran ili je trik?",
+                isTrue: false,
+                ruleTag: "Provjera mogućeg i nemogućeg u videozapisima",
+                explanation: "Ovo je LAŽ! Psi mogu naučiti stati na skateboard, ali nijedan pas ne može skočiti u svemir i sletjeti na Mjesec! To je računalna animacija.",
+                renderMedia: () => `
+                    <div id="video-player-3" class="max-w-md mx-auto bg-slate-900 rounded-2xl overflow-hidden border-4 border-purple-400 shadow-lg">
+                        <div class="relative bg-gradient-to-b from-indigo-950 via-blue-900 to-emerald-700 p-3">
+                            <svg viewBox="0 0 400 220" class="w-full h-auto rounded-xl">
+                                <!-- Zvijezde -->
+                                <circle cx="45" cy="35" r="2.5" fill="#fef08a"/>
+                                <circle cx="120" cy="25" r="2" fill="#ffffff"/>
+                                <circle cx="190" cy="45" r="3" fill="#fef08a"/>
+                                <circle cx="80" cy="85" r="2" fill="#ffffff"/>
+                                <!-- Mjesec u gornjem desnom kutu -->
+                                <circle cx="330" cy="52" r="34" fill="#fde047" stroke="#eab308" stroke-width="3"/>
+                                <circle cx="318" cy="44" r="6" fill="#facc15"/>
+                                <circle cx="342" cy="60" r="8" fill="#facc15"/>
+                                <circle cx="325" cy="68" r="4" fill="#facc15"/>
+                                <!-- Tlo / rampa -->
+                                <rect x="0" y="185" width="400" height="35" fill="#15803d"/>
+                                <path d="M 110 185 Q 150 185 170 155 L 170 185 Z" fill="#94a3b8"/>
+                                <!-- Pas na skateboardu -->
+                                <g class="skate-dog">
+                                    <!-- Daska -->
+                                    <rect x="45" y="172" width="60" height="8" rx="4" fill="#ef4444"/>
+                                    <circle cx="57" cy="182" r="5" fill="#1e293b"/>
+                                    <circle cx="93" cy="182" r="5" fill="#1e293b"/>
+                                    <!-- Pas -->
+                                    <ellipse cx="75" cy="155" rx="18" ry="13" fill="#d97706"/>
+                                    <circle cx="86" cy="138" r="13" fill="#d97706"/>
+                                    <ellipse cx="78" cy="136" rx="5" ry="9" fill="#92400e"/>
+                                    <circle cx="91" cy="135" r="2.5" fill="#000"/>
+                                    <circle cx="98" cy="140" r="3" fill="#000"/>
+                                </g>
+                            </svg>
+                            <!-- Oznaka videa -->
+                            <div class="absolute top-5 left-5 bg-black/60 text-white text-xs font-extrabold px-2.5 py-1 rounded-lg flex items-center gap-1.5">
+                                <span class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping"></span>
+                                <span>VIDEO: Pas skočio na Mjesec!</span>
+                            </div>
+                        </div>
+                        <!-- Kontrole videa -->
+                        <div class="bg-slate-800 px-4 py-3 flex items-center justify-between gap-3">
+                            <button onclick="toggleVideoPlay('video-player-3', this)" class="bg-purple-500 hover:bg-purple-600 text-white font-black text-xs sm:text-sm px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer">
+                                <span>▶️</span>
+                                <span>Pokreni video</span>
+                            </button>
+                            <div class="flex-grow bg-slate-700 h-2.5 rounded-full overflow-hidden">
+                                <div class="bg-purple-400 h-full w-1/2 rounded-full"></div>
+                            </div>
+                            <span class="text-xs font-bold text-slate-300">0:12</span>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 4,
+                type: "story",
+                categoryLabel: "📖 Kratka priča / oglas",
+                title: "Pročitaj ovu poruku koja je iskočila na ekranu. Govori li ona istinu?",
+                isTrue: false,
+                ruleTag: "Tragovi: Sumnjiva adresa i nerealna obećanja",
+                explanation: "Ovo je LAŽ! Čudna adresa 'besplatni-slatkisi-123.xyz', nepoznati autor i obećanje da ćeš postati nevidljiv siguran su znak da je informacija izmišljena.",
+                renderMedia: () => `
+                    <div class="max-w-lg mx-auto bg-gradient-to-br from-amber-100 to-rose-100 rounded-2xl p-5 border-4 border-rose-300 shadow-md text-left">
+                        <div class="flex flex-wrap items-center justify-between gap-2 text-xs font-extrabold text-rose-800 bg-white/80 px-3 py-2 rounded-xl mb-3 border border-rose-200">
+                            <span>🌐 Adresa: <u>www.besplatni-slatkisi-123.xyz</u></span>
+                            <span>📅 Datum: <em>Nema datuma</em></span>
+                        </div>
+                        <div class="flex items-center gap-3 mb-2">
+                            <span class="text-4xl">🍬</span>
+                            <h4 class="text-lg sm:text-xl font-black text-rose-700">
+                                ČAROBNI BOMBONI ZA NEVIDLJIVOST!
+                            </h4>
+                        </div>
+                        <p class="text-sm sm:text-base font-bold text-slate-700 leading-relaxed bg-white/70 p-3.5 rounded-xl">
+                            „Znanstvenici su otkrili čokoladni bombon! Ako pojedeš 100 komada odjednom, postat ćeš potpuno nevidljiv na cijeli dan! Klikni odmah i naruči!”
+                        </p>
+                        <p class="text-xs font-extrabold text-slate-500 mt-2 text-right">
+                            ✍️ Napisao: Nepoznati autor
+                        </p>
+                    </div>
+                `
+            },
+            {
+                id: 5,
+                type: "image",
+                categoryLabel: "🖼️ Slika iz prirode",
+                title: "Pogledaj ovu sliku iz šume. Je li istina da jež u jesen skuplja lišće i plodove?",
+                isTrue: true,
+                ruleTag: "Provjera znanja o prirodi i stvarnom svijetu",
+                explanation: "Ovo je ISTINA! Ježevi žive u našim šumama i vrtovima, a u jesen skupljaju suho lišće kako bi napravili toplo gnijezdo za zimski san.",
+                renderMedia: () => `
+                    <div class="max-w-md mx-auto bg-gradient-to-b from-amber-100 to-orange-200 rounded-2xl p-4 border-4 border-amber-300 shadow-inner">
+                        <svg viewBox="0 0 400 220" class="w-full h-auto rounded-xl bg-amber-50">
+                            <!-- Jesensko tlo -->
+                            <rect x="0" y="165" width="400" height="55" fill="#b45309"/>
+                            <ellipse cx="200" cy="170" rx="180" ry="18" fill="#d97706"/>
+                            <!-- Jesensko lišće na tlu -->
+                            <ellipse cx="70" cy="180" rx="14" ry="7" transform="rotate(-15 70 180)" fill="#dc2626"/>
+                            <ellipse cx="320" cy="185" rx="15" ry="7" transform="rotate(20 320 185)" fill="#eab308"/>
+                            <ellipse cx="115" cy="195" rx="12" ry="6" fill="#ea580c"/>
+                            <!-- Ježić -->
+                            <g transform="translate(115, 75)">
+                                <!-- Bodlje -->
+                                <path d="M 20 85 Q 80 5 150 85 Z" fill="#78350f"/>
+                                <path d="M 30 70 L 40 35 L 55 60 L 70 25 L 85 55 L 100 25 L 115 60 L 130 35 L 140 70" fill="none" stroke="#451a03" stroke-width="4" stroke-linejoin="round"/>
+                                <!-- Njuškica i lice -->
+                                <path d="M 135 55 Q 178 72 138 88 Z" fill="#fde68a" stroke="#d97706" stroke-width="2"/>
+                                <circle cx="174" cy="73" r="4.5" fill="#1e293b"/>
+                                <circle cx="148" cy="68" r="4" fill="#1e293b"/>
+                                <circle cx="132" cy="60" r="8" fill="#fcd34d" stroke="#d97706" stroke-width="2"/>
+                                <!-- Nožice -->
+                                <ellipse cx="55" cy="88" rx="10" ry="6" fill="#92400e"/>
+                                <ellipse cx="120" cy="88" rx="10" ry="6" fill="#92400e"/>
+                                <!-- Jabuka i list na leđima -->
+                                <circle cx="85" cy="34" r="14" fill="#ef4444"/>
+                                <path d="M 85 20 Q 90 10 96 15" fill="none" stroke="#15803d" stroke-width="3"/>
+                                <ellipse cx="105" cy="40" rx="12" ry="6" transform="rotate(25 105 40)" fill="#f59e0b"/>
+                            </g>
+                        </svg>
+                        <p class="text-center text-xs font-extrabold text-amber-900 mt-1">Objavljeno u: <em>Dječji prirodoslovni časopis</em></p>
+                    </div>
+                `
+            },
+            {
+                id: 6,
+                type: "video",
+                categoryLabel: "🎬 Znanstveni video",
+                title: "Pokreni videozapis pokusa. Pretvara li se voda u led kada je stavimo na jaku hladnoću?",
+                isTrue: true,
+                ruleTag: "Provjera znanstvenih činjenica iz prirode i društva",
+                explanation: "Ovo je ISTINA! Kada tekuću vodu stavimo u zamrzivač (ispod 0 stupnjeva), ona se smrzava i pretvara u čvrsti led.",
+                renderMedia: () => `
+                    <div id="video-player-6" class="max-w-md mx-auto bg-slate-900 rounded-2xl overflow-hidden border-4 border-sky-400 shadow-lg">
+                        <div class="relative bg-gradient-to-b from-sky-100 to-blue-200 p-3">
+                            <svg viewBox="0 0 400 220" class="w-full h-auto rounded-xl">
+                                <!-- Termometar (hladno) -->
+                                <rect x="35" y="30" width="22" height="140" rx="11" fill="#ffffff" stroke="#64748b" stroke-width="3"/>
+                                <circle cx="46" cy="170" r="18" fill="#3b82f6" stroke="#64748b" stroke-width="3"/>
+                                <rect x="42" y="115" width="8" height="50" fill="#3b82f6"/>
+                                <text x="68" y="122" font-size="14" font-weight="bold" fill="#1e3a8a">-10 °C</text>
+                                <!-- Pahuljice -->
+                                <text x="310" y="55" font-size="28">❄️</text>
+                                <text x="340" y="110" font-size="22">❄️</text>
+                                <text x="295" y="160" font-size="24">❄️</text>
+                                <!-- Posudica s vodom koja se ledi -->
+                                <g transform="translate(135, 65)">
+                                    <rect x="0" y="0" width="120" height="110" class="ice-cube" fill="#38bdf8" rx="24" stroke="#0284c7" stroke-width="4"/>
+                                    <line x1="20" y1="25" x2="45" y2="50" stroke="#ffffff" stroke-width="4" stroke-linecap="round" opacity="0.7"/>
+                                    <line x1="35" y1="20" x2="55" y2="40" stroke="#ffffff" stroke-width="3" stroke-linecap="round" opacity="0.7"/>
+                                </g>
+                            </svg>
+                            <div class="absolute top-5 left-5 bg-sky-900/80 text-white text-xs font-extrabold px-2.5 py-1 rounded-lg">
+                                POKUS: Voda na hladnoći
+                            </div>
+                        </div>
+                        <div class="bg-slate-800 px-4 py-3 flex items-center justify-between gap-3">
+                            <button onclick="toggleVideoPlay('video-player-6', this)" class="bg-sky-500 hover:bg-sky-600 text-white font-black text-xs sm:text-sm px-4 py-2 rounded-xl flex items-center gap-1.5 cursor-pointer">
+                                <span>▶️</span>
+                                <span>Pokreni video</span>
+                            </button>
+                            <div class="flex-grow bg-slate-700 h-2.5 rounded-full overflow-hidden">
+                                <div class="bg-sky-400 h-full w-2/3 rounded-full"></div>
+                            </div>
+                            <span class="text-xs font-bold text-slate-300">0:18</span>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 7,
+                type: "webpage",
+                categoryLabel: "🌐 Školska stranica",
+                title: "Pogledaj dobro ovu stranicu! Je li ovo prava obavijest za sutrašnju nastavu?",
+                isTrue: false,
+                ruleTag: "Tragovi: Lažna adresa (nema skole.hr) i datum iz 2005. godine!",
+                explanation: "Ovo je LAŽ! Pogledaj 3 traga iz udžbenika: 1) Adresa NIJE školska (piše 'super-igra-bez-skole.com'), 2) Autor je nepoznat ('Šaljivac'), 3) Datum je iz 2005. godine!",
+                renderMedia: () => `
+                    <div class="max-w-xl mx-auto rounded-2xl border-4 border-amber-300 overflow-hidden shadow-md bg-white text-left">
+                        <div class="bg-slate-200 px-3 py-2 flex items-center gap-2 border-b border-slate-300">
+                            <div class="flex gap-1.5">
+                                <span class="w-3 h-3 rounded-full bg-rose-400"></span>
+                                <span class="w-3 h-3 rounded-full bg-amber-400"></span>
+                                <span class="w-3 h-3 rounded-full bg-emerald-400"></span>
+                            </div>
+                            <div class="flex-grow bg-white rounded-lg px-3 py-1 text-xs sm:text-sm font-extrabold text-rose-600 border-2 border-rose-300 flex items-center gap-1.5">
+                                <span>⚠️</span>
+                                <span>http://www.super-igra-bez-skole.com/vijest</span>
+                            </div>
+                        </div>
+                        <div class="p-4 sm:p-5">
+                            <div class="flex flex-wrap items-center justify-between gap-2 pb-3 mb-3 border-b-2 border-slate-100">
+                                <span class="text-lg font-black text-purple-700">🎉 Vijesti za učenike</span>
+                                <span class="text-xs font-extrabold bg-rose-50 text-rose-700 px-2.5 py-1 rounded-lg border border-rose-200">
+                                    ✍️ Autor: Nepoznati šaljivac
+                                </span>
+                            </div>
+                            <div class="text-xs font-bold text-slate-500 mb-1">
+                                📅 Datum vijesti: <strong class="text-rose-600">1. 4. 2005.</strong>
+                            </div>
+                            <h4 class="text-lg font-black text-slate-800 mb-2">
+                                Sutra nema škole jer će padati kiša od čokoladnog mlijeka!
+                            </h4>
+                            <p class="text-sm text-slate-600 font-semibold leading-relaxed">
+                                Svi učenici 2. razreda sutra ostaju kod kuće i cijeli dan igraju igrice umjesto nastave.
+                            </p>
+                        </div>
+                    </div>
+                `
+            },
+            {
+                id: 8,
+                type: "story",
+                categoryLabel: "📖 Obavijest knjižnice",
+                title: "Pročitaj ovu vijest na stranicama gradske knjižnice. Je li ova informacija točna i pouzdana?",
+                isTrue: true,
+                ruleTag: "Tragovi: Poznata ustanova, stvaran događaj i točan datum",
+                explanation: "Ovo je ISTINA! Gradske i školske knjižnice redovito organiziraju radionice čitanja i pričanja priča za učenike nižih razreda, a vijest ima jasnu ustanovu i datum.",
+                renderMedia: () => `
+                    <div class="max-w-lg mx-auto bg-gradient-to-br from-emerald-50 to-teal-100 rounded-2xl p-5 border-4 border-emerald-300 shadow-md text-left">
+                        <div class="flex flex-wrap items-center justify-between gap-2 text-xs font-extrabold text-emerald-900 bg-white/90 px-3 py-2 rounded-xl mb-3 border border-emerald-200">
+                            <span>🌐 <u>www.gradska-knjiznica.hr/djecji-odjel</u></span>
+                            <span>📅 10. 11. 2026.</span>
+                        </div>
+                        <div class="flex items-center gap-3 mb-2">
+                            <span class="text-4xl">📚</span>
+                            <h4 class="text-lg sm:text-xl font-black text-emerald-800">
+                                Pričaonica za učenike 1. i 2. razreda
+                            </h4>
+                        </div>
+                        <p class="text-sm sm:text-base font-bold text-slate-700 leading-relaxed bg-white/80 p-3.5 rounded-xl">
+                            Dragi učenici, pozivamo vas ovu subotu u 10 sati na Dječji odjel knjižnice. Čitat ćemo slikovnice o šumskim životinjama i izrađivati straničnike!
+                        </p>
+                        <p class="text-xs font-extrabold text-emerald-800 mt-2 text-right">
+                            ✍️ Objavila: Dječja knjižničarka Ana
+                        </p>
+                    </div>
+                `
+            }
+        ];
+
+        // Stanje igre
+        let currentIndex = 0;
+        let score = 0;
+        let answered = false;
+
+        // DOM elementi
+        const startScreen = document.getElementById('start-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const endScreen = document.getElementById('end-screen');
+        const headerScoreBadge = document.getElementById('header-score-badge');
+        const scoreDisplay = document.getElementById('score-display');
+        const questionCounter = document.getElementById('question-counter');
+        const progressBar = document.getElementById('progress-bar');
+        const categoryBadge = document.getElementById('category-badge');
+        const questionTitle = document.getElementById('question-title');
+        const mediaContainer = document.getElementById('media-container');
+        const answerButtons = document.getElementById('answer-buttons');
+        const feedbackBox = document.getElementById('feedback-box');
+        const feedbackIcon = document.getElementById('feedback-icon');
+        const feedbackHeading = document.getElementById('feedback-heading');
+        const feedbackText = document.getElementById('feedback-text');
+        const feedbackRuleTag = document.getElementById('feedback-rule-tag');
+        const nextBtn = document.getElementById('next-btn');
+
+        // Pokretanje igre
+        function startGame() {
+            currentIndex = 0;
+            score = 0;
+            updateScoreUI();
+            startScreen.classList.add('hidden');
+            endScreen.classList.add('hidden');
+            quizScreen.classList.remove('hidden');
+            headerScoreBadge.classList.remove('hidden');
+            loadQuestion();
+        }
+
+        // Ponovno pokretanje
+        function restartGame() {
+            startGame();
+        }
+
+        // Učitavanje trenutnog zadatka
+        function loadQuestion() {
+            answered = false;
+            const q = questions[currentIndex];
+
+            // Ažuriranje trake napretka
+            questionCounter.textContent = `Zadatak ${currentIndex + 1} od ${questions.length}`;
+            progressBar.style.width = `${((currentIndex + 1) / questions.length) * 100}%`;
+            categoryBadge.textContent = q.categoryLabel;
+            questionTitle.textContent = q.title;
+
+            // Prikaz medija
+            mediaContainer.innerHTML = q.renderMedia();
+
+            // Resetiranje gumba i povratne informacije
+            answerButtons.classList.remove('hidden');
+            feedbackBox.classList.add('hidden');
+
+            // Ponovno pokretanje ulazne animacije kartice
+            const card = document.getElementById('question-card');
+            card.classList.remove('pop-in');
+            void card.offsetWidth; // trigger reflow
+            card.classList.add('pop-in');
+        }
+
+        // Kontrola pokretanja/zaustavljanja simuliranog videa
+        function toggleVideoPlay(playerId, btnElement) {
+            const player = document.getElementById(playerId);
+            if (!player) return;
+            const isPlaying = player.classList.toggle('video-playing');
+            if (isPlaying) {
+                btnElement.innerHTML = '<span>⏸️</span><span>Pauziraj</span>';
+            } else {
+                btnElement.innerHTML = '<span>▶️</span><span>Pokreni video</span>';
+            }
+        }
+
+        // Obrada učenikovog odgovora
+        function submitAnswer(userChoice) {
+            if (answered) return;
+            answered = true;
+
+            const q = questions[currentIndex];
+            const isCorrect = (userChoice === q.isTrue);
+
+            answerButtons.classList.add('hidden');
+            feedbackBox.classList.remove('hidden');
+
+            // Ukloni stare klase boja
+            feedbackBox.classList.remove('bg-emerald-50', 'border-emerald-400', 'bg-amber-50', 'border-amber-400');
+
+            if (isCorrect) {
+                score++;
+                updateScoreUI();
+                launchConfetti();
+                feedbackBox.classList.add('bg-emerald-50', 'border-emerald-400');
+                feedbackIcon.textContent = '🌟';
+                feedbackHeading.textContent = 'Bravo, detektive! Točan odgovor!';
+                feedbackHeading.className = 'text-xl sm:text-2xl font-black mb-1 text-emerald-700';
+            } else {
+                feedbackBox.classList.add('bg-amber-50', 'border-amber-400');
+                feedbackIcon.textContent = '🧐';
+                feedbackHeading.textContent = 'Skoro! Pogledajmo zajedno tragove:';
+                feedbackHeading.className = 'text-xl sm:text-2xl font-black mb-1 text-amber-800';
+            }
+
+            feedbackText.textContent = q.explanation;
+            feedbackRuleTag.textContent = `🔍 ${q.ruleTag}`;
+
+            if (currentIndex === questions.length - 1) {
+                nextBtn.innerHTML = '<span>Preuzmi diplomu!</span><span>🏆</span>';
+            } else {
+                nextBtn.innerHTML = '<span>Sljedeći zadatak</span><span>➡️</span>';
+            }
+        }
+
+        // Prelazak na sljedeći zadatak ili završetak
+        function nextQuestion() {
+            if (currentIndex < questions.length - 1) {
+                currentIndex++;
+                loadQuestion();
+            } else {
+                showEndScreen();
+            }
+        }
+
+        // Prikaz završnog ekrana s diplomom
+        function showEndScreen() {
+            quizScreen.classList.add('hidden');
+            endScreen.classList.remove('hidden');
+            launchConfetti();
+
+            document.getElementById('final-score').textContent = score;
+
+            // Prikaz zvjezdica
+            const starsRow = document.getElementById('stars-row');
+            starsRow.innerHTML = '';
+            for (let i = 0; i < questions.length; i++) {
+                const span = document.createElement('span');
+                span.textContent = i < score ? '⭐' : '☆';
+                span.className = i < score ? 'text-amber-400' : 'text-slate-300';
+                starsRow.appendChild(span);
+            }
+
+            const finalMessage = document.getElementById('final-message');
+            if (score === questions.length) {
+                finalMessage.textContent = 'Savršeno! Pravi si majstor u prepoznavanju istine na internetu!';
+            } else if (score >= 5) {
+                finalMessage.textContent = 'Odličan posao! Već jako dobro prepoznaješ detektivske tragove!';
+            } else {
+                finalMessage.textContent = 'Dobar početak! Svaki detektiv uči vježbom. Pokušaj ponovno!';
+            }
+        }
+
+        // Ažuriranje brojača bodova u zaglavlju
+        function updateScoreUI() {
+            scoreDisplay.textContent = score;
+        }
+
+        // Otvaranje/zatvaranje modala s pravilima iz udžbenika
+        function toggleCluesModal() {
+            const modal = document.getElementById('clues-modal');
+            modal.classList.toggle('hidden');
+        }
+
+        // Jednostavan efekt konfeta za poticaj učenicima
+        function launchConfetti() {
+            const colors = ['#f59e0b', '#10b981', '#3b82f6', '#ec4899', '#8b5cf6'];
+            for (let i = 0; i < 28; i++) {
+                const piece = document.createElement('div');
+                piece.className = 'confetti-piece rounded-sm';
+                piece.style.left = Math.random() * 100 + 'vw';
+                piece.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                piece.style.animationDuration = (Math.random() * 1.5 + 1.5) + 's';
+                document.body.appendChild(piece);
+                setTimeout(() => piece.remove(), 3100);
+            }
+        }
+    </script>
+</body>
+</html>
