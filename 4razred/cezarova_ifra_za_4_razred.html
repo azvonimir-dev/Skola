@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tajni Laboratorij: Cezarova šifra (4. razred)</title>
+    <!-- Učitavanje Tailwind CSS-a za responzivan i moderan dizajn -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Učitavanje čitljivih fontova prilagođenih djeci i učenicima s disleksijom (Andika i Lexend) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Andika:ital,wght@0,400;0,700;1,400&family=Lexend:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'kid': ['Andika', 'Lexend', 'sans-serif'],
+                        'display': ['Lexend', 'Andika', 'sans-serif'],
+                    },
+                    colors: {
+                        'detective-bg': '#F4F8FB',
+                        'detective-paper': '#FFFDF7',
+                        'detective-blue': '#2563EB',
+                        'detective-yellow': '#FACC15',
+                        'detective-green': '#16A34A',
+                        'detective-orange': '#F97316',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Prilagodba za maksimalnu čitljivost za učenike 4. razreda */
+        body {
+            font-family: 'Andika', 'Lexend', sans-serif;
+            letter-spacing: 0.04em;
+            line-height: 1.65;
+            background-color: #EFF6FF;
+            background-image: radial-gradient(#CBD5E1 1.5px, transparent 1.5px);
+            background-size: 24px 24px;
+        }
+
+        /* Prilagođeni klizač (slider) prilagođen dječjim prstićima i tabletima */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 16px;
+            background: #DBEAFE;
+            border-radius: 999px;
+            border: 3px solid #93C5FD;
+            outline: none;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #FACC15;
+            border: 4px solid #1E3A8A;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            transition: transform 0.15s ease, background-color 0.15s ease;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover,
+        input[type="range"]::-webkit-slider-thumb:active {
+            transform: scale(1.15);
+            background: #FDE047;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #FACC15;
+            border: 4px solid #1E3A8A;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Animacija odskoka za gumbove */
+        .btn-bounce:active {
+            transform: scale(0.95);
+        }
+
+        /* Prilagođeni scrollbar za traku abecede */
+        .alphabet-scroll::-webkit-scrollbar {
+            height: 10px;
+        }
+        .alphabet-scroll::-webkit-scrollbar-track {
+            background: #E2E8F0;
+            border-radius: 999px;
+        }
+        .alphabet-scroll::-webkit-scrollbar-thumb {
+            background: #60A5FA;
+            border-radius: 999px;
+        }
+        .alphabet-scroll::-webkit-scrollbar-thumb:hover {
+            background: #2563EB;
+        }
+
+        /* Isticanje aktivnog slova u tablici */
+        .letter-card-active {
+            transform: translateY(-4px) scale(1.08);
+            box-shadow: 0 8px 15px rgba(37, 99, 235, 0.3);
+            z-index: 10;
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen pb-12 selection:bg-yellow-300 selection:text-slate-900">
+
+    <!-- Gornje zaglavlje (Detektivska traka) -->
+    <header class="bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700 text-white shadow-lg border-b-4 border-yellow-400">
+        <div class="max-w-6xl mx-auto px-4 py-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-4 text-center sm:text-left">
+                <div class="bg-yellow-400 text-blue-950 p-3 rounded-2xl shadow-md border-2 border-white transform -rotate-3">
+                    <!-- SVG Ikona Povećala -->
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-9 w-9" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </div>
+                <div>
+                    <span class="inline-block bg-blue-900/60 text-yellow-300 text-xs sm:text-sm font-bold px-3 py-1 rounded-full uppercase tracking-wider mb-1">
+                        4. razred • Hrvatska abeceda (30 slova)
+                    </span>
+                    <h1 class="font-display text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-wide text-white drop-shadow">
+                        Tajni Laboratorij: Cezarova šifra
+                    </h1>
+                </div>
+            </div>
+
+            <!-- Gumb za pomoć / upute -->
+            <button id="toggleHelpBtn" type="button" class="btn-bounce bg-yellow-400 hover:bg-yellow-300 text-blue-950 font-bold px-5 py-3 rounded-2xl shadow-md border-2 border-yellow-200 flex items-center gap-2 text-base sm:text-lg transition">
+                <span class="text-2xl">💡</span>
+                <span>Kako ovo radi?</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Skočni/proširivi okvir s jednostavnim uputama za učenike -->
+    <section id="helpPanel" class="hidden max-w-6xl mx-auto px-4 mt-6">
+        <div class="bg-amber-50 border-4 border-amber-300 rounded-3xl p-6 shadow-md relative">
+            <button id="closeHelpBtn" type="button" aria-label="Zatvori upute" class="absolute top-4 right-4 bg-amber-200 hover:bg-amber-300 text-amber-900 font-bold w-10 h-10 rounded-full flex items-center justify-center text-xl transition">
+                ✕
+            </button>
+            <h2 class="font-display text-xl sm:text-2xl font-bold text-amber-900 mb-3 flex items-center gap-2">
+                <span>🕵️‍♂️</span> Što je Cezarova šifra?
+            </h2>
+            <div class="grid md:grid-cols-3 gap-4 text-base sm:text-lg text-slate-800">
+                <div class="bg-white p-4 rounded-2xl border-2 border-amber-200 shadow-sm">
+                    <div class="font-bold text-blue-700 mb-1">1. Tajni ključ (Pomak) 🔑</div>
+                    <p>Rimski vojskovođa Julije Cezar slao je tajne poruke tako što je svako slovo zamijenio slovom koje dolazi nekoliko mjesta kasnije u abecedi.</p>
+                </div>
+                <div class="bg-white p-4 rounded-2xl border-2 border-amber-200 shadow-sm">
+                    <div class="font-bold text-green-700 mb-1">2. Kako šifriramo? 🔒</div>
+                    <p>Ako odabereš <strong>pomak 3</strong>, slovo <strong>A</strong> postaje <strong>Č</strong> (A → B → C → Č). Naša abeceda ima <strong>30 slova</strong>, uključujući <em>Dž, Lj, Nj</em>!</p>
+                </div>
+                <div class="bg-white p-4 rounded-2xl border-2 border-amber-200 shadow-sm">
+                    <div class="font-bold text-orange-600 mb-1">3. Kako čitamo tajnu? 🔓</div>
+                    <p>Tvoj prijatelj mora znati isti tajni ključ! Kad uključi način <strong>"Dešifriraj poruku"</strong> i namjesti isti broj, tajna se otkriva!</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Glavni sadržaj aplikacije -->
+    <main class="max-w-6xl mx-auto px-4 mt-6 space-y-6">
+
+        <!-- 1. KORAK: Odabir načina rada i Tajnog zadatka -->
+        <div class="bg-white rounded-3xl p-5 sm:p-6 shadow-md border-2 border-blue-200 flex flex-col lg:flex-row items-center justify-between gap-4">
+            
+            <!-- Prekidač načina rada (Šifriraj / Dešifriraj) -->
+            <div class="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
+                <span class="font-bold text-slate-600 text-base sm:text-lg">Odaberi zadatak:</span>
+                <div class="grid grid-cols-2 gap-2 bg-slate-100 p-2 rounded-2xl border-2 border-slate-200 w-full sm:w-auto">
+                    <button id="modeEncryptBtn" type="button" class="btn-bounce px-5 py-3 rounded-xl font-bold text-base sm:text-lg flex items-center justify-center gap-2 transition shadow-sm bg-blue-600 text-white">
+                        <span>🔒</span>
+                        <span>Šifriraj poruku</span>
+                    </button>
+                    <button id="modeDecryptBtn" type="button" class="btn-bounce px-5 py-3 rounded-xl font-bold text-base sm:text-lg flex items-center justify-center gap-2 transition text-slate-700 hover:bg-white">
+                        <span>🔓</span>
+                        <span>Dešifriraj poruku</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Gumb za učitavanje tajnog zadatka za vježbu -->
+            <button id="loadChallengeBtn" type="button" class="btn-bounce w-full lg:w-auto bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold px-6 py-3.5 rounded-2xl shadow-md border-2 border-orange-300 flex items-center justify-center gap-2 text-base sm:text-lg transition">
+                <span class="text-2xl">🎯</span>
+                <span>Isprobaj tajni zadatak!</span>
+            </button>
+        </div>
+
+        <!-- Traka s obavijesti o učitanom tajnom zadatku (skrivena dok se ne klikne zadatak) -->
+        <div id="challengeBanner" class="hidden bg-orange-100 border-4 border-orange-400 rounded-3xl p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
+            <div class="flex items-center gap-3">
+                <span class="text-3xl">🕵️‍♀️</span>
+                <div>
+                    <h3 class="font-bold text-orange-950 text-lg">Tajna misija učitana!</h3>
+                    <p id="challengeHintText" class="text-orange-900 text-base">Pokušaj otkriti poruku! Namjesti ključ i provjeri rezultat.</p>
+                </div>
+            </div>
+            <button id="revealKeyBtn" type="button" class="btn-bounce bg-white hover:bg-orange-50 text-orange-800 font-bold px-4 py-2.5 rounded-xl border-2 border-orange-400 text-sm sm:text-base whitespace-nowrap shadow-sm">
+                🔑 Otkrij tajni ključ
+            </button>
+        </div>
+
+        <!-- 2. KORAK: Odabir tajnog ključa (Pomaka) i interaktivni vizualni prikaz abecede -->
+        <section class="bg-white rounded-3xl p-5 sm:p-7 shadow-md border-2 border-blue-200">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b-2 border-slate-100">
+                <div>
+                    <h2 class="font-display text-xl sm:text-2xl font-extrabold text-blue-950 flex items-center gap-2">
+                        <span>🔑</span> Tajni ključ (Pomak slova)
+                    </h2>
+                    <p class="text-slate-600 text-base mt-1">
+                        Pomiči klizač ili klikni na bilo koje slovo u tablici ispod da vidiš u što se pretvara!
+                    </p>
+                </div>
+
+                <!-- Veliki bedž s trenutnim pomakom i primjerom -->
+                <div class="bg-yellow-100 border-4 border-yellow-400 rounded-2xl px-5 py-3 flex items-center justify-center gap-4 shadow-sm">
+                    <div class="text-center">
+                        <span class="block text-xs font-bold uppercase text-yellow-800">Tajni pomak</span>
+                        <span id="shiftDisplayValue" class="font-display text-3xl font-extrabold text-blue-900">3</span>
+                    </div>
+                    <div class="h-10 w-1 bg-yellow-400 rounded-full"></div>
+                    <div class="text-center">
+                        <span class="block text-xs font-bold uppercase text-yellow-800">Primjer pretvorbe</span>
+                        <span id="shiftExampleBadge" class="font-display text-xl sm:text-2xl font-extrabold text-green-700">A → Č</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Kontrole klizača (+ / - i slider) -->
+            <div class="my-6 flex items-center gap-3 sm:gap-5">
+                <button id="decreaseShiftBtn" type="button" aria-label="Smanji pomak za 1" class="btn-bounce bg-blue-100 hover:bg-blue-200 active:bg-blue-300 text-blue-900 font-extrabold text-2xl sm:text-3xl w-14 h-14 rounded-2xl border-2 border-blue-300 flex items-center justify-center shadow-sm shrink-0">
+                    −
+                </button>
+                
+                <div class="flex-1 flex flex-col">
+                    <input id="shiftSlider" type="range" min="1" max="29" value="3" class="w-full" aria-label="Odaberi pomak od 1 do 29">
+                    <div class="flex justify-between text-xs sm:text-sm font-bold text-slate-400 mt-2 px-1">
+                        <span>1</span>
+                        <span>5</span>
+                        <span>10</span>
+                        <span>15 (pola abecede)</span>
+                        <span>20</span>
+                        <span>25</span>
+                        <span>29</span>
+                    </div>
+                </div>
+
+                <button id="increaseShiftBtn" type="button" aria-label="Povećaj pomak za 1" class="btn-bounce bg-blue-100 hover:bg-blue-200 active:bg-blue-300 text-blue-900 font-extrabold text-2xl sm:text-3xl w-14 h-14 rounded-2xl border-2 border-blue-300 flex items-center justify-center shadow-sm shrink-0">
+                    +
+                </button>
+            </div>
+
+            <!-- Vizualni Cezarov pojas / tablica svih 30 slova hrvatske abecede -->
+            <div class="bg-slate-50 rounded-2xl p-4 border-2 border-slate-200">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                    <span class="text-sm sm:text-base font-bold text-slate-700 flex items-center gap-2">
+                        <span>👀</span> Vizualni prevoditelj abecede (klikni na slovo za provjeru):
+                    </span>
+                    <span id="selectedLetterInfo" class="text-sm sm:text-base font-bold bg-blue-100 text-blue-900 px-3 py-1 rounded-xl border border-blue-300">
+                        Klikni neko slovo ispod!
+                    </span>
+                </div>
+
+                <!-- Kontejner za horizontalno pomicanje 30 slova -->
+                <div id="alphabetStrip" class="alphabet-scroll flex gap-2 overflow-x-auto pb-3 pt-2 px-1 select-none">
+                    <!-- Dinamički generirano putem JavaScripta -->
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. KORAK: Unos poruke i prikaz rezultata -->
+        <section class="grid lg:grid-cols-2 gap-6">
+            
+            <!-- Lijevi okvir: Ulazni tekst -->
+            <div class="bg-detective-paper rounded-3xl p-5 sm:p-6 shadow-md border-4 border-blue-300 flex flex-col">
+                <div class="flex items-center justify-between gap-2 mb-3">
+                    <label for="inputText" id="inputLabel" class="font-display text-xl sm:text-2xl font-extrabold text-blue-950 flex items-center gap-2">
+                        <span>✏️</span> Napiši običnu poruku:
+                    </label>
+                    <button id="clearTextBtn" type="button" class="btn-bounce text-sm font-bold text-slate-600 hover:text-red-600 bg-slate-100 hover:bg-red-50 px-3 py-1.5 rounded-xl border border-slate-300 transition">
+                        🗑️ Obriši sve
+                    </button>
+                </div>
+
+                <textarea id="inputText" rows="5" placeholder="Ovdje upiši svoju poruku... Npr. DANAS IDEMO NA SLADOLED!" class="w-full flex-1 rounded-2xl border-2 border-blue-200 focus:border-blue-600 focus:ring-4 focus:ring-blue-100 p-4 text-xl sm:text-2xl font-bold text-slate-900 placeholder:text-slate-400 placeholder:font-normal resize-none outline-none transition bg-white"></textarea>
+
+                <!-- Brza tipkovnica za dvoslove i dijakritičke znakove (korisno ako učenik koristi tipkovnicu bez HR znakova) -->
+                <div class="mt-3 pt-3 border-t-2 border-dashed border-slate-200">
+                    <span class="block text-xs sm:text-sm font-bold text-slate-500 mb-2">
+                        Brzi umetak hrvatskih slova (klikni za dodavanje u tekst):
+                    </span>
+                    <div id="hrQuickKeys" class="flex flex-wrap gap-1.5">
+                        <!-- Gumbi za Č, Ć, Dž, Đ, Lj, Nj, Š, Ž -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Desni okvir: Rezultat (Šifrirana ili dešifrirana poruka) -->
+            <div class="bg-gradient-to-br from-emerald-50 to-green-100 rounded-3xl p-5 sm:p-6 shadow-md border-4 border-green-400 flex flex-col">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                    <h2 id="outputLabel" class="font-display text-xl sm:text-2xl font-extrabold text-green-950 flex items-center gap-2">
+                        <span>🔐</span> Tvoja tajna poruka:
+                    </h2>
+                    <span id="charCountBadge" class="text-xs sm:text-sm font-bold bg-white/80 text-green-900 px-3 py-1 rounded-full border border-green-300">
+                        0 slova
+                    </span>
+                </div>
+
+                <!-- Područje s rezultatom -->
+                <div id="outputBox" class="w-full flex-1 min-h-[160px] rounded-2xl border-2 border-green-300 bg-white p-4 text-xl sm:text-2xl font-extrabold text-green-950 break-words whitespace-pre-wrap shadow-inner select-all flex items-start">
+                    <span class="text-slate-400 font-normal text-lg sm:text-xl">Ovdje će se pojaviti tvoja poruka...</span>
+                </div>
+
+                <!-- Gumb za kopiranje i obavijest -->
+                <div class="mt-4 flex flex-col sm:flex-row items-center gap-3">
+                    <button id="copyResultBtn" type="button" class="btn-bounce w-full bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-bold py-3.5 px-6 rounded-2xl shadow-md border-2 border-green-400 flex items-center justify-center gap-2 text-lg sm:text-xl transition">
+                        <span>📋</span>
+                        <span id="copyBtnText">Kopiraj tajnu poruku</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. KORAK: Interaktivni detektivski rendgen (prikazuje slovo po slovo što se događa s zadnjom riječi ili porukom) -->
+        <section class="bg-white rounded-3xl p-5 sm:p-6 shadow-md border-2 border-indigo-200">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                <h2 class="font-display text-lg sm:text-xl font-extrabold text-indigo-950 flex items-center gap-2">
+                    <span>🔬</span> Detektivski povećalo-prikaz (slovo po slovo)
+                </h2>
+                <span class="text-sm text-slate-500 font-bold">Prikazuje prvih 20 znakova tvoje poruke</span>
+            </div>
+            <div id="letterBreakdown" class="flex flex-wrap gap-2 min-h-[68px] items-center bg-indigo-50/60 p-3 rounded-2xl border border-indigo-100">
+                <span class="text-slate-500 text-base">Upiši tekst iznad kako bi vidio/vidjela kako se svako pojedino slovo mijenja!</span>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Podnožje -->
+    <footer class="max-w-6xl mx-auto px-4 mt-10 text-center text-slate-500 text-sm sm:text-base">
+        <p class="font-bold text-slate-600">Napravljeno za male detektive 4. razreda osnovne škole 🕵️‍♂️🇭🇷</p>
+        <p class="mt-1">Podržava sva slova hrvatske abecede: A, B, C, Č, Ć, D, Dž, Đ, E, F, G, H, I, J, K, L, Lj, M, N, Nj, O, P, R, S, Š, T, U, V, Z, Ž.</p>
+    </footer>
+
+    <!-- Skočna vesela poruka (Toast) umjesto alert() -->
+    <div id="toastMessage" class="fixed bottom-6 left-1/2 transform -translate-x-1/2 translate-y-24 opacity-0 pointer-events-none transition-all duration-300 z-50 bg-slate-900 text-white px-6 py-4 rounded-2xl shadow-2xl border-2 border-yellow-400 flex items-center gap-3 text-lg font-bold">
+        <span id="toastIcon" class="text-2xl">🎉</span>
+        <span id="toastText">Poruka je kopirana!</span>
+    </div>
+
+    <script>
+        /**
+         * HRVATSKA ABECEDA (30 slova)
+         * Važno: Dvoslovi 'Dž', 'Lj' i 'Nj' su zasebna slova hrvatske abecede!
+         */
+        const HR_ALPHABET = [
+            'A', 'B', 'C', 'Č', 'Ć', 'D', 'Dž', 'Đ', 'E', 'F',
+            'G', 'H', 'I', 'J', 'K', 'L', 'Lj', 'M', 'N', 'Nj',
+            'O', 'P', 'R', 'S', 'Š', 'T', 'U', 'V', 'Z', 'Ž'
+        ];
+
+        // Stanje aplikacije
+        const state = {
+            mode: 'encrypt', // 'encrypt' (šifriraj) ili 'decrypt' (dešifriraj)
+            shift: 3,        // Pomak od 1 do 29
+            selectedIndex: 0, // Trenutno odabrano slovo u vizualnoj traci
+            currentChallenge: null
+        };
+
+        // Zabavni tajni zadaci za učenike 4. razreda
+        const SECRET_CHALLENGES = [
+            {
+                plain: "TAJNA LOZINKA JE SLADOLED!",
+                shift: 3,
+                hint: "Ova poruka skriva najslađu ljetnu poslasticu! Pokušaj s malim pomakom (između 2 i 5)."
+            },
+            {
+                plain: "VIDIMO SE NA VELIKOM ODMORU KOD KLUPE.",
+                shift: 5,
+                hint: "Gdje se nalazimo kad zazvoni školsko zvono? Tajni ključ je broj prstiju na jednoj ruci!"
+            },
+            {
+                plain: "DŽEPNI SAT POKAZUJE TOČNO PODNE.",
+                shift: 4,
+                hint: "Pazi na slovo Dž na početku! Pomak je jednak broju stranica kvadrata."
+            },
+            {
+                plain: "LJUBAV I PRIJATELJSTVO SU NAJVEĆE BLAGO.",
+                shift: 7,
+                hint: "Poruka počinje dvoslovom Lj! Tajni ključ je broj dana u tjednu."
+            },
+            {
+                plain: "NJEŽNI MAČIĆ SPAVA U KOŠARI.",
+                shift: 2,
+                hint: "Poruka počinje dvoslovom Nj! Tajni ključ je najmanji parni broj veći od nule."
+            },
+            {
+                plain: "ČETVRTAŠI SU NAJBOLJI DETEKTIVI!",
+                shift: 10,
+                hint: "Tko su najbolji detektivi? Tajni ključ je broj prstiju na obje ruke!"
+            }
+        ];
+
+        // DOM elementi
+        const elements = {
+            modeEncryptBtn: document.getElementById('modeEncryptBtn'),
+            modeDecryptBtn: document.getElementById('modeDecryptBtn'),
+            loadChallengeBtn: document.getElementById('loadChallengeBtn'),
+            challengeBanner: document.getElementById('challengeBanner'),
+            challengeHintText: document.getElementById('challengeHintText'),
+            revealKeyBtn: document.getElementById('revealKeyBtn'),
+            shiftSlider: document.getElementById('shiftSlider'),
+            decreaseShiftBtn: document.getElementById('decreaseShiftBtn'),
+            increaseShiftBtn: document.getElementById('increaseShiftBtn'),
+            shiftDisplayValue: document.getElementById('shiftDisplayValue'),
+            shiftExampleBadge: document.getElementById('shiftExampleBadge'),
+            alphabetStrip: document.getElementById('alphabetStrip'),
+            selectedLetterInfo: document.getElementById('selectedLetterInfo'),
+            inputLabel: document.getElementById('inputLabel'),
+            inputText: document.getElementById('inputText'),
+            clearTextBtn: document.getElementById('clearTextBtn'),
+            hrQuickKeys: document.getElementById('hrQuickKeys'),
+            outputLabel: document.getElementById('outputLabel'),
+            outputBox: document.getElementById('outputBox'),
+            charCountBadge: document.getElementById('charCountBadge'),
+            copyResultBtn: document.getElementById('copyResultBtn'),
+            copyBtnText: document.getElementById('copyBtnText'),
+            letterBreakdown: document.getElementById('letterBreakdown'),
+            toggleHelpBtn: document.getElementById('toggleHelpBtn'),
+            helpPanel: document.getElementById('helpPanel'),
+            closeHelpBtn: document.getElementById('closeHelpBtn'),
+            toastMessage: document.getElementById('toastMessage'),
+            toastIcon: document.getElementById('toastIcon'),
+            toastText: document.getElementById('toastText')
+        };
+
+        /**
+         * Prikazuje veselu obavijest na dnu ekrana (umjesto alert prozora)
+         */
+        let toastTimeout;
+        function showToast(text, icon = '🎉') {
+            clearTimeout(toastTimeout);
+            elements.toastText.textContent = text;
+            elements.toastIcon.textContent = icon;
+            elements.toastMessage.classList.remove('translate-y-24', 'opacity-0');
+            elements.toastMessage.classList.add('translate-y-0', 'opacity-100');
+
+            toastTimeout = setTimeout(() => {
+                elements.toastMessage.classList.add('translate-y-24', 'opacity-0');
+                elements.toastMessage.classList.remove('translate-y-0', 'opacity-100');
+            }, 3000);
+        }
+
+        /**
+         * Pretvara tekst u niz tokena prepoznajući hrvatske dvoslove (Dž, Lj, Nj)
+         * te čuvajući informaciju o velikim/malim slovima.
+         */
+        function tokenizeCroatianText(text) {
+            const tokens = [];
+            let i = 0;
+
+            while (i < text.length) {
+                const twoChars = text.slice(i, i + 2);
+                const twoCharsUpper = twoChars.toUpperCase();
+
+                // Provjera dvoslova DŽ, LJ, NJ (npr. "Dž", "DŽ", "dž")
+                if (twoCharsUpper === 'DŽ' || twoCharsUpper === 'LJ' || twoCharsUpper === 'NJ') {
+                    // Određujemo standardni oblik iz HR_ALPHABET ('Dž', 'Lj', 'Nj')
+                    const standardDigraph = twoCharsUpper[0] + twoCharsUpper[1].toLowerCase();
+                    const alphabetIndex = HR_ALPHABET.indexOf(standardDigraph);
+
+                    // Provjera je li napisano potpuno velikim slovima (npr. "LJ" u "LJUBAV") ili samo prvo veliko ("Lj" u "Ljubav") ili malo ("lj")
+                    let caseType = 'lower';
+                    if (twoChars === twoChars.toUpperCase()) {
+                        caseType = 'allUpper';
+                    } else if (twoChars[0] === twoChars[0].toUpperCase()) {
+                        caseType = 'title';
+                    }
+
+                    tokens.push({
+                        original: twoChars,
+                        alphabetIndex: alphabetIndex,
+                        caseType: caseType,
+                        isLetter: true
+                    });
+                    i += 2;
+                    continue;
+                }
+
+                // Jednoslovni znak
+                const oneChar = text[i];
+                const oneCharUpper = oneChar.toUpperCase();
+                const alphabetIndex = HR_ALPHABET.indexOf(oneCharUpper);
+
+                if (alphabetIndex !== -1) {
+                    const isUpper = oneChar === oneCharUpper;
+                    tokens.push({
+                        original: oneChar,
+                        alphabetIndex: alphabetIndex,
+                        caseType: isUpper ? 'allUpper' : 'lower',
+                        isLetter: true
+                    });
+                } else {
+                    // Razmak, broj ili interpunkcija
+                    tokens.push({
+                        original: oneChar,
+                        alphabetIndex: -1,
+                        caseType: 'none',
+                        isLetter: false
+                    });
+                }
+                i += 1;
+            }
+
+            return tokens;
+        }
+
+        /**
+         * Oblikuje slovo iz HR_ALPHABET prema izvornom načinu pisanja (veliko/malo slovo)
+         */
+        function formatLetterCase(alphabetLetter, caseType) {
+            if (caseType === 'lower') {
+                return alphabetLetter.toLowerCase();
+            }
+            if (caseType === 'title') {
+                // Npr. 'Dž', 'Lj', 'Nj' ili jednoslovno veliko 'A'
+                return alphabetLetter;
+            }
+            // 'allUpper' -> npr. ako je ulaz bio 'LJUBAV' (allUpper), i rezultat dvoslova neka bude 'DŽ' ili 'NJ'
+            return alphabetLetter.toUpperCase();
+        }
+
+        /**
+         * Glavna funkcija Cezarove šifre za hrvatsku abecedu (30 slova)
+         */
+        function transformText(text, shift, mode) {
+            const tokens = tokenizeCroatianText(text);
+            const len = HR_ALPHABET.length; // 30
+            const effectiveShift = mode === 'encrypt' ? shift : (len - (shift % len)) % len;
+
+            const breakdownItems = [];
+            let result = '';
+
+            tokens.forEach((token) => {
+                if (!token.isLetter) {
+                    result += token.original;
+                    breakdownItems.push({
+                        from: token.original,
+                        to: token.original,
+                        isLetter: false
+                    });
+                } else {
+                    const newIndex = (token.alphabetIndex + effectiveShift) % len;
+                    const targetBaseLetter = HR_ALPHABET[newIndex];
+                    const formattedLetter = formatLetterCase(targetBaseLetter, token.caseType);
+
+                    result += formattedLetter;
+                    breakdownItems.push({
+                        from: token.original,
+                        to: formattedLetter,
+                        isLetter: true
+                    });
+                }
+            });
+
+            return { result, breakdownItems };
+        }
+
+        /**
+         * Iscrtava interaktivnu traku s 30 slova hrvatske abecede
+         */
+        function renderAlphabetStrip() {
+            const len = HR_ALPHABET.length;
+            const shift = state.shift;
+            const isEncrypt = state.mode === 'encrypt';
+
+            elements.alphabetStrip.innerHTML = '';
+
+            HR_ALPHABET.forEach((letter, idx) => {
+                // Izračun para slova ovisno o načinu rada
+                const targetIdx = isEncrypt
+                    ? (idx + shift) % len
+                    : (idx - shift + len) % len;
+                const mappedLetter = HR_ALPHABET[targetIdx];
+
+                const isSelected = idx === state.selectedIndex;
+
+                const card = document.createElement('button');
+                card.type = 'button';
+                card.className = `flex flex-col items-center justify-between min-w-[56px] sm:min-w-[62px] py-2.5 px-2 rounded-2xl border-2 transition-all duration-150 cursor-pointer shrink-0 ${
+                    isSelected
+                        ? 'bg-yellow-300 border-blue-700 letter-card-active'
+                        : 'bg-white hover:bg-blue-50 border-slate-200'
+                }`;
+
+                card.innerHTML = `
+                    <span class="text-xs font-bold ${isSelected ? 'text-blue-900' : 'text-slate-400'}">${idx + 1}.</span>
+                    <span class="font-display text-lg sm:text-xl font-extrabold ${isSelected ? 'text-blue-950' : 'text-slate-800'}">${letter}</span>
+                    <span class="text-sm font-bold ${isSelected ? 'text-blue-700' : 'text-slate-400'} my-0.5">↓</span>
+                    <span class="font-display text-lg sm:text-xl font-extrabold px-2 py-0.5 rounded-lg ${
+                        isEncrypt
+                            ? (isSelected ? 'bg-blue-700 text-white' : 'bg-blue-100 text-blue-900')
+                            : (isSelected ? 'bg-green-700 text-white' : 'bg-green-100 text-green-900')
+                    }">${mappedLetter}</span>
+                `;
+
+                card.addEventListener('click', () => {
+                    state.selectedIndex = idx;
+                    renderAlphabetStrip();
+                    updateSelectedLetterBanner();
+                });
+
+                elements.alphabetStrip.appendChild(card);
+            });
+
+            updateSelectedLetterBanner();
+        }
+
+        /**
+         * Ažurira tekstualno objašnjenje za trenutno odabrano slovo u traci
+         */
+        function updateSelectedLetterBanner() {
+            const len = HR_ALPHABET.length;
+            const idx = state.selectedIndex;
+            const sourceLetter = HR_ALPHABET[idx];
+            const isEncrypt = state.mode === 'encrypt';
+
+            const targetIdx = isEncrypt
+                ? (idx + state.shift) % len
+                : (idx - state.shift + len) % len;
+            const targetLetter = HR_ALPHABET[targetIdx];
+
+            if (isEncrypt) {
+                elements.selectedLetterInfo.innerHTML = `Slovo <strong class="text-blue-700 text-lg">${sourceLetter}</strong> postaje <strong class="text-green-700 text-lg">${targetLetter}</strong> (+${state.shift})`;
+            } else {
+                elements.selectedLetterInfo.innerHTML = `Šifrirano <strong class="text-blue-700 text-lg">${sourceLetter}</strong> vraća se u <strong class="text-green-700 text-lg">${targetLetter}</strong> (−${state.shift})`;
+            }
+        }
+
+        /**
+         * Ažurira prikaz rezultata i detektivskog pregleda slovo po slovo
+         */
+        function updateOutputAndBreakdown() {
+            const rawInput = elements.inputText.value;
+            const { result, breakdownItems } = transformText(rawInput, state.shift, state.mode);
+
+            // Brojač slova
+            const letterCount = breakdownItems.filter(item => item.isLetter).length;
+            elements.charCountBadge.textContent = `${letterCount} ${letterCount === 1 ? 'slovo' : (letterCount >= 2 && letterCount <= 4 ? 'slova' : 'slova')}`;
+
+            // Prikaz izlaza
+            if (rawInput.trim().length === 0) {
+                elements.outputBox.innerHTML = `<span class="text-slate-400 font-normal text-lg sm:text-xl">Ovdje će se pojaviti tvoja poruka...</span>`;
+            } else {
+                elements.outputBox.textContent = result;
+            }
+
+            // Prikaz povećala (slovo po slovo za prvih 20 znakova)
+            if (breakdownItems.length === 0) {
+                elements.letterBreakdown.innerHTML = `<span class="text-slate-500 text-base">Upiši tekst iznad kako bi vidio/vidjela kako se svako pojedino slovo mijenja!</span>`;
+                return;
+            }
+
+            const visibleItems = breakdownItems.slice(0, 20);
+            elements.letterBreakdown.innerHTML = '';
+
+            visibleItems.forEach((item) => {
+                const chip = document.createElement('div');
+                if (!item.isLetter) {
+                    chip.className = 'px-2.5 py-2 rounded-xl bg-slate-200/70 text-slate-600 font-bold text-base flex flex-col items-center justify-center min-w-[36px]';
+                    chip.innerHTML = `
+                        <span class="text-xs text-slate-400">razmak</span>
+                        <span>${item.from === ' ' ? '␣' : item.from}</span>
+                    `;
+                } else {
+                    chip.className = 'px-3 py-1.5 rounded-xl bg-white border-2 border-indigo-200 shadow-sm flex flex-col items-center justify-center min-w-[48px]';
+                    chip.innerHTML = `
+                        <span class="text-sm font-bold text-slate-500">${item.from}</span>
+                        <span class="text-xs text-indigo-400 leading-none">↓</span>
+                        <span class="text-base font-extrabold text-indigo-900">${item.to}</span>
+                    `;
+                }
+                elements.letterBreakdown.appendChild(chip);
+            });
+
+            if (breakdownItems.length > 20) {
+                const moreBadge = document.createElement('span');
+                moreBadge.className = 'text-sm font-bold text-indigo-700 px-3 py-2';
+                moreBadge.textContent = `+ još ${breakdownItems.length - 20} znakova...`;
+                elements.letterBreakdown.appendChild(moreBadge);
+            }
+        }
+
+        /**
+         * Ažurira sve vizualne oznake vezane uz pomak i način rada
+         */
+        function syncUI() {
+            const len = HR_ALPHABET.length;
+            elements.shiftSlider.value = state.shift;
+            elements.shiftDisplayValue.textContent = state.shift;
+
+            // Primjer za slovo A
+            if (state.mode === 'encrypt') {
+                const targetForA = HR_ALPHABET[state.shift % len];
+                elements.shiftExampleBadge.textContent = `A → ${targetForA}`;
+            } else {
+                const sourceForA = HR_ALPHABET[state.shift % len];
+                elements.shiftExampleBadge.textContent = `${sourceForA} → A`;
+            }
+
+            // Stilovi gumba za način rada
+            if (state.mode === 'encrypt') {
+                elements.modeEncryptBtn.className = 'btn-bounce px-5 py-3 rounded-xl font-bold text-base sm:text-lg flex items-center justify-center gap-2 transition shadow-sm bg-blue-600 text-white';
+                elements.modeDecryptBtn.className = 'btn-bounce px-5 py-3 rounded-xl font-bold text-base sm:text-lg flex items-center justify-center gap-2 transition text-slate-700 hover:bg-white';
+                elements.inputLabel.innerHTML = '<span>✏️</span> Napiši običnu poruku:';
+                elements.outputLabel.innerHTML = '<span>🔐</span> Tvoja tajna poruka:';
+                elements.copyBtnText.textContent = 'Kopiraj tajnu poruku';
+            } else {
+                elements.modeDecryptBtn.className = 'btn-bounce px-5 py-3 rounded-xl font-bold text-base sm:text-lg flex items-center justify-center gap-2 transition shadow-sm bg-green-600 text-white';
+                elements.modeEncryptBtn.className = 'btn-bounce px-5 py-3 rounded-xl font-bold text-base sm:text-lg flex items-center justify-center gap-2 transition text-slate-700 hover:bg-white';
+                elements.inputLabel.innerHTML = '<span>🕵️‍♂️</span> Zalijepi ili upiši tajnu poruku:';
+                elements.outputLabel.innerHTML = '<span>📖</span> Otkrivena poruka:';
+                elements.copyBtnText.textContent = 'Kopiraj otkrivenu poruku';
+            }
+
+            renderAlphabetStrip();
+            updateOutputAndBreakdown();
+        }
+
+        /**
+         * Inicijalizira brze tipke za hrvatske dijakritičke znakove i dvoslove
+         */
+        function initQuickCroatianKeys() {
+            const specialLetters = ['Č', 'Ć', 'Dž', 'Đ', 'Lj', 'Nj', 'Š', 'Ž'];
+            elements.hrQuickKeys.innerHTML = '';
+
+            specialLetters.forEach((letter) => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.textContent = letter;
+                btn.className = 'btn-bounce bg-blue-50 hover:bg-blue-200 text-blue-950 font-display font-bold text-base sm:text-lg px-3.5 py-1.5 rounded-xl border-2 border-blue-200 shadow-sm transition';
+                btn.addEventListener('click', () => {
+                    const textarea = elements.inputText;
+                    const start = textarea.selectionStart;
+                    const end = textarea.selectionEnd;
+                    const currentVal = textarea.value;
+
+                    textarea.value = currentVal.substring(0, start) + letter + currentVal.substring(end);
+                    textarea.focus();
+                    textarea.selectionStart = textarea.selectionEnd = start + letter.length;
+                    updateOutputAndBreakdown();
+                });
+                elements.hrQuickKeys.appendChild(btn);
+            });
+        }
+
+        /**
+         * Učitava nasumični tajni zadatak za vježbu dešifriranja
+         */
+        let lastChallengeIndex = -1;
+        function loadRandomChallenge() {
+            let nextIdx;
+            do {
+                nextIdx = Math.floor(Math.random() * SECRET_CHALLENGES.length);
+            } while (nextIdx === lastChallengeIndex && SECRET_CHALLENGES.length > 1);
+            lastChallengeIndex = nextIdx;
+
+            const challenge = SECRET_CHALLENGES[nextIdx];
+            state.currentChallenge = challenge;
+
+            // Šifriramo zadatak njegovim tajnim ključem
+            const encrypted = transformText(challenge.plain, challenge.shift, 'encrypt').result;
+
+            // Postavljamo aplikaciju u način za dešifriranje i stavljamo krivi početni ključ (npr. 1) kako bi učenik sam tražio
+            state.mode = 'decrypt';
+            state.shift = challenge.shift === 1 ? 2 : 1;
+            elements.inputText.value = encrypted;
+
+            // Prikazujemo traku s tragom (hintom)
+            elements.challengeHintText.textContent = challenge.hint;
+            elements.challengeBanner.classList.remove('hidden');
+
+            syncUI();
+            showToast('Novi tajni zadatak je spreman! Pomiči ključ i otkrij poruku.', '🕵️‍♂️');
+        }
+
+        // --- Povezivanje događaja (Event Listeners) ---
+
+        // Načini rada
+        elements.modeEncryptBtn.addEventListener('click', () => {
+            state.mode = 'encrypt';
+            elements.challengeBanner.classList.add('hidden');
+            syncUI();
+        });
+
+        elements.modeDecryptBtn.addEventListener('click', () => {
+            state.mode = 'decrypt';
+            syncUI();
+        });
+
+        // Klizač i gumbi + / -
+        elements.shiftSlider.addEventListener('input', (e) => {
+            state.shift = parseInt(e.target.value, 10);
+            syncUI();
+        });
+
+        elements.decreaseShiftBtn.addEventListener('click', () => {
+            state.shift = state.shift > 1 ? state.shift - 1 : 29;
+            syncUI();
+        });
+
+        elements.increaseShiftBtn.addEventListener('click', () => {
+            state.shift = state.shift < 29 ? state.shift + 1 : 1;
+            syncUI();
+        });
+
+        // Unos teksta
+        elements.inputText.addEventListener('input', () => {
+            updateOutputAndBreakdown();
+        });
+
+        // Brisanje teksta
+        elements.clearTextBtn.addEventListener('click', () => {
+            elements.inputText.value = '';
+            elements.challengeBanner.classList.add('hidden');
+            elements.inputText.focus();
+            updateOutputAndBreakdown();
+            showToast('Polje je očišćeno!', '🧹');
+        });
+
+        // Kopiranje rezultata (uz sigurnosnu metodu document.execCommand('copy') za iFrame okruženja)
+        elements.copyResultBtn.addEventListener('click', () => {
+            const rawInput = elements.inputText.value;
+            if (!rawInput.trim()) {
+                showToast('Prvo napiši poruku koju želiš kopirati!', '✍️');
+                return;
+            }
+
+            const textToCopy = elements.outputBox.textContent;
+            const tempInput = document.createElement('textarea');
+            tempInput.value = textToCopy;
+            tempInput.style.position = 'fixed';
+            tempInput.style.opacity = '0';
+            document.body.appendChild(tempInput);
+            tempInput.select();
+
+            try {
+                document.execCommand('copy');
+                showToast('Kopirano! Sada možeš poslati poruku prijatelju.', '✅');
+            } catch (err) {
+                showToast('Označi tekst i pritisni Ctrl+C za kopiranje.', '📋');
+            } finally {
+                document.body.removeChild(tempInput);
+            }
+        });
+
+        // Tajni zadatak i otkrivanje ključa
+        elements.loadChallengeBtn.addEventListener('click', loadRandomChallenge);
+
+        elements.revealKeyBtn.addEventListener('click', () => {
+            if (state.currentChallenge) {
+                state.shift = state.currentChallenge.shift;
+                syncUI();
+                showToast(`Tajni ključ je ${state.shift}! Poruka je dešifrirana!`, '🎉');
+            }
+        });
+
+        // Pomoć / upute
+        elements.toggleHelpBtn.addEventListener('click', () => {
+            elements.helpPanel.classList.toggle('hidden');
+        });
+
+        elements.closeHelpBtn.addEventListener('click', () => {
+            elements.helpPanel.classList.add('hidden');
+        });
+
+        // Pokretanje aplikacije pri učitavanju stranice
+        window.addEventListener('DOMContentLoaded', () => {
+            initQuickCroatianKeys();
+            syncUI();
+        });
+    </script>
+</body>
+</html>
