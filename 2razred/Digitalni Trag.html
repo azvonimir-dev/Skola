@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Informatika 2. razred – Osobni podatci i digitalni trag</title>
+    <!-- Učitavanje Tailwind CSS-a za responzivan i moderan izgled -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Učitavanje dječjeg, izrazito čitljivog fonta Nunito s punom podrškom za hrvatske znakove (č, ć, ž, š, đ) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Nunito', 'Verdana', 'Arial', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Dodatne prilagodbe za glatke animacije i maksimalnu čitljivost za učenike 2. razreda */
+        body {
+            font-family: 'Nunito', 'Verdana', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #e0f2fe 0%, #fef9c3 50%, #dcfce7 100%);
+            min-height: 100vh;
+        }
+
+        .card-shadow {
+            box-shadow: 0 12px 30px -5px rgba(14, 116, 144, 0.15), 0 4px 10px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .option-btn {
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .option-btn:hover:not(:disabled) {
+            transform: translateY(-2px) scale(1.01);
+        }
+
+        .option-btn:active:not(:disabled) {
+            transform: translateY(1px) scale(0.99);
+        }
+
+        @keyframes popIn {
+            0% { opacity: 0; transform: scale(0.92) translateY(8px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .animate-pop {
+            animation: popIn 0.35s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased flex flex-col items-center justify-center p-3 sm:p-6">
+
+    <!-- Glavni spremnik aplikacije -->
+    <main class="w-full max-w-3xl bg-white/95 backdrop-blur-sm rounded-3xl card-shadow border-4 border-sky-200 overflow-hidden my-auto">
+        
+        <!-- Gornje zaglavlje kviza -->
+        <header class="bg-gradient-to-r from-sky-500 via-blue-500 to-indigo-500 text-white p-4 sm:p-6 text-center relative">
+            <div class="inline-flex items-center gap-2 bg-white/20 px-4 py-1 rounded-full text-sm sm:text-base font-extrabold tracking-wide mb-2">
+                <span>💻</span>
+                <span>INFORMATIKA • 2. RAZRED</span>
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-black tracking-tight drop-shadow-sm">
+                Osobni podatci i digitalni trag 👣
+            </h1>
+        </header>
+
+        <!-- POČETNI ZASLON -->
+        <section id="start-screen" class="p-6 sm:p-10 text-center animate-pop">
+            <div class="w-24 h-24 mx-auto bg-amber-100 border-4 border-amber-300 rounded-full flex items-center justify-center text-5xl mb-5 shadow-inner">
+                🕵️‍♂️
+            </div>
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-800 mb-3">
+                Dobro došli u kviz znanja!
+            </h2>
+            <p class="text-lg sm:text-xl text-slate-600 font-semibold max-w-xl mx-auto mb-6 leading-relaxed">
+                Provjeri koliko dobro poznaješ <strong>osobne podatke</strong>, pravila sigurnosti <strong>P A Z I M</strong>, <strong>digitalni trag</strong> i <strong>vježbe razgibavanja</strong>!
+            </p>
+
+            <!-- Kratki podsjetnik iz udžbenika -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-2xl mx-auto mb-8 text-left">
+                <div class="bg-sky-50 border-2 border-sky-200 rounded-2xl p-4 flex items-center gap-3">
+                    <span class="text-3xl">🪪</span>
+                    <div>
+                        <p class="font-extrabold text-sky-900 text-base">20 pitanja</p>
+                        <p class="text-sm text-sky-700 font-semibold">Iz našeg udžbenika</p>
+                    </div>
+                </div>
+                <div class="bg-amber-50 border-2 border-amber-200 rounded-2xl p-4 flex items-center gap-3">
+                    <span class="text-3xl">🛡️</span>
+                    <div>
+                        <p class="font-extrabold text-amber-900 text-base">Pravila PAZIM</p>
+                        <p class="text-sm text-amber-700 font-semibold">Sigurno na internetu</p>
+                    </div>
+                </div>
+                <div class="bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-4 flex items-center gap-3">
+                    <span class="text-3xl">🤸</span>
+                    <div>
+                        <p class="font-extrabold text-emerald-900 text-base">Zdravlje i odmor</p>
+                        <p class="text-sm text-emerald-700 font-semibold">Vježbe razgibavanja</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <button onclick="startQuiz(false)" class="w-full sm:w-auto px-8 py-4 bg-emerald-500 hover:bg-emerald-600 text-white text-xl font-black rounded-2xl shadow-lg shadow-emerald-200 border-b-4 border-emerald-700 transition transform hover:-translate-y-0.5 active:translate-y-0.5 cursor-pointer">
+                    🚀 Započni kviz!
+                </button>
+                <button onclick="startQuiz(true)" class="w-full sm:w-auto px-6 py-4 bg-amber-400 hover:bg-amber-500 text-slate-900 text-lg font-extrabold rounded-2xl shadow-md border-b-4 border-amber-600 transition transform hover:-translate-y-0.5 active:translate-y-0.5 cursor-pointer">
+                    🔀 Započni s izmiješanim pitanjima
+                </button>
+            </div>
+        </section>
+
+        <!-- ZASLON S PITANJIMA -->
+        <section id="quiz-screen" class="hidden p-5 sm:p-8">
+            <!-- Traka napretka i bodovi -->
+            <div class="mb-6">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-2 text-base sm:text-lg font-extrabold">
+                    <span class="text-sky-700 bg-sky-100 px-3.5 py-1 rounded-xl">
+                        Pitanje <span id="current-question-num">1</span> / 20
+                    </span>
+                    <span id="category-badge" class="text-indigo-700 bg-indigo-100 px-3.5 py-1 rounded-xl text-sm sm:text-base">
+                        📚 Osobni podatci
+                    </span>
+                    <span class="text-emerald-700 bg-emerald-100 px-3.5 py-1 rounded-xl">
+                        ⭐ Bodovi: <span id="score-display">0</span>
+                    </span>
+                </div>
+                <!-- Vizualna traka napretka -->
+                <div class="w-full bg-slate-200 h-4 rounded-full overflow-hidden p-0.5">
+                    <div id="progress-bar" class="bg-gradient-to-r from-sky-400 to-emerald-400 h-full rounded-full transition-all duration-500" style="width: 5%;"></div>
+                </div>
+            </div>
+
+            <!-- Kartica pitanja -->
+            <div id="question-container" class="animate-pop">
+                <!-- Pomoćni prikaz iz udžbenika (prikazuje se samo kod određenih pitanja, npr. kartica Luke Alfića ili PAZIM) -->
+                <div id="helper-box" class="hidden mb-5"></div>
+
+                <!-- Tekst pitanja -->
+                <div class="bg-slate-50 border-2 border-slate-200 rounded-2xl p-5 sm:p-6 mb-6">
+                    <div class="flex items-start gap-3 sm:gap-4">
+                        <span id="question-emoji" class="text-3xl sm:text-4xl select-none shrink-0 mt-0.5">❓</span>
+                        <h3 id="question-text" class="text-xl sm:text-2xl font-extrabold text-slate-800 leading-snug">
+                            Tekst pitanja dolazi ovdje...
+                        </h3>
+                    </div>
+                </div>
+
+                <!-- Ponuđeni odgovori -->
+                <div id="options-container" class="grid grid-cols-1 gap-3.5 mb-6">
+                    <!-- Gumbi odgovora generiraju se putem JavaScripta -->
+                </div>
+
+                <!-- Povratna informacija nakon odgovora -->
+                <div id="feedback-box" class="hidden rounded-2xl p-5 mb-6 border-2 animate-pop">
+                    <div class="flex items-start gap-3">
+                        <span id="feedback-icon" class="text-3xl shrink-0">🎉</span>
+                        <div>
+                            <h4 id="feedback-title" class="text-xl font-black mb-1">Bravo! Točan odgovor!</h4>
+                            <p id="feedback-text" class="text-base sm:text-lg font-semibold leading-relaxed"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gumb za sljedeće pitanje -->
+                <div class="flex justify-end">
+                    <button id="next-btn" onclick="nextQuestion()" class="hidden w-full sm:w-auto px-8 py-4 bg-sky-500 hover:bg-sky-600 text-white text-xl font-black rounded-2xl shadow-lg border-b-4 border-sky-700 transition transform hover:-translate-y-0.5 cursor-pointer">
+                        Sljedeće pitanje ➡️
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ZAVRŠNI ZASLON S REZULTATIMA -->
+        <section id="result-screen" class="hidden p-6 sm:p-10 text-center animate-pop">
+            <div id="result-trophy" class="w-28 h-28 mx-auto bg-amber-100 border-4 border-amber-300 rounded-full flex items-center justify-center text-6xl mb-4 shadow-md">
+                🏆
+            </div>
+            
+            <h2 id="result-heading" class="text-2xl sm:text-4xl font-black text-slate-800 mb-2">
+                Izvrstan posao!
+            </h2>
+            <p id="result-grade" class="inline-block bg-emerald-100 text-emerald-800 border-2 border-emerald-300 px-5 py-1.5 rounded-full text-lg sm:text-xl font-extrabold mb-4">
+                Ocjena: Odličan (5) 🌟
+            </p>
+
+            <!-- Prikaz osvojenih bodova -->
+            <div class="max-w-md mx-auto bg-sky-50 border-3 border-sky-200 rounded-3xl p-6 mb-6">
+                <p class="text-lg font-bold text-slate-600 mb-1">Tvoj rezultat je:</p>
+                <div class="text-4xl sm:text-5xl font-black text-sky-600 mb-2">
+                    <span id="final-score">0</span> / 20
+                </div>
+                <p id="result-message" class="text-base sm:text-lg font-bold text-slate-700">
+                    Odlično poznaješ pravila sigurnosti na internetu!
+                </p>
+            </div>
+
+            <!-- Pregled netočnih odgovora (ako ih je bilo) -->
+            <div id="mistakes-section" class="hidden text-left max-w-2xl mx-auto mb-8">
+                <h3 class="text-xl font-black text-rose-700 mb-3 flex items-center gap-2">
+                    <span>📝</span>
+                    <span>Ponovimo pitanja na kojima je bila pogreška:</span>
+                </h3>
+                <div id="mistakes-list" class="space-y-3 max-h-80 overflow-y-auto pr-1">
+                    <!-- Popis netočnih odgovora generira se dinamički -->
+                </div>
+            </div>
+
+            <!-- Gumbi za ponovno igranje -->
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <button onclick="startQuiz(false)" class="w-full sm:w-auto px-8 py-4 bg-emerald-500 hover:bg-emerald-600 text-white text-xl font-black rounded-2xl shadow-lg border-b-4 border-emerald-700 transition transform hover:-translate-y-0.5 cursor-pointer">
+                    🔄 Igraj ponovno (po redu)
+                </button>
+                <button onclick="startQuiz(true)" class="w-full sm:w-auto px-7 py-4 bg-amber-400 hover:bg-amber-500 text-slate-900 text-lg font-extrabold rounded-2xl shadow-md border-b-4 border-amber-600 transition transform hover:-translate-y-0.5 cursor-pointer">
+                    🔀 Igraj ponovno (izmiješano)
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="mt-4 text-center text-sm font-bold text-slate-600">
+        Informatika za 2. razred osnovne škole • Učimo sigurno i pametno! 🌟
+    </footer>
+
+    <script>
+        // Baza od 20 raznolikih pitanja izrađenih prema stranicama iz udžbenika
+        const allQuestions = [
+            {
+                id: 1,
+                category: "Osobni podatci",
+                emoji: "🪪",
+                showLukaCard: true,
+                question: "Pogledaj osobnu karticu dječaka iz udžbenika. Kako se dječak zove i preziva?",
+                options: [
+                    "Luka Alfić",
+                    "Marko Bjelovar",
+                    "Ivan Zagrebački",
+                    "Luka Horvat"
+                ],
+                correct: 0,
+                explanation: "Na kartici u udžbeniku piše: IME I PREZIME: LUKA ALFIĆ."
+            },
+            {
+                id: 2,
+                category: "Osobni podatci",
+                emoji: "🎂",
+                showLukaCard: true,
+                question: "Koji je datum rođenja Luke Alfića napisan na njegovoj kartici?",
+                options: [
+                    "16. ožujka 2010.",
+                    "31. siječnja 2010.",
+                    "1. veljače 2012.",
+                    "31. prosinca 2010."
+                ],
+                correct: 1,
+                explanation: "Točno! Datum rođenja Luke Alfića je 31. siječnja 2010. Datum rođenja je naš osobni podatak."
+            },
+            {
+                id: 3,
+                category: "Osobni podatci",
+                emoji: "🏠",
+                showLukaCard: true,
+                question: "U kojem gradu živi i ide u školu Luka Alfić?",
+                options: [
+                    "U Zagrebu",
+                    "U Splitu",
+                    "U Bjelovaru",
+                    "U Osijeku"
+                ],
+                correct: 2,
+                explanation: "Na kartici piše GRAD: BJELOVAR i ŠKOLA: OŠ BJELOVAR."
+            },
+            {
+                id: 4,
+                category: "Osobni podatci",
+                emoji: "📋",
+                showLukaCard: false,
+                question: "Što od navedenoga spada u tvoje osobne podatke?",
+                options: [
+                    "Tvoja omiljena boja i najdraža igračka",
+                    "Ime i prezime, adresa, OIB i broj mobitela",
+                    "Ime lika iz crtanog filma",
+                    "Naziv najdražeg godišnjeg doba"
+                ],
+                correct: 1,
+                explanation: "Osobni podatci su: ime i prezime, datum rođenja, spol, OIB, adresa, grad, broj mobitela i škola."
+            },
+            {
+                id: 5,
+                category: "Osobni podatci",
+                emoji: "🔢",
+                showLukaCard: false,
+                question: "Što je OIB koji se nalazi na popisu osobnih podataka?",
+                options: [
+                    "Osobni identifikacijski broj svakog građanina",
+                    "Oznaka za omiljenu igricu",
+                    "Broj kućnog ljubimca",
+                    "Šifra za otključavanje učionice"
+                ],
+                correct: 0,
+                explanation: "OIB je naš osobni identifikacijski broj i vrlo je važan osobni podatak koji moramo čuvati."
+            },
+            {
+                id: 6,
+                category: "Zaštita podataka",
+                emoji: "🚫",
+                showLukaCard: false,
+                question: "Smiješ li svoje osobne podatke otkrivati nepoznatim osobama na internetu?",
+                options: [
+                    "Da, ako nas lijepo zamole",
+                    "Da, ali samo svoju adresu i školu",
+                    "Ne, nikada ne smijemo otkrivati osobne podatke nepoznatim osobama!",
+                    "Da, ako nam obećaju nagradu u igrici"
+                ],
+                correct: 2,
+                explanation: "Svoje osobne podatke NIKADA ne smijemo otkrivati nepoznatim osobama jer na internetu nisu svi ljudi iskreni i dobri."
+            },
+            {
+                id: 7,
+                category: "Zaštita podataka",
+                emoji: "👨‍👩‍👧‍👦",
+                showLukaCard: false,
+                question: "Komu smiješ reći ili dati svoje osobne podatke?",
+                options: [
+                    "Bilo komu koga upoznaš u online igrici",
+                    "Roditeljima i odraslim osobama od povjerenja (npr. učiteljici ili liječniku)",
+                    "Svima na društvenim mrežama",
+                    "Nepoznatim osobama koje nam pošalju poruku"
+                ],
+                correct: 1,
+                explanation: "Osobne podatke smijemo dati samo roditeljima i odraslim osobama od povjerenja (učiteljima, liječnicima, policiji)."
+            },
+            {
+                id: 8,
+                category: "Sigurnost na internetu",
+                emoji: "🖼️",
+                showLukaCard: false,
+                question: "Kada dijelimo slike s prijateljima na internetu, zašto moramo dobro paziti što objavljujemo?",
+                options: [
+                    "Zato što se računalo može pokvariti",
+                    "Zato što naše objave mogu vidjeti i nepoznate osobe",
+                    "Zato što slike na internetu brzo nestanu",
+                    "Zato što prijatelji ne vole gledati slike"
+                ],
+                correct: 1,
+                explanation: "U udžbeniku dječak upozorava: 'Ali moramo dobro paziti što objavljujemo jer to mogu vidjeti i nepoznate osobe.'"
+            },
+            {
+                id: 9,
+                category: "Digitalni trag",
+                emoji: "👣",
+                showLukaCard: false,
+                question: "Što je digitalni trag?",
+                options: [
+                    "Otisak cipele u blatu pokraj škole",
+                    "Sve što objaviš na internetu čini tvoj digitalni trag",
+                    "Crtež koji nacrtaš drvenim bojicama na papiru",
+                    "Kabel kojim je miš spojen na računalo"
+                ],
+                correct: 1,
+                explanation: "Točno! Sve što objaviš, napišeš ili podijeliš na internetu ostaje zapisano i čini tvoj digitalni trag."
+            },
+            {
+                id: 10,
+                category: "Digitalni trag",
+                emoji: "🔍",
+                showLukaCard: false,
+                question: "Kako u vježbi iz udžbenika možemo provjeriti postoji li već neki digitalni trag o nama na internetu?",
+                options: [
+                    "Tako da ugasimo ekran računala",
+                    "Tako da otvorimo mrežnu stranicu www.google.hr i upišemo svoje ime i prezime",
+                    "Tako da pritisnemo tipku Space deset puta",
+                    "Tako da promijenimo pozadinu radne površine"
+                ],
+                correct: 1,
+                explanation: "U udžbeniku piše: 1. Pokreni mrežnu stranicu www.google.hr, 2. Upiši svoje ime i prezime i provjeri jesi li pronašao/pronašla nešto o sebi."
+            },
+            {
+                id: 11,
+                category: "Pravila PAZIM",
+                emoji: "🔤",
+                showPazimBox: true,
+                question: "Koja nam čarobna riječ iz udžbenika pomaže zapamtiti 5 važnih pravila za pametno ostavljanje digitalnih tragova?",
+                options: [
+                    "IGRAM",
+                    "PAZIM",
+                    "PIŠEM",
+                    "CRTAM"
+                ],
+                correct: 1,
+                explanation: "Riječ PAZIM pomaže nam zapamtiti pet zlatnih pravila sigurnog ponašanja na internetu!"
+            },
+            {
+                id: 12,
+                category: "Pravila PAZIM",
+                emoji: "🅿️",
+                showPazimBox: false,
+                question: "Što u riječi PAZIM znači prvo slovo P?",
+                options: [
+                    "Piši poruke svima redom",
+                    "Čuvaj osobne Podatke",
+                    "Pokaži svima svoju adresu",
+                    "Pritisni svaku poveznicu"
+                ],
+                correct: 1,
+                explanation: "Slovo P u riječi PAZIM znači: čuvaj osobne Podatke!"
+            },
+            {
+                id: 13,
+                category: "Pravila PAZIM",
+                emoji: "🤝",
+                showPazimBox: false,
+                question: "Što u riječi PAZIM znači drugo slovo A?",
+                options: [
+                    "Poštuj druge osobe nA internetu",
+                    "Adresu napiši na internet",
+                    "Ako želiš, rugaj se drugima",
+                    "Automatski prihvati sve zahtjeve"
+                ],
+                correct: 0,
+                explanation: "Slovo A u riječi PAZIM znači: poštuj druge osobe nA internetu! Na internetu budimo pristojni i ljubazni kao i u školi."
+            },
+            {
+                id: 14,
+                category: "Pravila PAZIM",
+                emoji: "🔑",
+                showPazimBox: false,
+                question: "Što u riječi PAZIM znači treće slovo Z?",
+                options: [
+                    "Zaboravi ugasiti računalo",
+                    "Zapiši lozinku na školsku ploču",
+                    "Čuvaj svoje loZinke",
+                    "Zovi nepoznate osobe u igru"
+                ],
+                correct: 2,
+                explanation: "Slovo Z u riječi PAZIM znači: čuvaj svoje loZinke! Lozinke su tajni ključevi naših računa."
+            },
+            {
+                id: 15,
+                category: "Pravila PAZIM",
+                emoji: "📸",
+                showPazimBox: false,
+                question: "Što u riječi PAZIM znači četvrto slovo I?",
+                options: [
+                    "Igraj igrice cijelu noć",
+                    "Ne objavljuj fotografije prIjatelja bez dopuštenja",
+                    "Ispiši sve slike na pisaču",
+                    "Izbriši sve prijatelje"
+                ],
+                correct: 1,
+                explanation: "Slovo I u riječi PAZIM znači: ne objavljuj fotografije prIjatelja bez dopuštenja! Uvijek prvo pitaj prijatelja smiješ li objaviti njegovu sliku."
+            },
+            {
+                id: 16,
+                category: "Pravila PAZIM",
+                emoji: "🤔",
+                showPazimBox: false,
+                question: "Što u riječi PAZIM znači peto slovo M?",
+                options: [
+                    "Misli samo na zabavu",
+                    "Dobro razMisli prije nego objaviš",
+                    "Mobitel nosi u kadu",
+                    "Mijenjaj lozinku svake minute"
+                ],
+                correct: 1,
+                explanation: "Slovo M u riječi PAZIM znači: dobro razMisli prije nego objaviš! Jednom objavljena slika ili poruka ostaje na internetu."
+            },
+            {
+                id: 17,
+                category: "Sigurnost na internetu",
+                emoji: "📷",
+                showPazimBox: false,
+                question: "Fotografirao si prijatelja u školskom dvorištu i želiš objaviti tu sliku na internetu. Što moraš učiniti prije objave?",
+                options: [
+                    "Odmah objaviti sliku bez pitanja",
+                    "Pitati prijatelja za dopuštenje smiješ li objaviti njegovu fotografiju",
+                    "Napisati ispod slike njegovu kućnu adresu i OIB",
+                    "Poslati sliku nepoznatim osobama"
+                ],
+                correct: 1,
+                explanation: "Prema pravilu PAZIM, nikada ne objavljujemo fotografije prijatelja bez njihova dopuštenja!"
+            },
+            {
+                id: 18,
+                category: "Zdravlje za računalom",
+                emoji: "🧘",
+                showExerciseIcons: true,
+                question: "Što trebamo učiniti nakon rada i učenja na računalu kako bismo sačuvali zdravlje?",
+                options: [
+                    "Odmoriti se od računala i odraditi vježbe razgibavanja",
+                    "Odmah uzeti mobitel i igrati igrice još dva sata",
+                    "Sjediti potpuno mirno bez pomicanja",
+                    "Približiti glavu sasvim blizu ekrana"
+                ],
+                correct: 0,
+                explanation: "U udžbeniku piše: 'Odmori se od računala i odradi vježbe razgibavanja.' To je važno za naše oči, kralježnicu i ruke."
+            },
+            {
+                id: 19,
+                category: "Zdravlje za računalom",
+                emoji: "🖐️",
+                showExerciseIcons: true,
+                question: "Koje dijelove tijela razgibavamo na vježbama prikazanima u udžbeniku?",
+                options: [
+                    "Samo nožne prste",
+                    "Vrat i glavu, ruke, ramena te šake i prste",
+                    "Samo uši i nos",
+                    "Ne trebamo se uopće razgibavati"
+                ],
+                correct: 1,
+                explanation: "Na sličicama u udžbeniku djeca razgibavaju glavu i vrat, istežu ruke i ramena te stišću i šire šake i prste."
+            },
+            {
+                id: 20,
+                category: "Sigurnost na internetu",
+                emoji: "🌟",
+                showPazimBox: false,
+                question: "Zašto moramo biti oprezni i pametno ostavljati svoje digitalne tragove?",
+                options: [
+                    "Zato što se na internetu nalazi jako puno ljudi, a nisu svi iskreni i dobri",
+                    "Zato što internet radi samo nedjeljom",
+                    "Zato što tipkovnica ima premalo slova",
+                    "Zato što računalo ne voli djecu"
+                ],
+                correct: 0,
+                explanation: "Bravo! Na internetu se nalazi jako puno ljudi i nisu svi iskreni i dobri. Zato uvijek primjenjujemo pravila PAZIM!"
+            }
+        ];
+
+        // Varijable stanja kviza
+        let currentQuestions = [];
+        let currentIndex = 0;
+        let score = 0;
+        let answered = false;
+        let mistakes = [];
+
+        // Pokretanje kviza (s opcijom miješanja pitanja)
+        function startQuiz(shuffle = false) {
+            currentQuestions = [...allQuestions];
+            if (shuffle) {
+                for (let i = currentQuestions.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [currentQuestions[i], currentQuestions[j]] = [currentQuestions[j], currentQuestions[i]];
+                }
+            }
+
+            currentIndex = 0;
+            score = 0;
+            mistakes = [];
+
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+
+            renderQuestion();
+        }
+
+        // Prikaz trenutnog pitanja
+        function renderQuestion() {
+            answered = false;
+            const q = currentQuestions[currentIndex];
+
+            // Ažuriranje zaglavlja i trake napretka
+            document.getElementById('current-question-num').textContent = currentIndex + 1;
+            document.getElementById('category-badge').textContent = `📚 ${q.category}`;
+            document.getElementById('score-display').textContent = score;
+            
+            const progressPercent = ((currentIndex + 1) / currentQuestions.length) * 100;
+            document.getElementById('progress-bar').style.width = `${progressPercent}%`;
+
+            // Ponovno pokretanje animacije kartice
+            const container = document.getElementById('question-container');
+            container.classList.remove('animate-pop');
+            void container.offsetWidth; // trigger reflow
+            container.classList.add('animate-pop');
+
+            // Prikaz pomoćnih kartica iz udžbenika ako pitanje to zahtijeva
+            const helperBox = document.getElementById('helper-box');
+            helperBox.innerHTML = '';
+            helperBox.classList.add('hidden');
+
+            if (q.showLukaCard) {
+                helperBox.classList.remove('hidden');
+                helperBox.innerHTML = `
+                    <div class="bg-amber-50/90 border-2 border-amber-400 rounded-2xl p-4 shadow-sm">
+                        <div class="text-xs font-extrabold uppercase tracking-wider text-amber-800 mb-2 flex items-center gap-1.5">
+                            <span>📖</span> <span>Kartica iz udžbenika:</span>
+                        </div>
+                        <div class="flex flex-col sm:flex-row items-center sm:items-start gap-4 bg-orange-100/70 border border-amber-300 rounded-xl p-3.5">
+                            <div class="w-16 h-20 bg-sky-200 border-2 border-slate-600 rounded-lg flex items-center justify-center text-4xl shrink-0">
+                                👦
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 text-sm sm:text-base text-slate-800 w-full">
+                                <p><strong>IME I PREZIME:</strong> LUKA ALFIĆ</p>
+                                <p><strong>ADRESA:</strong> ZAGREBAČKA 16</p>
+                                <p><strong>DATUM ROĐENJA:</strong> 31. siječnja 2010.</p>
+                                <p><strong>GRAD:</strong> BJELOVAR</p>
+                                <p><strong>SPOL:</strong> MUŠKI</p>
+                                <p><strong>BROJ MOBITELA:</strong> 0951234567</p>
+                                <p><strong>OIB:</strong> 1234567891</p>
+                                <p><strong>ŠKOLA:</strong> OŠ BJELOVAR</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (q.showPazimBox) {
+                helperBox.classList.remove('hidden');
+                helperBox.innerHTML = `
+                    <div class="bg-rose-50 border-2 border-rose-300 rounded-2xl p-4 text-center">
+                        <p class="text-sm font-extrabold text-rose-700 mb-2">📖 Podsjetnik iz udžbenika – Pametno ostavljaj svoje digitalne tragove:</p>
+                        <div class="inline-block text-left text-base sm:text-lg font-bold text-slate-800 space-y-1">
+                            <p>čuvaj osobne <span class="text-rose-600 font-black text-xl">P</span>odatke</p>
+                            <p>poštuj druge osobe n<span class="text-rose-600 font-black text-xl">A</span> internetu</p>
+                            <p>čuvaj svoje lo<span class="text-rose-600 font-black text-xl">Z</span>inke</p>
+                            <p>ne objavljuj fotografije pr<span class="text-rose-600 font-black text-xl">I</span>jatelja bez dopuštenja</p>
+                            <p>dobro raz<span class="text-rose-600 font-black text-xl">M</span>isli prije nego objaviš</p>
+                        </div>
+                    </div>
+                `;
+            } else if (q.showExerciseIcons) {
+                helperBox.classList.remove('hidden');
+                helperBox.innerHTML = `
+                    <div class="bg-emerald-50 border-2 border-emerald-300 rounded-2xl p-3.5 flex flex-wrap items-center justify-around gap-3 text-center">
+                        <div class="flex flex-col items-center">
+                            <span class="text-3xl">🙇</span>
+                            <span class="text-xs font-extrabold text-emerald-800 mt-1">Glava i vrat</span>
+                        </div>
+                        <div class="flex flex-col items-center">
+                            <span class="text-3xl">🙆‍♀️</span>
+                            <span class="text-xs font-extrabold text-emerald-800 mt-1">Ruke i ramena</span>
+                        </div>
+                        <div class="flex flex-col items-center">
+                            <span class="text-3xl">✊🖐️</span>
+                            <span class="text-xs font-extrabold text-emerald-800 mt-1">Šake i prsti</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Postavljanje teksta i emotikona pitanja
+            document.getElementById('question-emoji').textContent = q.emoji;
+            document.getElementById('question-text').textContent = q.question;
+
+            // Generiranje gumba s ponuđenim odgovorima
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+
+            const letters = ['A', 'B', 'C', 'D'];
+            q.options.forEach((optionText, index) => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'option-btn w-full text-left p-4 sm:p-5 rounded-2xl border-3 border-slate-200 bg-white hover:bg-sky-50 hover:border-sky-400 shadow-sm flex items-center gap-4 cursor-pointer focus:outline-none focus:ring-4 focus:ring-sky-200';
+                btn.style.borderWidth = '3px';
+                btn.onclick = () => selectAnswer(index, btn);
+
+                btn.innerHTML = `
+                    <span class="w-10 h-10 rounded-xl bg-sky-100 text-sky-800 font-black text-lg flex items-center justify-center shrink-0 border-2 border-sky-200 option-letter">
+                        ${letters[index]}
+                    </span>
+                    <span class="text-lg sm:text-xl font-bold text-slate-800 leading-snug">
+                        ${optionText}
+                    </span>
+                `;
+                optionsContainer.appendChild(btn);
+            });
+
+            // Sakrivanje povratne informacije i gumba "Sljedeće pitanje"
+            document.getElementById('feedback-box').classList.add('hidden');
+            const nextBtn = document.getElementById('next-btn');
+            nextBtn.classList.add('hidden');
+            nextBtn.textContent = (currentIndex === currentQuestions.length - 1) 
+                ? 'Prikaži rezultat 🏆' 
+                : 'Sljedeće pitanje ➡️';
+        }
+
+        // Obrada odabira odgovora
+        function selectAnswer(selectedIndex, clickedBtn) {
+            if (answered) return;
+            answered = true;
+
+            const q = currentQuestions[currentIndex];
+            const isCorrect = selectedIndex === q.correct;
+            const allButtons = document.querySelectorAll('#options-container button');
+
+            // Onemogućavanje svih gumba i označavanje točnog/netočnog
+            allButtons.forEach((btn, idx) => {
+                btn.disabled = true;
+                btn.classList.remove('hover:bg-sky-50', 'hover:border-sky-400', 'cursor-pointer');
+                const badge = btn.querySelector('.option-letter');
+
+                if (idx === q.correct) {
+                    btn.classList.remove('border-slate-200', 'bg-white');
+                    btn.classList.add('border-emerald-500', 'bg-emerald-50', 'ring-2', 'ring-emerald-200');
+                    badge.classList.remove('bg-sky-100', 'text-sky-800', 'border-sky-200');
+                    badge.classList.add('bg-emerald-500', 'text-white', 'border-emerald-600');
+                    badge.textContent = '✓';
+                } else if (idx === selectedIndex && !isCorrect) {
+                    btn.classList.remove('border-slate-200', 'bg-white');
+                    btn.classList.add('border-rose-500', 'bg-rose-50');
+                    badge.classList.remove('bg-sky-100', 'text-sky-800', 'border-sky-200');
+                    badge.classList.add('bg-rose-500', 'text-white', 'border-rose-600');
+                    badge.textContent = '✕';
+                } else {
+                    btn.classList.add('opacity-60');
+                }
+            });
+
+            // Prikaz povratne informacije učeniku
+            const feedbackBox = document.getElementById('feedback-box');
+            const feedbackIcon = document.getElementById('feedback-icon');
+            const feedbackTitle = document.getElementById('feedback-title');
+            const feedbackText = document.getElementById('feedback-text');
+
+            feedbackBox.classList.remove('hidden', 'bg-emerald-50', 'border-emerald-300', 'text-emerald-900', 'bg-rose-50', 'border-rose-300', 'text-rose-900');
+
+            if (isCorrect) {
+                score++;
+                document.getElementById('score-display').textContent = score;
+                feedbackBox.classList.add('bg-emerald-50', 'border-emerald-400', 'text-emerald-900');
+                feedbackIcon.textContent = '🌟';
+                feedbackTitle.textContent = 'Bravo! Točan odgovor!';
+            } else {
+                mistakes.push({
+                    question: q.question,
+                    userAnswer: q.options[selectedIndex],
+                    correctAnswer: q.options[q.correct],
+                    explanation: q.explanation
+                });
+                feedbackBox.classList.add('bg-rose-50', 'border-rose-400', 'text-rose-900');
+                feedbackIcon.textContent = '💡';
+                feedbackTitle.textContent = 'Nije točno, ali učimo dalje!';
+            }
+
+            feedbackText.textContent = q.explanation;
+
+            // Prikaz gumba za nastavak
+            document.getElementById('next-btn').classList.remove('hidden');
+        }
+
+        // Prelazak na sljedeće pitanje ili završni ekran
+        function nextQuestion() {
+            currentIndex++;
+            if (currentIndex < currentQuestions.length) {
+                renderQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        // Prikaz završnog rezultata i ocjene prilagođene 2. razredu
+        function showResults() {
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+
+            document.getElementById('final-score').textContent = score;
+
+            const trophy = document.getElementById('result-trophy');
+            const heading = document.getElementById('result-heading');
+            const grade = document.getElementById('result-grade');
+            const message = document.getElementById('result-message');
+
+            if (score >= 18) {
+                trophy.textContent = '🏆';
+                heading.textContent = 'Čestitamo! Pravi si stručnjak!';
+                grade.textContent = 'Ocjena: Odličan (5) 🌟🌟🌟';
+                grade.className = 'inline-block bg-emerald-100 text-emerald-800 border-2 border-emerald-400 px-5 py-1.5 rounded-full text-lg sm:text-xl font-extrabold mb-4';
+                message.textContent = 'Izvrsno poznaješ osobne podatke, pravila PAZIM i digitalni trag!';
+            } else if (score >= 14) {
+                trophy.textContent = '🥈';
+                heading.textContent = 'Jako dobro! Svaka čast!';
+                grade.textContent = 'Ocjena: Vrlo dobar (4) 🌟🌟';
+                grade.className = 'inline-block bg-sky-100 text-sky-800 border-2 border-sky-400 px-5 py-1.5 rounded-full text-lg sm:text-xl font-extrabold mb-4';
+                message.textContent = 'Znaš puno o sigurnosti na internetu. Pogledaj još nekoliko sitnica ispod.';
+            } else if (score >= 10) {
+                trophy.textContent = '🥉';
+                heading.textContent = 'Dobar trud!';
+                grade.textContent = 'Ocjena: Dobar (3) 🌟';
+                grade.className = 'inline-block bg-amber-100 text-amber-800 border-2 border-amber-400 px-5 py-1.5 rounded-full text-lg sm:text-xl font-extrabold mb-4';
+                message.textContent = 'Na dobrom si putu! Ponovi pravila PAZIM i pokušaj ponovno.';
+            } else {
+                trophy.textContent = '📖';
+                heading.textContent = 'Vježbom do savršenstva!';
+                grade.textContent = 'Pokušaj ponovno za još bolji rezultat 💪';
+                grade.className = 'inline-block bg-rose-100 text-rose-800 border-2 border-rose-300 px-5 py-1.5 rounded-full text-lg sm:text-xl font-extrabold mb-4';
+                message.textContent = 'Pročitaj objašnjenja ispod i odigraj kviz još jednom. Sigurno će biti puno bolje!';
+            }
+
+            // Prikaz pogrešaka ako ih je bilo
+            const mistakesSection = document.getElementById('mistakes-section');
+            const mistakesList = document.getElementById('mistakes-list');
+            mistakesList.innerHTML = '';
+
+            if (mistakes.length > 0) {
+                mistakesSection.classList.remove('hidden');
+                mistakes.forEach((m) => {
+                    const item = document.createElement('div');
+                    item.className = 'bg-rose-50/80 border-2 border-rose-200 rounded-2xl p-4';
+                    item.innerHTML = `
+                        <p class="font-extrabold text-slate-800 text-base mb-1.5">❓ ${m.question}</p>
+                        <p class="text-sm font-bold text-rose-700">✕ Tvoj odgovor: ${m.userAnswer}</p>
+                        <p class="text-sm font-extrabold text-emerald-700 mb-1">✓ Točan odgovor: ${m.correctAnswer}</p>
+                        <p class="text-xs sm:text-sm font-semibold text-slate-600 bg-white/80 p-2 rounded-xl border border-rose-100">💡 ${m.explanation}</p>
+                    `;
+                    mistakesList.appendChild(item);
+                });
+            } else {
+                mistakesSection.classList.add('hidden');
+            }
+        }
+    </script>
+</body>
+</html>
